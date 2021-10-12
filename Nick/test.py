@@ -20,7 +20,7 @@ h = np.array([[0, -0.09889]])
 field1 = SHField(Rn, g, h, 0, 0)
 
 #field1.plot3DField(-1.5*Rn, 1.5*Rn, -1.5*Rn, 1.5*Rn, -1.5*Rn, 1.5*Rn, scale = 100000000)
-field1.plot2DField(np.array([Rn, 0, 0]), np.array([0, Rn, 0]), 5)
+field1.plot2DField(np.array([Rn, 0, 0]), np.array([0, Rn, 0]), 6)
 
 # import matplotlib.pyplot as plt
 # import numpy as np

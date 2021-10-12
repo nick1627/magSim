@@ -83,9 +83,9 @@ class Field:
 
         #a is a vector in the plane
         #b is another vector in the plane, perpendicular to a
-        #N is the number of vectors a or b that make up the side length of the plane
+        #N is the number of points along one side of the plane
 
-        x = np.zeros((N + 1, N + 1))
+        x = np.zeros((N, N))
       
         y = np.zeros(np.shape(x))
         z = np.zeros(np.shape(x))
@@ -94,7 +94,7 @@ class Field:
         v = np.zeros(np.shape(x))
         w = np.zeros(np.shape(x))
 
-        start = np.array([0,0,0]) - (N/2)*a - (N/2)*b
+        start = np.array([0,0,0]) - ((N-1)/2)*a - ((N-1)/2)*b
 
         for i in range(0, np.shape(x)[0]):
             for j in range(0, np.shape(x)[1]):
