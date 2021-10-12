@@ -117,7 +117,7 @@ class Field:
         ax2 = plt.figure().add_subplot(projection = "3d")
         ax2.quiver(x, y, z, u, v, w)
 
-        return
+        return x, y, z, u, v, w
 
 
 

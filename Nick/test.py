@@ -10,36 +10,38 @@ import fields as f
 
 
 
+#========================================================================================
+# #Plotting field of Neptune since it's a bit less weird
+# Rn = 24765000 #radius of neptune in metres
+# #start with dipole only
+# g = np.array([[0.09732, 0.03220]])
+# h = np.array([[0, -0.09889]])
 
-#Plotting field of Neptune since it's a bit less weird
-Rn = 24765000 #radius of neptune in metres
-#start with dipole only
-g = np.array([[0.09732, 0.03220]])
-h = np.array([[0, -0.09889]])
+# NField = SHField(Rn, g, h, 0, 0)
 
-field1 = SHField(Rn, g, h, 0, 0)
+# #field1.plot3DField(-1.5*Rn, 1.5*Rn, -1.5*Rn, 1.5*Rn, -1.5*Rn, 1.5*Rn, scale = 100000000)
+# NField.plot2DField(np.array([Rn, 0, 0]), np.array([0, Rn, 0]), 6)
 
-#field1.plot3DField(-1.5*Rn, 1.5*Rn, -1.5*Rn, 1.5*Rn, -1.5*Rn, 1.5*Rn, scale = 100000000)
-field1.plot2DField(np.array([Rn, 0, 0]), np.array([0, Rn, 0]), 6)
+#========================================================================================
 
-# import matplotlib.pyplot as plt
-# import numpy as np
+Ru = 25600000           #radius of Uranus in metres
+g = np.array([[11893, 11579]])
+h = np.array([[0, -15684]])
 
-# ax = plt.figure().add_subplot(projection='3d')
+UField = SHField(Ru, g, h, 0, 0)
 
-# # Make the grid
-# x, y, z = np.meshgrid(np.arange(-0.5, 1, 0.5),
-#                       np.arange(-0.5, 1, 0.5),
-#                       np.arange(-0.5, 1, 0.5))
+#Plot results of 16 points on the x=0 plane
+x, y, z, u, v, w = UField.plot2DField(np.array([0, Ru, 0]), np.array([0, 0, Ru]), 4, scale = 1) 
 
-# print(np.shape(x))
+print(y/Ru)
+print(z/Ru)
+print(u)
+print(v)
+print(w)
 
-# # Make the direction data for the arrows
-# u = np.ones(np.shape(x))
-# v = np.ones(np.shape(x))
-# w = np.ones(np.shape(x))
+#========================================================================================
 
-# ax.quiver(x, y, z, u, v, w, length=0.1, normalize=True)
+
 
 
 
