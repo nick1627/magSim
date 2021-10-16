@@ -19,25 +19,25 @@ import fields as f
 
 # NField = SHField(Rn, g, h, 0, 0)
 
-# #field1.plot3DField(-1.5*Rn, 1.5*Rn, -1.5*Rn, 1.5*Rn, -1.5*Rn, 1.5*Rn, scale = 100000000)
-# NField.plot2DField(np.array([Rn, 0, 0]), np.array([0, Rn, 0]), 6)
+# NField.plot3DField(-1.5*Rn, 1.5*Rn, -1.5*Rn, 1.5*Rn, -1.5*Rn, 1.5*Rn, scale = 100000000)
+# #NField.plot2DField(np.array([Rn, 0, 0]), np.array([0, Rn, 0]), 6)
 
 #========================================================================================
 
 Ru = 25600000           #radius of Uranus in metres
-g = np.array([[11893, 11579]])
-h = np.array([[0, -15684]])
+g = np.array([[11278, 10928, 0], [-9648, -12284, 1453]])
+h = np.array([[0, -16049, 0], [0, 6405, 4220]])
 
 UField = SHField(Ru, g, h, 0, 0)
 
 #Plot results of 16 points on the x=0 plane
-x, y, z, u, v, w = UField.plot2DField(np.array([0, Ru, 0]), np.array([0, 0, Ru]), 4, scale = 1) 
+x, y, z, u, v, w = UField.plot2DField("x", 0, 16, Ru/4, Ru)
 
-print(y/Ru)
-print(z/Ru)
-print(u)
-print(v)
-print(w)
+# print(y/Ru)
+# print(z/Ru)
+# print(u)
+# print(v)
+# print(w)
 
 #========================================================================================
 

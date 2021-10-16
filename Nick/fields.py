@@ -39,7 +39,7 @@ class Field:
         #This is a placeholder
         return self.B
 
-    def plot3DField(self, xmin, xmax, ymin, ymax, zmin, zmax, scale = 1):
+    def plot3DField(self, xmin, xmax, ymin, ymax, zmin, zmax, scale = 1, planetaryFilter = True):
         xstep = (xmax - xmin)/4
         ystep = (ymax - ymin)/4
         zstep = (zmax - zmin)/4
@@ -76,7 +76,7 @@ class Field:
         return
         
 
-    def plot2DField(self, a, b, N, scale = 1):
+    def plot2DField(self, plane, intercept, noPoints, vecLength, planetRadius, vectors = "2D", scaleOverride = 1, planetaryFilter = True):
         #  This plots a 2D vector field (arrows may be in 3D) as a plane
         #  Normal vector of the plane is n, specified by user
         #  Plane will always intersect the origin
@@ -85,8 +85,21 @@ class Field:
         #b is another vector in the plane, perpendicular to a
         #N is the number of points along one side of the plane
 
-        x = np.zeros((N, N))
-      
+        if plane == "x":
+            a = np.array([0, vecLength, 0])
+            b = np.array([0, 0, vecLength])
+            start = np.array([intercept, 0, 0])
+        elif plane == "y":
+            a = np.array([vecLength, 0, 0])
+            b = np.array([0, 0, vecLength])
+            start = np.array([0, intercept, 0])
+        elif plane == "z":
+            a = np.array([vecLength, 0, 0])
+            b = np.array([0, vecLength, 0])
+            start = np.array([0, 0, intercept])
+        
+
+        x = np.zeros((noPoints, noPoints))
         y = np.zeros(np.shape(x))
         z = np.zeros(np.shape(x))
 
@@ -94,28 +107,116 @@ class Field:
         v = np.zeros(np.shape(x))
         w = np.zeros(np.shape(x))
 
-        start = np.array([0,0,0]) - ((N-1)/2)*a - ((N-1)/2)*b
+        start = start - ((noPoints-1)/2)*a - ((noPoints-1)/2)*b
+        biggestLength = 0
 
-        for i in range(0, np.shape(x)[0]):
-            for j in range(0, np.shape(x)[1]):
-                currentVector = start + i*a + j*b
+        aHat = a/np.linalg.norm(a)
+        bHat = b/np.linalg.norm(b)
 
-                x[i, j] = currentVector[0]
-                y[i, j] = currentVector[1]
-                z[i, j] = currentVector[2]
+        if planetaryFilter: #filter out vectors inside the planet
+            if vectors == "2D":
+                for i in range(0, np.shape(x)[0]):
+                    for j in range(0, np.shape(x)[1]):
+                        currentVector = start + i*a + j*b
+                        if np.linalg.norm(currentVector) > planetRadius:
 
-                currentB = self.getField(currentVector)
-                u[i, j] = currentB[0]
-                v[i, j] = currentB[1]
-                w[i, j] = currentB[2]
+                            x[i, j] = currentVector[0]
+                            y[i, j] = currentVector[1]
+                            z[i, j] = currentVector[2]
 
-        u = scale*u
-        v = scale*v
-        w = scale*w
+                            currentB = self.getField(currentVector)
+                            u[i, j] = currentB[0]
+                            v[i, j] = currentB[1]
+                            w[i, j] = currentB[2]
+
+                            currentLength = pow(np.dot(currentB, aHat), 2) + pow(np.dot(currentB, bHat), 2)
+                            if currentLength > biggestLength:
+                                print(biggestLength)
+                                biggestLength = currentLength
+                
+                biggestLength = np.sqrt(biggestLength)
+
+            else: #vectors = 3D
+                for i in range(0, np.shape(x)[0]):
+                    for j in range(0, np.shape(x)[1]):
+                        currentVector = start + i*a + j*b
+                        if np.linalg.norm(currentVector) > planetRadius:
+
+                            x[i, j] = currentVector[0]
+                            y[i, j] = currentVector[1]
+                            z[i, j] = currentVector[2]
+
+                            currentB = self.getField(currentVector)
+                            u[i, j] = currentB[0]
+                            v[i, j] = currentB[1]
+                            w[i, j] = currentB[2]
+
+                            currentLength = np.linalg.norm(currentB)
+                            if currentLength > biggestLength:
+                                biggestLength = currentLength
+
+        else: #Don't filter out vectors inside planet
+            if vectors == "2D":
+                for i in range(0, np.shape(x)[0]):
+                    for j in range(0, np.shape(x)[1]):
+                        currentVector = start + i*a + j*b
+                        
+                        x[i, j] = currentVector[0]
+                        y[i, j] = currentVector[1]
+                        z[i, j] = currentVector[2]
+
+                        currentB = self.getField(currentVector)
+                        u[i, j] = currentB[0]
+                        v[i, j] = currentB[1]
+                        w[i, j] = currentB[2]
+
+                        currentLength = pow(np.dot(currentB, aHat), 2) + pow(np.dot(currentB, bHat), 2)
+                        if currentLength > biggestLength:
+                            biggestLength = currentLength
+                
+                biggestLength = np.sqrt(biggestLength)
+
+            else:
+                for i in range(0, np.shape(x)[0]):
+                    for j in range(0, np.shape(x)[1]):
+                        currentVector = start + i*a + j*b
+                        
+                        x[i, j] = currentVector[0]
+                        y[i, j] = currentVector[1]
+                        z[i, j] = currentVector[2]
+
+                        currentB = self.getField(currentVector)
+                        u[i, j] = currentB[0]
+                        v[i, j] = currentB[1]
+                        w[i, j] = currentB[2]
+
+                        currentLength = np.linalg.norm(currentB)
+                        if currentLength > biggestLength:
+                            biggestLength = currentLength
 
 
-        ax2 = plt.figure().add_subplot(projection = "3d")
-        ax2.quiver(x, y, z, u, v, w)
+        
+        print(biggestLength)
+        # u = scaleOverride*scale*u
+        # v = scaleOverride*scale*v
+        # w = scaleOverride*scale*w
+
+        #Now we plot the vectors.  1 unit of B takes the lenght of biggestLength/vecLength metres (since x in metres)
+
+        if vectors == "3D":
+            ax2 = plt.figure().add_subplot(projection = "3d")
+            ax2.quiver(x, y, z, u, v, w, scale = biggestLength/vecLength, scale_units = "x")
+        else: #vectors = 2D
+            ax2 = plt.figure().add_subplot()
+
+            if plane == "x":
+                ax2.quiver(y, z, v, w, scale = biggestLength/vecLength, scale_units = "x")#, scale_units = "xy")
+            elif plane == "y":
+                ax2.quiver(x, z, u, w, scale = biggestLength/vecLength, scale_units = "x")
+            elif plane == "z":
+                ax2.quiver(x, y, u, v, scale = biggestLength/vecLength, scale_units = "x")
+
+        ax2.set_aspect("equal")       
 
         return x, y, z, u, v, w
 
