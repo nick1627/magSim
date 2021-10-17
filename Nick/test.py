@@ -31,14 +31,15 @@ h = np.array([[0, -16049, 0], [0, 6405, 4220]])
 UField = SHField(Ru, g, h, 0, 0)
 
 #Plot results of 16 points on the x=0 plane
-x, y, z, u, v, w = UField.plot3DField(-2.5*Ru, 2.5*Ru, -2.5*Ru, 2.5*Ru, -2.5*Ru, 2.5*Ru, 6, Ru)
+x, y, z, u, v, w = UField.plot3DField(-1.5*Ru, 1.5*Ru, -1.5*Ru, 1.5*Ru, -1.5*Ru, 1.5*Ru, 4, Ru, planetaryFilter=False)
 #x, y, z, u, v, w = UField.plot2DField("x", 0, 16, Ru/4, Ru)
 
-# print(y/Ru)
-# print(z/Ru)
-# print(u)
-# print(v)
-# print(w)
+print(x/Ru)
+print(y/Ru)
+print(z/Ru)
+print(u)
+print(v)
+print(w)
 
 #========================================================================================
 
