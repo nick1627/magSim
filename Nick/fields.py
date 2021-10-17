@@ -39,41 +39,80 @@ class Field:
         #This is a placeholder
         return self.B
 
-    def plot3DField(self, xmin, xmax, ymin, ymax, zmin, zmax, scale = 1, planetaryFilter = True):
-        xstep = (xmax - xmin)/4
-        ystep = (ymax - ymin)/4
-        zstep = (zmax - zmin)/4
+    def plot3DField(self, xmin, xmax, ymin, ymax, zmin, zmax, noPoints, planetRadius, planetaryFilter = True, scaleOverride = 1):
+        xstep = (xmax - xmin)/(noPoints - 1)
+        ystep = (ymax - ymin)/(noPoints - 1)
+        zstep = (zmax - zmin)/(noPoints - 1)
+
+        x = np.zeros((noPoints, noPoints, noPoints))
+        y = np.zeros(np.shape(x))
+        z = np.zeros(np.shape(x))
+
+        u = np.zeros(np.shape(x))
+        v = np.zeros(np.shape(x))
+        w = np.zeros(np.shape(x))
 
 
-        x = np.arange(xmin, xmax + xstep, xstep)
-        y = np.arange(ymin, ymax + ystep, ystep)
-        z = np.arange(zmin, zmax + zstep, zstep)
+        biggestLength = 0
+        initialPosition = np.array([xmin, ymin, zmin])
+        #Define lattice vectors
+        a = np.array([xstep, 0, 0])
+        b = np.array([0, ystep, 0])
+        c = np.array([0, 0, zstep])
 
-        grid_x, grid_y, grid_z = np.meshgrid(x, y, z)
-        u = np.zeros(np.shape(grid_x))
-        v = np.zeros(np.shape(grid_x))
-        w = np.zeros(np.shape(grid_x))
+        if planetaryFilter:
+            for i in range(0, noPoints):
+                for j in range(0, noPoints):
+                    for k in range(0, noPoints):
+                        r = initialPosition + i*a + j*b + k*c
 
-        for i in range(0, np.shape(grid_x)[0]):
-            for j in range(0, np.shape(grid_x)[1]):
-                for k in range(0, np.shape(grid_x)[2]):
-                    r = np.array([grid_x[i, j, k], grid_y[i, j, k], grid_z[i, j, k]])
-                    B = self.getField(r)
-                    # print(u[i,j,k])
-                    # print(B[0])
-                    u[i, j, k] = B[0]
-                    v[i, j, k] = B[1]
-                    w[i, j, k] = B[2]
+                        x[i, j, k] = r[0]
+                        y[i, j, k] = r[1]
+                        z[i, j, k] = r[2]
 
+                        if np.linalg.norm(r) > planetRadius:
+                            B = self.getField(r)
+                            currentLength = np.linalg.norm(B)
+                            if currentLength > biggestLength:
+                                biggestLength = currentLength
+                        
+                            u[i, j, k] = B[0]
+                            v[i, j, k] = B[1]
+                            w[i, j, k] = B[2]
+
+
+        else:
+            for i in range(0, noPoints):
+                for j in range(0, noPoints):
+                    for k in range(0, noPoints):
+                        r = initialPosition + i*a + j*b + k*c
+                      
+                        x[i, j, k] = r[0]
+                        y[i, j, k] = r[1]
+                        z[i, j, k] = r[2]
+                        
+                        B = self.getField(r)
+                        currentLength = np.linalg.norm(B)
+                        if currentLength > biggestLength:
+                            biggestLength = currentLength
+                    
+                        u[i, j, k] = B[0]
+                        v[i, j, k] = B[1]
+                        w[i, j, k] = B[2]
+
+
+        scale = scaleOverride*xstep/biggestLength
         u = scale*u
         v = scale*v
         w = scale*w
-        
+
+
 
         ax = plt.figure().add_subplot(projection = "3d")
-        ax.quiver(grid_x, grid_y, grid_z, u, v, w)
+        ax.quiver(x, y, z, u, v, w)
+        #ax.set_aspect("equal")       
 
-        return
+        return x, y, z, u, v, w
         
 
     def plot2DField(self, plane, intercept, noPoints, vecLength, planetRadius, vectors = "2D", scaleOverride = 1, planetaryFilter = True):
