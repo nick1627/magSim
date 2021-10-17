@@ -170,7 +170,7 @@ class Field:
 
                             currentLength = pow(np.dot(currentB, aHat), 2) + pow(np.dot(currentB, bHat), 2)
                             if currentLength > biggestLength:
-                                print(biggestLength)
+                                
                                 biggestLength = currentLength
                 
                 biggestLength = np.sqrt(biggestLength)
@@ -235,7 +235,7 @@ class Field:
 
 
         
-        print(biggestLength)
+        
         # u = scaleOverride*scale*u
         # v = scaleOverride*scale*v
         # w = scaleOverride*scale*w
@@ -249,11 +249,13 @@ class Field:
             ax2 = plt.figure().add_subplot()
 
             if plane == "x":
-                ax2.quiver(y, z, v, w, scale = biggestLength/vecLength, scale_units = "x")#, scale_units = "xy")
+                ax2.quiver(y/planetRadius, z/planetRadius, v, w, scale = biggestLength*planetRadius/vecLength, scale_units = "x")
+                
+                
             elif plane == "y":
-                ax2.quiver(x, z, u, w, scale = biggestLength/vecLength, scale_units = "x")
+                ax2.quiver(x/planetRadius, z/planetRadius, u, w, scale = biggestLength*planetRadius/vecLength, scale_units = "x")
             elif plane == "z":
-                ax2.quiver(x, y, u, v, scale = biggestLength/vecLength, scale_units = "x")
+                ax2.quiver(x/planetRadius, y/planetRadius, u, v, scale = biggestLength*planetRadius/vecLength, scale_units = "x")
 
         ax2.set_aspect("equal")       
 
@@ -274,7 +276,7 @@ class SHField(Field):
         self.g_error = g_error
         self.h_error = h_error
 
-        self.nMax = 1 #Need to get this from the shape of g etc
+        self.nMax = np.shape(g)[0]
  
 
     def PnmCos(self, n, m, theta): #Returns Pnm(cos(theta)) for n up to 2
@@ -347,10 +349,9 @@ class SHField(Field):
         for n in range(1, self.nMax+1):
             frac2 = frac**(n+2)
             for m in range(0, n+1):
+    
                 #g[n,m] difference in matrix index to n value
-                # print(n, m, theta)
-                # print(np.shape(theta))
-                # print(self.PnmCos(n, m, theta))
+              
                 Br += (n+1)*frac2*(self.g[n-1, m]*np.cos(m*phi) + self.h[n-1, m]*np.sin(m*phi))*self.PnmCos(n, m, theta)
                 Btheta -= (frac2*(self.g[n-1, m]*np.cos(m*phi) + self.h[n-1, m]*np.sin(m*phi))*self.PnmCosDerivative(n, m, theta))
                 Bphi += m*frac2*(self.g[n-1, m]*np.sin(m*phi) - self.h[n-1, m]*np.cos(m*phi))*self.PnmCos(n, m, theta)
