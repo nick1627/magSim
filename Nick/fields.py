@@ -228,7 +228,7 @@ class Field:
                         u[i, j] = currentB[0]
                         v[i, j] = currentB[1]
                         w[i, j] = currentB[2]
-
+ 
                         currentLength = np.linalg.norm(currentB)
                         if currentLength > biggestLength:
                             biggestLength = currentLength
