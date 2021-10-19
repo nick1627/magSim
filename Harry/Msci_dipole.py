@@ -15,20 +15,20 @@ from Functions import *
 a = 25600000 # Uranus' radius
 
 #Uranus' coefficients
-g01 = 11893 #z
-g11 = 11579 #x
-h11 = - 15684 #y
-g02 = 0
-g12 = 0
-h12 = 0
-g22 = 0
-h22 = 0
+g01 = 1#11893 #z
+g11 = 1#11579 #x
+h11 = 1#- 15684 #y
+g02 = 1
+g12 = 1
+h12 = 1
+g22 = 1
+h22 = 1
 
 args = np.array([g01, g11, h11, g02, g12, h12, g22, h22])
 
-r = np.linspace(2 * a, 3 * a, 1)
-theta = np.linspace(0, np.pi, 25)
-phi = np.linspace(0, 2 * np.pi, 25)
+r = [2*a]#np.linspace(2 * a, 3 * a, 1)
+theta = [np.pi / 4]#np.linspace(0, np.pi, 25)
+phi = [np.pi / 2]#np.linspace(0, 2 * np.pi, 25)
 
 x, y, z, u, v, w = Get_B_sph(r, theta, phi, a, args, 2)
 
@@ -46,22 +46,32 @@ plt.show()
 #%%
 a = 25600000 #Uranus radius
 
-x = np.linspace(-1.5 * a, 1.5 * a, 4)
-y = np.linspace(-1.5 * a, 1.5 * a, 4)
-z = np.linspace(-1.5 * a, 1.5 * a, 4)
+x1 = np.linspace(-1.5 * a, 1.5 * a, 4)
+z1 = np.linspace(-1.5 * a, 1.5 * a, 5)
+y1 = np.linspace(-1.5 * a, 1.5 * a, 7)
 
-g01 = 11278 #z
-g11 = 10928 #x
-h11 = -16049 #y
-g02 = -9648
-g12 = -12284
-h12 = 6405
-g22 = 1453
-h22 = 4220
+# r = 2*a#np.linspace(2 * a, 3 * a, 1)
+# theta = np.pi / 4#np.linspace(0, np.pi, 25)
+# phi = np.pi / 2#np.linspace(0, 2 * np.pi, 25)
+
+# x, y, z = Sph_to_Cart(r, theta, phi)
+
+# x = [x]
+# y = [y]
+# z = [z]
+
+g01 = 1#11278 #z
+g11 = 1#10928 #x
+h11 = 1#-16049 #y
+g02 = 1#-9648
+g12 = 1#-12284
+h12 = 1#6405
+g22 = 1#1453
+h22 = 1#4220
 
 args = np.array([g01, g11, h11, g02, g12, h12, g22, h22])
 
-x, y, z, u, v, w = Get_B_cart(x, y, z, a, args, 2)
+x, y, z, u, v, w = Get_B_cart(x1, y1, z1, a, args, 2)
 
 x = np.array(x) / a
 y = np.array(y) / a
@@ -70,7 +80,7 @@ u = np.array(u)
 v = np.array(v)
 w = np.array(w)
 
-#Circle1 = plt.Circle((0, 0), 1, color = 'red', fill = False)
+Circle1 = plt.Circle((0, 0), 1, color = 'red', fill = False)
 params = {
    'axes.labelsize': 20,
    'font.size': 20,
@@ -83,37 +93,34 @@ params = {
 } 
 plt.rcParams.update(params)
 
-fig, ax = plt.subplots()
-#ax.add_patch(Circle1)
-#ax.quiver(y, z, v, w, pivot = 'mid')
-plt.title('at $x/a$ = {}'.format(0))
-plt.xlabel('y/a')
-plt.ylabel('z/a')
-#plt.savefig('h22_x=0')
+# fig, ax = plt.subplots()
+# ax.add_patch(Circle1)
+# ax.quiver(x, y, u, v, pivot = 'mid')
+# plt.title('at $z/a$ = {}'.format(0))
+# plt.xlabel('x/a')
+# plt.ylabel('y/a')
+# #plt.savefig('h22_z=0')
 plt.show()
 
 #%%
-x_mat = np.zeros((4,4,4))
-y_mat = np.zeros((4,4,4))
-z_mat = np.zeros((4,4,4))
-u_mat = np.zeros((4,4,4))
-v_mat = np.zeros((4,4,4))
-w_mat = np.zeros((4,4,4))
 
-for i in range(len(x)):
-    s = int((i)/16)
-    d = int((i)/4)%4
-    f = i%4
-    x_mat[s][d][f] = x[i]
-    y_mat[s][d][f] = y[i]
-    z_mat[s][d][f] = z[i]
-    u_mat[s][d][f] = u[i]
-    v_mat[s][d][f] = v[i]
-    w_mat[s][d][f] = w[i]
+def reshape(x, y, z, u, v, w, x_s, y_s, z_s):
+
+    x_mat = x.reshape((x_s,y_s,z_s))
+    y_mat = y.reshape((x_s,y_s,z_s))
+    z_mat = z.reshape((x_s,y_s,z_s))
+    u_mat = u.reshape((x_s,y_s,z_s))
+    v_mat = v.reshape((x_s,y_s,z_s))
+    w_mat = w.reshape((x_s,y_s,z_s))
+
+    return x_mat, y_mat, z_mat, u_mat, v_mat, w_mat
             
 #%%
-print(u_mat)
+x_mat, y_mat, z_mat, u_mat, v_mat, w_mat = reshape(x, y, z, u, v, w, 4, 7, 5)
 
+print(x_mat)
+print(y_mat)
+print(z_mat)
 #%%
 
 a = 25600000 #Uranus radius
