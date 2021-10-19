@@ -276,7 +276,7 @@ class SHField(Field):
         self.g_error = g_error
         self.h_error = h_error
 
-        self.nMax = np.shape(g)[0]
+        self.nMax = len(g) - 1
  
 
     def PnmCos(self, n, m, theta): #Returns Pnm(cos(theta)) for n up to 2
@@ -352,9 +352,9 @@ class SHField(Field):
     
                 #g[n,m] difference in matrix index to n value
               
-                Br += (n+1)*frac2*(self.g[n-1, m]*np.cos(m*phi) + self.h[n-1, m]*np.sin(m*phi))*self.PnmCos(n, m, theta)
-                Btheta -= (frac2*(self.g[n-1, m]*np.cos(m*phi) + self.h[n-1, m]*np.sin(m*phi))*self.PnmCosDerivative(n, m, theta))
-                Bphi += m*frac2*(self.g[n-1, m]*np.sin(m*phi) - self.h[n-1, m]*np.cos(m*phi))*self.PnmCos(n, m, theta)
+                Br += (n+1)*frac2*(self.g[n][m]*np.cos(m*phi) + self.h[n][m]*np.sin(m*phi))*self.PnmCos(n, m, theta)
+                Btheta -= (frac2*(self.g[n][m]*np.cos(m*phi) + self.h[n][m]*np.sin(m*phi))*self.PnmCosDerivative(n, m, theta))
+                Bphi += m*frac2*(self.g[n][m]*np.sin(m*phi) - self.h[n][m]*np.cos(m*phi))*self.PnmCos(n, m, theta)
         
         Bphi *= 1/np.sin(theta)
 
