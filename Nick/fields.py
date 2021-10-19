@@ -102,14 +102,9 @@ class Field:
 
 
         scale = scaleOverride*xstep/biggestLength
-        u = scale*u
-        v = scale*v
-        w = scale*w
-
-
 
         ax = plt.figure().add_subplot(projection = "3d")
-        ax.quiver(x, y, z, u, v, w)
+        ax.quiver(x, y, z, u*scale, v*scale, w*scale)
         #ax.set_aspect("equal")       
 
         return x, y, z, u, v, w
@@ -277,6 +272,7 @@ class SHField(Field):
         self.h_error = h_error
 
         self.nMax = np.shape(g)[0]
+        print(self.nMax)
  
 
     def PnmCos(self, n, m, theta): #Returns Pnm(cos(theta)) for n up to 2
@@ -347,7 +343,7 @@ class SHField(Field):
         frac = self.a/r
 
         for n in range(1, self.nMax+1):
-            frac2 = frac**(n+2)
+            frac2 = np.power(frac, (n+2))
             for m in range(0, n+1):
     
                 #g[n,m] difference in matrix index to n value
