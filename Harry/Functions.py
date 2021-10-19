@@ -105,16 +105,16 @@ def dPnm(n, m, theta):
     
     if n == 2:
         if m == 0:
-            term = (-3) * np.sin(theta) * np.cos(theta)
-            return term
+            term1 = (-3) * np.sin(theta) * np.cos(theta)
+            return term1
         
         if m == 1:
-            term = (np.sqrt(3)) * np.cos(2 * theta)
-            return term
+            term2 = (np.sqrt(3)) * np.cos(2 * theta)
+            return term2
         
         if m == 2:
-            term = (np.sqrt(3)) * np.sin(theta) * np.cos(theta)
-            return term
+            term3 = (np.sqrt(3)) * np.sin(theta) * np.cos(theta)
+            return term3
 
 def Get_B_sph(r, theta, phi, a, args, n):
     """
@@ -205,9 +205,9 @@ def Get_B_sph(r, theta, phi, a, args, n):
         for k in r:
             for i in theta:
                 for j in phi:
-                    r01 = (2 * ((a / k) ** (3))) * (args[0] * Pnm(1, 0, i))
-                    r11 = (2 * ((a / k) ** (3))) * ((args[1] * np.cos(j)) + \
-                                                    (args[0] * np.sin(j))) * Pnm(1, 1, i)
+                    r01 = (2 * ((a / k) ** 3)) * (args[0] * Pnm(1, 0, i))
+                    r11 = (2 * ((a / k) ** 3)) * ((args[1] * np.cos(j)) + \
+                                                    (args[2] * np.sin(j))) * Pnm(1, 1, i)
                     r02 = (3 * ((a / k) ** 4)) * (args[3] * Pnm(2, 0, i))
                     r12 = (3 * ((a / k) ** 4)) * ((args[4] * np.cos(j)) + \
                                         (args[5] * np.sin(j))) * Pnm(2, 1, i)
@@ -254,6 +254,7 @@ def Get_B_sph(r, theta, phi, a, args, n):
                     u_all.append(u)
                     v_all.append(v)
                     w_all.append(w)
+                    
             
     return x_all, y_all, z_all, u_all, v_all, w_all
 
@@ -398,7 +399,7 @@ def Get_B_cart(x, y, z, a, args, n):
                     u_all.append(u)
                     v_all.append(v)
                     w_all.append(w)
-    
+                    
     return x_all, y_all, z_all, u_all, v_all, w_all
 
 def getB_fun(x, y, z, a, g, h, n):
