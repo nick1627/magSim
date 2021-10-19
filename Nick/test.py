@@ -26,6 +26,10 @@ import tools
 #========================================================================================
 
 Ru = 25600000           #radius of Uranus in metres
+
+# g = np.array([[11278, 10928]])
+# h = np.array([[0, -16049]])
+
 g = np.array([[11278, 10928, 0], [-9648, -12284, 1453]])
 h = np.array([[0, -16049, 0], [0, 6405, 4220]])
 
@@ -35,22 +39,11 @@ UField = SHField(Ru, g, h, 0, 0)
 x, y, z, u, v, w = UField.plot3DField(-1.5*Ru, 1.5*Ru, -1.5*Ru, 1.5*Ru, -1.5*Ru, 1.5*Ru, 4, Ru, planetaryFilter=False)
 #x, y, z, u, v, w = UField.plot2DField("x", 0, 16, Ru/4, Ru)
 
-print(u[0, 0, 0] - 1.79626500e+03)
-
-# tools.saveBField(x, y, z, u, v, w, "Output/quadrupole_nick3.npz")
-
-# a, b, c, d, e, f = tools.loadBField("Output/quadrupole_nick3.npz")
-
-# print(x - a)
-
-# print(x/Ru)
-# print(y/Ru)
-# print(z/Ru)
-# print(u)
-# print(v)
-# print(w)
+# print(u[0, 0, 0] - 1.79626500e+03)
+tools.saveBField(x, y, z, u, v, w, "Output/quadrupole_nick.npz")
 
 
+plt.show()
 
 
 

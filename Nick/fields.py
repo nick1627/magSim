@@ -282,11 +282,11 @@ class SHField(Field):
     def PnmCos(self, n, m, theta): #Returns Pnm(cos(theta)) for n up to 2
         if n == 2:
             if m == 0:
-                return 1.5*(pow(np.cos(theta), 2) - 1/3)
+                return 1.5*(np.power(np.cos(theta), 2) - 1/3)
             elif m == 1:
                 return np.sqrt(3)*np.cos(theta)*np.sin(theta)
             elif m == 2:
-                return 0.5*np.sqrt(3)*pow(np.sin(theta), 2)
+                return 0.5*np.sqrt(3)*np.power(np.sin(theta), 2)
             else:
                 raise Exception("Error:  m = " + m + " is invalid!")
 
@@ -308,7 +308,7 @@ class SHField(Field):
             elif m == 1:
                 return np.sqrt(3)*np.cos(2*theta)
             elif m == 2:
-                return np.sqrt(3)*np.sin(theta)*np.cos(theta)
+                return 0.5*np.sqrt(3)*np.sin(2*theta)
             else:
                 raise Exception("Error:  m = " + m + " is invalid!")
 
