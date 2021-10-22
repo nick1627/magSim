@@ -34,13 +34,16 @@ h = np.array([[0, -16049]])
 # h = np.array([[0, -16049, 0], [0, 6405, 4220]])
 
 UField = SHField(Ru, g, h, 0, 0)
+UField.rotate("Field")
 
 #Plot results of 16 points on the x=0 plane
 x, y, z, u, v, w = UField.plot3DField(-1.5*Ru, 1.5*Ru, -1.5*Ru, 1.5*Ru, -1.5*Ru, 1.5*Ru, 4, Ru, planetaryFilter=False)
-#x, y, z, u, v, w = UField.plot2DField("x", 0, 16, Ru/4, Ru)
+# a = UField.plot2DField("x", 0, 16, Ru/4, Ru)
+# b = UField.plot2DField("y", 0, 16, Ru/4, Ru)
+# c = UField.plot2DField("z", 0, 16, Ru/4, Ru)
 
 # print(u[0, 0, 0] - 1.79626500e+03)
-tools.saveBField(x, y, z, u, v, w, "Output/dipole_nick.npz")
+tools.saveBField(x, y, z, u, v, w, "Output/dipole_nick_fieldaligned.npz")
 
 
 

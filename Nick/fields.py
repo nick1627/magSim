@@ -245,12 +245,19 @@ class Field:
 
             if plane == "x":
                 ax2.quiver(y/planetRadius, z/planetRadius, v, w, scale = biggestLength*planetRadius/vecLength, scale_units = "x")
-                
-                
+                ax2.set_xlabel("y/a")
+                ax2.set_ylabel("z/a")
+                ax2.set_title("Plane perpendicular to x-axis")
             elif plane == "y":
                 ax2.quiver(x/planetRadius, z/planetRadius, u, w, scale = biggestLength*planetRadius/vecLength, scale_units = "x")
+                ax2.set_xlabel("x/a")
+                ax2.set_ylabel("z/a")
+                ax2.set_title("Plane perpendicular to y-axis")
             elif plane == "z":
                 ax2.quiver(x/planetRadius, y/planetRadius, u, v, scale = biggestLength*planetRadius/vecLength, scale_units = "x")
+                ax2.set_xlabel("x/a")
+                ax2.set_ylabel("y/a")
+                ax2.set_title("Plane perpendicular to z-axis")
 
         ax2.set_aspect("equal")       
 
@@ -272,7 +279,43 @@ class SHField(Field):
         self.h_error = h_error
 
         self.nMax = np.shape(g)[0]
-        print(self.nMax)
+
+        self.rotationFlag = "R"
+        self.R = np.identity(3)
+        self.Rinv = np.identity(3)
+
+    def rotate(self, rotationKey):
+        #rotationKey is a string that tells you what system to rotate into.
+        #rotationKey can take values "Field" and "Rotation", or "F" and "R"
+
+        if rotationKey == ("Field" or "F"):
+            self.rotationFlag = "F"
+        elif rotationKey == ("Rotation" or "R"):
+            self.rotationFlag = "R"
+        else:
+            raise(Exception("Warning!  Invalid rotation set."))
+        
+
+        if self.rotationFlag == "R":
+            self.R = np.identity(3)
+            self.Rinv = np.identity(3)
+        else: #In this case self.rotationFlag = "F", field-aligned coordinates.
+
+            #This uses the components of g and h to align the dipole of the field with the z axis
+            #First get the vector of the dipole moment
+            #g10 = z, g11 = x, h11 = y
+            zF = np.array([self.g[0, 1], self.h[0, 1], self.g[0, 0]]) #z axis in new system
+            zF = zF/np.linalg.norm(zF) #should now be unit vector
+            zR = np.array([0, 0, 1])
+
+            xF = np.cross(zF, zR)
+            yF = np.cross(zF, xF)
+
+            self.R = np.transpose(np.vstack((xF, yF, zF)))
+
+            self.Rinv = np.linalg.inv(self.R)
+
+        return
  
 
     def PnmCos(self, n, m, theta): #Returns Pnm(cos(theta)) for n up to 2
@@ -324,6 +367,9 @@ class SHField(Field):
     def getField(self, rvec):
         #Input rvec will always be cartesian
 
+        #First we convert rvec to the cartesian frame where the field is defined (rotation axis frame R)
+        rvec = np.matmul(self.R, rvec)
+
 
         #Assume spherical coordinate system
         #we want positions in r, theta, phi 
@@ -361,6 +407,9 @@ class SHField(Field):
                         [np.cos(theta),             -np.sin(theta),             0]])
 
         Bcartesian = np.matmul(T, Bspherical)
+
+        #Now need to convert back to the desired frame
+        Bcartesian = np.matmul(self.Rinv, Bcartesian)
 
         return np.array(Bcartesian)
 
