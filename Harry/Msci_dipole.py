@@ -6,9 +6,10 @@ Created on Thu Oct  7 19:21:41 2021
 """
 import numpy as np
 import matplotlib.pyplot as plt
-from Functions import *
+from Harry.Functions import *
 import sys, os
 sys.path.insert(0, os.getcwd())
+from tools import *
 
 #%%
 
@@ -57,19 +58,6 @@ args = np.array([g01, g11, h11, g02, g12, h12, g22, h22])
 x, y, z, u, v, w = Get_B_cart(x1, y1, z1, a, args, 2, True)
 
 TwoD_plot(x, y, u, v, 'z')
-
-#%%
-
-def reshape(x, y, z, u, v, w, x_s, y_s, z_s):
-
-    x_mat = x.reshape((x_s,y_s,z_s))
-    y_mat = y.reshape((x_s,y_s,z_s))
-    z_mat = z.reshape((x_s,y_s,z_s))
-    u_mat = u.reshape((x_s,y_s,z_s))
-    v_mat = v.reshape((x_s,y_s,z_s))
-    w_mat = w.reshape((x_s,y_s,z_s))
-
-    return x_mat, y_mat, z_mat, u_mat, v_mat, w_mat
             
 #%%
 x_mat, y_mat, z_mat, u_mat, v_mat, w_mat = reshape(x, y, z, u, v, w, 4, 7, 5)
@@ -81,9 +69,9 @@ print(z_mat)
 
 a = 25600000 #Uranus radius
 
-x1 = [0]#np.linspace(-1.5 * a, 1.5 * a, 4)
-y1 = np.linspace(-1.5 * a, 1.5 * a, 20)
-z1 = np.linspace(-1.5 * a, 1.5 * a, 20)
+x1 = np.linspace(-1.5 * a, 1.5 * a, 4)
+y1 = np.linspace(-1.5 * a, 1.5 * a, 4)
+z1 = np.linspace(-1.5 * a, 1.5 * a, 4)
     
     
 g01 = 11278 #z
@@ -101,7 +89,7 @@ g = np.array([[g01, g11],
 h = np.array([[0, h11], 
               [0, h12, h22]], dtype = object)
 
-x, y, z, u, v, w = getB_fun(x1, y1, z1, a, g, h, 2, True)
+x, y, z, u, v, w = getB_fun(x1, y1, z1, a, g, h, 2)
 
 TwoD_plot(y, z, v, w, 'x')
 
@@ -203,21 +191,10 @@ x, y, z, u, v, w = Get_B_cart_rot(x1, y1, z1, a, args, 2, np.identity(3), True)
 TwoD_plot(x, y, u, v, 'z')
 
 #%%
-def loadBField(filePath):
-    savedArrays = np.load(filePath)
-    x = savedArrays["x"]
-    y = savedArrays["y"]
-    z = savedArrays["z"]
-    u = savedArrays["u"]
-    v = savedArrays["v"]
-    w = savedArrays["w"]
-    
-    return x, y, z, u, v, w
 
+xn, yn, zn, un, vn, wn = loadBField('Output/dipole_nick_fieldaligned.npz')
 
-xn, yn, zn, un, vn, wn = loadBField('dipole_nick_fieldaligned.npz')
-
-xc, yc, zc, uc, vc, wc = reshape(x, y, z, u, v, w, 4, 4, 4)
+xc, yc, zc, uc, vc, wc = reshapeCN(x, y, z, u, v, w, 4, 4, 4)
 
 #%%
 
