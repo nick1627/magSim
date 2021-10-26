@@ -242,7 +242,9 @@ def Get_B_sph(r, theta, phi, a, args, n):
                     B_phi = (1 / np.sin(i)) * (phi01 + phi11 + phi02 + phi12 + phi22)
                     
                     B = np.array([B_r, B_theta, B_phi])
-            
+                    
+                    print(B)
+                    
                     x, y, z = Sph_to_Cart(k, i, j)        
             
                     u = (np.sin(i)*np.cos(j) * B[0]) + (np.cos(i)*np.cos(j) * B[1])\
@@ -540,7 +542,7 @@ def Get_B_cart_rot(x, y, z, a, args, n, R, planet = None):
             for i in y:
                 for j in z:
                     xyz = np.array([k, i, j])
-                    x_r, y_r, z_r = np.matmul(R, xyz)
+                    x_r, y_r, z_r = np.matmul(np.linalg.inv(R), xyz)
                     r, theta, phi = Cart_to_Sph(x_r, y_r, z_r)
                     
                     r01 = (2 * ((a / r) ** 3)) * (args[0] * Pnm(1, 0, theta))
@@ -585,7 +587,7 @@ def Get_B_cart_rot(x, y, z, a, args, n, R, planet = None):
                     w = (np.cos(theta) * B[0]) + (-np.sin(theta) * B[1])
                     
                     B_rot = np.array([u, v, w])
-                    B_f = np.matmul(np.linalg.inv(R), B_rot)
+                    B_f = np.matmul(R, B_rot)
                     
                     if planet == True:
                     
