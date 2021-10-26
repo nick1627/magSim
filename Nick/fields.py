@@ -230,7 +230,7 @@ class Field:
 
 
         
-        
+        print(biggestLength)
         # u = scaleOverride*scale*u
         # v = scaleOverride*scale*v
         # w = scaleOverride*scale*w
@@ -306,14 +306,24 @@ class SHField(Field):
             #g10 = z, g11 = x, h11 = y
             zF = np.array([self.g[0, 1], self.h[0, 1], self.g[0, 0]]) #z axis in new system
             zF = zF/np.linalg.norm(zF) #should now be unit vector
+            
             zR = np.array([0, 0, 1])
 
             xF = np.cross(zF, zR)
+            xF = xF/np.linalg.norm(xF)
+
             yF = np.cross(zF, xF)
+            yF = yF/np.linalg.norm(yF)
+
 
             self.R = np.transpose(np.vstack((xF, yF, zF)))
 
+            # print(np.linalg.norm(self.R[:, 2]))
+
             self.Rinv = np.linalg.inv(self.R)
+
+
+            # print(np.matmul(self.R, self.Rinv))
 
         return
  
@@ -374,8 +384,8 @@ class SHField(Field):
         #Assume spherical coordinate system
         #we want positions in r, theta, phi 
 
-        r = np.sqrt(pow(rvec[0], 2) + pow(rvec[1], 2) + pow(rvec[2], 2))
-        theta = np.arctan2(np.sqrt(pow(rvec[0], 2) + pow(rvec[1], 2)), rvec[2])
+        r = np.sqrt(np.power(rvec[0], 2) + np.power(rvec[1], 2) + np.power(rvec[2], 2))
+        theta = np.arctan2(np.sqrt(np.power(rvec[0], 2) + np.power(rvec[1], 2)), rvec[2])
         phi = np.arctan2(rvec[1], rvec[0])
 
         #Analytical form given by Connerney (1993)
@@ -402,8 +412,8 @@ class SHField(Field):
 
         #Now need to recover cartesian mag field components
         Bspherical = np.array([Br, Btheta, Bphi])
-        T = np.array([[np.sin(theta)*np.cos(phi),   np.cos(theta)*np.cos(phi),  -np.sin(theta)], 
-                        [np.sin(theta)*np.sin(phi), np.cos(theta)*np.sin(phi),  np.cos(theta)],
+        T = np.array([[np.sin(theta)*np.cos(phi),   np.cos(theta)*np.cos(phi),  -np.sin(phi)], 
+                        [np.sin(theta)*np.sin(phi), np.cos(theta)*np.sin(phi),  np.cos(phi)],
                         [np.cos(theta),             -np.sin(theta),             0]])
 
         Bcartesian = np.matmul(T, Bspherical)
@@ -412,6 +422,15 @@ class SHField(Field):
         Bcartesian = np.matmul(self.Rinv, Bcartesian)
 
         return np.array(Bcartesian)
+
+
+class OTDField(Field):
+    def __init__(self, m):
+        self.m = m
+
+    def getField(self, rvec):
+        r = np.linalg.norm(rvec)
+        return -(1/np.power(r, 3))*self.m + (3/np.power(r, 5))*np.dot(self.m, rvec)*rvec
 
 
 class UniformField(Field):
