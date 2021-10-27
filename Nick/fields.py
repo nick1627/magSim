@@ -3,6 +3,7 @@ Module for storing magnetic field code.
 
 There is an overarching class called Field, from which SHField is derived (along with other fields)
 
+TODO:  make sure code can handle field at pole somehow
 
 """
 
@@ -17,23 +18,27 @@ class Field:
         #     #basic field superclass to deal with coordinate system conversions
         #     #we assume that the field wants to be in cartesian at the base level
         return
-    
-    def polarToCartesianB(self, B):
-        #input B in the form Br, Btheta, Bphi in a vector B
-        #output Bx, By, Bz
-        Bx = B[0]*np.sin(B[1])*np.cos(B[2])
-        By = B[0]*np.sin(B[1])*np.sin(B[2])
-        Bz = B[0]*np.cos(B[1])
 
-        return np.array([Bx, By, Bz])
+    def convertCartesianToPolar(self, rvec):
+        #converts vectors from the origin only
+        
+        r = np.sqrt(rvec[0]**2 + rvec[1]**2 + rvec[2]**2)
+        theta = np.arctan2(np.sqrt(rvec[0]**2 + rvec[1]**2), rvec[2])
+        phi = np.arctan2(rvec[1], rvec[0])
 
-    def cartesianToPolarB(self, B):
+        return np.array([r, theta, phi])
 
-        Br = np.sqrt(B[0]**2 + B[1]**2 + B[2]**2)
-        Btheta = np.arctan2(np.sqrt(B[0]**2 + B[1]**2), B[2])
-        Bphi = np.arctan2(B[1], B[0])
 
-        return np.array([Br, Btheta, Bphi])
+    def convertPolarToCartesian(self, rvec, theta, phi):
+        #rvec is the components of the vector to be converted in order (a, b, c) for a*rhat + b*theta hat + c*phihat
+        #For vectors from the origin, rvec should read (r, 0, 0), but theta and phi must be given too
+
+        T = np.array([[np.sin(theta)*np.cos(phi),   np.cos(theta)*np.cos(phi),  -np.sin(phi)], 
+                        [np.sin(theta)*np.sin(phi), np.cos(theta)*np.sin(phi),  np.cos(phi)],
+                        [np.cos(theta),             -np.sin(theta),             0]])
+
+        return np.matmul(T, rvec)
+
 
     def getField(self, posVec):
         #This is a placeholder
@@ -265,6 +270,10 @@ class Field:
 
 
 
+    
+
+
+
 class SHField(Field):
     def __init__(self, radius, g, h, g_error, h_error):
         #This is a planetary magnetic field using the spherical harmonic method
@@ -412,16 +421,100 @@ class SHField(Field):
 
         #Now need to recover cartesian mag field components
         Bspherical = np.array([Br, Btheta, Bphi])
-        T = np.array([[np.sin(theta)*np.cos(phi),   np.cos(theta)*np.cos(phi),  -np.sin(phi)], 
-                        [np.sin(theta)*np.sin(phi), np.cos(theta)*np.sin(phi),  np.cos(phi)],
-                        [np.cos(theta),             -np.sin(theta),             0]])
 
-        Bcartesian = np.matmul(T, Bspherical)
+        Bcartesian = self.convertPolarToCartesian(Bspherical, theta, phi)
 
         #Now need to convert back to the desired frame
         Bcartesian = np.matmul(self.Rinv, Bcartesian)
 
         return np.array(Bcartesian)
+
+    def getLongitudePlaneB(self, rMax, phi, N, planetaryFilter = True):
+        #rMax is the maximum r to plot out to in  units of self.a
+        #phi is the particular longitude to plot at in radians
+        #planetaryFilter tells teh function whether or not to plot where the planet is
+        #N is the  number of points on the side length of the rMax x rMax grid, inclusive of endpoints
+        
+        B = np.zeros((2*N, N, 3))
+        latticeVecAxial = np.array([0, 0, self.a*rMax/(2*N-1)])
+        l = self.a*rMax/(N-1)
+        latticeVecRho = np.array([l*np.cos(phi), l*np.sin(phi), 0])
+        startVec = -0.5*(2*N - 1)*latticeVecAxial
+        for i in range(0, np.shape(B)[0]):
+            for j in range(0, np.shape(B)[1]):
+                r = startVec + i*latticeVecAxial + j*latticeVecRho
+                if planetaryFilter:
+                    if np.linalg.norm(r) < self.a:
+                        B[i, j] = np.zeros((3))
+                    else:
+                        B[i, j] = self.getField(r)
+                else:
+                    B[i, j] = self.getField(r)
+        
+        return B
+
+
+    
+    def getLongitudePlanesB(self, deltaPhi, rMax, N, planetaryFilter = True):
+        #deltaPhi in degrees
+        deltaPhi = np.abs(deltaPhi)
+        deltaPhi = np.pi/180 * deltaPhi
+        noPlanes = int(np.round(2*np.pi/deltaPhi))
+        planeData = np.zeros((noPlanes, 2*N, N, 3))
+        for p in range(0, noPlanes):
+            phi = p*deltaPhi
+            planeData[p] = self.getLongitudePlaneB(rMax, phi, N, planetaryFilter)
+            
+        return planeData
+        
+
+    def plotLongitudePlanesB(self, deltaPhi, rMax, N, planetaryFilter = True):
+        return
+
+    def plotDeviationData(self, deltaPhi, rMax, N):
+        #This function plots data about how the field deviates from that of a dipole.
+        #To do this, we temporarily reset self.nMax
+
+        #deltaPhi in degrees
+
+        #Assume the field has been rotated to F, but it shouldn't be a problem if it's in R
+
+        #First get the dipole data
+        true_nMax = self.nMax
+        self.nMax = 1
+
+        dipolePlanes = self.getLongitudePlanesB(deltaPhi, rMax, N, planetaryFilter=True)
+
+        #Now set nMax back to the full field
+        self.nMax = true_nMax
+
+        quadrupolePlanes = self.getLongitudePlanesB(deltaPhi, rMax, N, planetaryFilter=True)
+
+        #Now can do maths on the planes to figure out where the important features should be
+        
+        
+        differencePlanes = quadrupolePlanes - dipolePlanes
+        differencePlanesMag = np.linalg.norm(differencePlanes, axis = 3)
+        dipolePlanesMag = np.linalg.norm(dipolePlanes, axis = 3)
+        
+
+        ratioPlanes = differencePlanesMag/dipolePlanesMag
+        ratioPlanes = np.nan_to_num(ratioPlanes) #replace nan with 0.0
+
+        maxRatioQ_D = np.amax(ratioPlanes, axis = 2)
+        maxRatioQ_D = np.amax(maxRatioQ_D, axis = 1)
+
+        ax3 = plt.figure().add_subplot()
+        xAxis = np.arange(0, 360, deltaPhi)
+        ax3.plot(xAxis, maxRatioQ_D)
+        ax3.set_xlabel("Longitude (º)")
+        ax3.set_ylabel("Maximum ratio of absolute deviation from dipole against dipole field")
+        ax3.set_title("Field Deviation")
+
+        
+
+
+
 
 
 class OTDField(Field):
