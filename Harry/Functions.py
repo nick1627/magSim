@@ -5,34 +5,9 @@ Created on Mon Oct 11 11:40:41 2021
 @author: Charalambos Ioannou
 """
 import numpy as np
-
 import matplotlib.pyplot as plt
-
 from mpl_toolkits.mplot3d import Axes3D
 
-# def matmul(X, Y):
-    
-#     if isinstance(Y[0], float) == True:
-        
-#         result = np.zeros(len(Y))
-        
-#         for i in range(len(X)):
-#            # iterate through columns of Y
-            
-#            for k in range(len(Y)):
-#                    result[i] += X[i][k] * Y[k]
-    
-#     else:
-#         result = np.zeros((len(X), len(Y)))
-#         for i in range(len(X)):
-#            # iterate through columns of Y
-            
-#            for j in range(len(Y[0])):
-#                # iterate through rows of Y
-#                for k in range(len(Y)):
-#                    result[i][j] += X[i][k] * Y[k][j]
-    
-#     return result
     
 def Cart_to_Sph(x, y, z):
     """
@@ -217,9 +192,9 @@ def Get_B_sph(r, theta, phi, a, args, n):
                     x, y, z = Sph_to_Cart(k, i, j)        
             
                     u = (np.sin(i)*np.cos(j) * B[0]) + (np.cos(i)*np.cos(j) * B[1])\
-                        + (-np.sin(i) * B[2])
+                        + (-np.sin(j) * B[2])
                     v = (np.sin(i)*np.sin(j) * B[0]) + (np.cos(i)*np.sin(j) * B[1])\
-                        +  (np.cos(i) * B[2])
+                        +  (np.cos(j) * B[2])
                     w = (np.cos(i) * B[0]) + (-np.sin(i) * B[1])
             
                     x_all.append(x)
@@ -267,13 +242,15 @@ def Get_B_sph(r, theta, phi, a, args, n):
                     B_phi = (1 / np.sin(i)) * (phi01 + phi11 + phi02 + phi12 + phi22)
                     
                     B = np.array([B_r, B_theta, B_phi])
-            
+                    
+                    print(B)
+                    
                     x, y, z = Sph_to_Cart(k, i, j)        
             
                     u = (np.sin(i)*np.cos(j) * B[0]) + (np.cos(i)*np.cos(j) * B[1])\
-                        + (-np.sin(i) * B[2])
+                        + (-np.sin(j) * B[2])
                     v = (np.sin(i)*np.sin(j) * B[0]) + (np.cos(i)*np.sin(j) * B[1])\
-                        +  (np.cos(i) * B[2])
+                        +  (np.cos(j) * B[2])
                     w = (np.cos(i) * B[0]) + (-np.sin(i) * B[1])
             
                     x_all.append(x)
@@ -361,9 +338,9 @@ def Get_B_cart(x, y, z, a, args, n, planet = None):
                     B = np.array([B_r, B_theta, B_phi])        
             
                     u = (np.sin(theta)*np.cos(phi) * B[0]) + (np.cos(theta)*np.cos(phi) * B[1])\
-                        + (-np.sin(theta) * B[2])
+                        + (-np.sin(phi) * B[2])
                     v = (np.sin(theta)*np.sin(phi) * B[0]) + (np.cos(theta)*np.sin(phi) * B[1])\
-                        +  (np.cos(theta) * B[2])
+                        +  (np.cos(phi) * B[2])
                     w = (np.cos(theta) * B[0]) + (-np.sin(theta) * B[1])   
                     
                     if planet == True:
@@ -426,9 +403,9 @@ def Get_B_cart(x, y, z, a, args, n, planet = None):
                     B = np.array([B_r, B_theta, B_phi])        
                     
                     u = (np.sin(theta)*np.cos(phi) * B[0]) + (np.cos(theta)*np.cos(phi) * B[1])\
-                        + (-np.sin(theta) * B[2])
+                        + (-np.sin(phi) * B[2])
                     v = (np.sin(theta)*np.sin(phi) * B[0]) + (np.cos(theta)*np.sin(phi) * B[1])\
-                        +  (np.cos(theta) * B[2])
+                        +  (np.cos(phi) * B[2])
                     w = (np.cos(theta) * B[0]) + (-np.sin(theta) * B[1])
                     
                     if planet == True:
@@ -533,9 +510,9 @@ def Get_B_cart_rot(x, y, z, a, args, n, R, planet = None):
                     B = np.array([B_r, B_theta, B_phi])        
             
                     u = (np.sin(theta)*np.cos(phi) * B[0]) + (np.cos(theta)*np.cos(phi) * B[1])\
-                        + (-np.sin(theta) * B[2])
+                        + (-np.sin(phi) * B[2])
                     v = (np.sin(theta)*np.sin(phi) * B[0]) + (np.cos(theta)*np.sin(phi) * B[1])\
-                        +  (np.cos(theta) * B[2])
+                        +  (np.cos(phi) * B[2])
                     w = (np.cos(theta) * B[0]) + (-np.sin(theta) * B[1])   
                     
                     B_rot = np.array([u, v, w])
@@ -565,8 +542,7 @@ def Get_B_cart_rot(x, y, z, a, args, n, R, planet = None):
             for i in y:
                 for j in z:
                     xyz = np.array([k, i, j])
-                    #print(len(xyz))
-                    x_r, y_r, z_r = np.matmul(R, xyz)
+                    x_r, y_r, z_r = np.matmul(np.linalg.inv(R), xyz)
                     r, theta, phi = Cart_to_Sph(x_r, y_r, z_r)
                     
                     r01 = (2 * ((a / r) ** 3)) * (args[0] * Pnm(1, 0, theta))
@@ -605,13 +581,13 @@ def Get_B_cart_rot(x, y, z, a, args, n, R, planet = None):
                     B = np.array([B_r, B_theta, B_phi])       
                     
                     u = (np.sin(theta)*np.cos(phi) * B[0]) + (np.cos(theta)*np.cos(phi) * B[1])\
-                        + (-np.sin(theta) * B[2])
+                        + (-np.sin(phi) * B[2])
                     v = (np.sin(theta)*np.sin(phi) * B[0]) + (np.cos(theta)*np.sin(phi) * B[1])\
-                        +  (np.cos(theta) * B[2])
+                        +  (np.cos(phi) * B[2])
                     w = (np.cos(theta) * B[0]) + (-np.sin(theta) * B[1])
                     
                     B_rot = np.array([u, v, w])
-                    B_f = np.matmul(np.linalg.inv(R), B_rot)
+                    B_f = np.matmul(R, B_rot)
                     
                     if planet == True:
                     
@@ -678,9 +654,9 @@ def getB_fun(x, y, z, a, g, h, n, planet = None):
                 B = np.array([B_r, B_theta, B_phi])        
                     
                 u = (np.sin(theta)*np.cos(phi) * B[0]) + (np.cos(theta)*np.cos(phi) * B[1])\
-                    + (-np.sin(theta) * B[2])
+                    + (-np.sin(phi) * B[2])
                 v = (np.sin(theta)*np.sin(phi) * B[0]) + (np.cos(theta)*np.sin(phi) * B[1])\
-                    +  (np.cos(theta) * B[2])
+                    +  (np.cos(phi) * B[2])
                 w = (np.cos(theta) * B[0]) + (-np.sin(theta) * B[1])
                 
                 if planet == True:
