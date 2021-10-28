@@ -243,8 +243,6 @@ def Get_B_sph(r, theta, phi, a, args, n):
                     
                     B = np.array([B_r, B_theta, B_phi])
                     
-                    print(B)
-                    
                     x, y, z = Sph_to_Cart(k, i, j)        
             
                     u = (np.sin(i)*np.cos(j) * B[0]) + (np.cos(i)*np.cos(j) * B[1])\
@@ -267,6 +265,166 @@ def Get_B_sph(r, theta, phi, a, args, n):
     v_all = np.array(v_all)
     w_all = np.array(w_all) 
     
+    return x_all, y_all, z_all, u_all, v_all, w_all
+
+def Get_B_sph_rot(r_in, theta_in, phi_in, a, args, n, R):
+    """
+    Calculates the B field given spherical harmonic coordinates for n = 1.
+    The return values are in Cartesian coordinates.
+
+    Parameters
+    ----------
+   r : array
+        radius.
+    theta : array
+        inclinatiom.
+    phi : array
+        azimuth.
+    a : float
+        planet radius.
+    g01 : float
+        g01 coefficient.
+    g11 : float
+        g11 coefficient.
+    h11 : float
+        h11 coefficient.
+
+    Returns
+    -------
+    x : array
+        x-coordinates.
+    y : array
+        y-coordinates.
+    z : array
+        z-coordinates.
+    u : array
+        Bx.
+    v : array
+        By.
+    w : array
+        Bz.
+
+    """
+  
+    x_all = []
+    y_all = []
+    z_all = []
+    u_all = []
+    v_all = []
+    w_all = []
+    
+    if n == 1:
+        for i in r_in:
+            for j in theta_in:
+                for k in phi_in:
+                    x, y, z = Sph_to_Cart(i, j, k)
+                    xyz = np.array([x, y, z])
+                    x_r, y_r, z_r = np.matmul(np.linalg.inv(R), xyz)
+                    r, theta, phi = Cart_to_Sph(x_r, y_r, z_r)
+                    
+                    r01 = (2 * ((a / r) ** 3)) * (args[0] * Pnm(1, 0, theta))
+                    r11 = (2 * ((a / r) ** 3)) * ((args[1] * np.cos(phi)) + \
+                                        (args[2] * np.sin(phi))) * Pnm(1, 1, theta)
+                    
+                    B_r = r01 + r11
+                    
+                    theta01 = ((a / r) ** 3) * (args[0] * (dPnm(1, 0, theta)))
+                    theta11 = ((a / r) ** 3) * ((args[1] * np.cos(phi)) + \
+                                      (args[2] * np.sin(phi))) * dPnm(1, 1, theta)
+                    
+                    B_theta = - (theta01 + theta11)
+                    
+                    phi01 = 0
+                    phi11 = ((a / r) ** (3)) * ((args[1] * np.sin(phi)) - (args[2] * np.cos(phi))) \
+                                                    * Pnm(1, 1, theta)
+                    
+                    B_phi = (1 / np.sin(theta)) * (phi01 + phi11)
+                    
+                    B = np.array([B_r, B_theta, B_phi])        
+            
+                    u = (np.sin(theta)*np.cos(phi) * B[0]) + (np.cos(theta)*np.cos(phi) * B[1])\
+                        + (-np.sin(phi) * B[2])
+                    v = (np.sin(theta)*np.sin(phi) * B[0]) + (np.cos(theta)*np.sin(phi) * B[1])\
+                        +  (np.cos(phi) * B[2])
+                    w = (np.cos(theta) * B[0]) + (-np.sin(theta) * B[1])   
+                    
+                    B_rot = np.array([u, v, w])
+                    B_f = np.matmul(R, B_rot)
+                    
+                    x_all.append(x)
+                    y_all.append(y)
+                    z_all.append(z)
+                    u_all.append(B_f[0])
+                    v_all.append(B_f[1])
+                    w_all.append(B_f[2])
+    
+    if n == 2:
+        for i in r_in:
+            for j in theta_in:
+                for k in phi_in:
+                    x, y, z = Sph_to_Cart(i, j, k)
+                    xyz = np.array([x, y, z])
+                    x_r, y_r, z_r = np.matmul(np.linalg.inv(R), xyz)
+                    r, theta, phi = Cart_to_Sph(x_r, y_r, z_r)
+                    
+                    r01 = (2 * ((a / r) ** 3)) * (args[0] * Pnm(1, 0, theta))
+                    r11 = (2 * ((a / r) ** 3)) * ((args[1] * np.cos(phi)) + \
+                                        (args[2] * np.sin(phi))) * Pnm(1, 1, theta)
+                    r02 = (3 * ((a / r) ** 4)) * (args[3] * Pnm(2, 0, theta))
+                    r12 = (3 * ((a / r) ** 4)) * ((args[4] * np.cos(phi)) + \
+                                        (args[5] * np.sin(phi))) * Pnm(2, 1, theta)
+                    r22 = (3 * ((a / r) ** 4)) * ((args[6] * np.cos(2 * phi)) + \
+                                        (args[7] * np.sin(2 * phi))) * Pnm(2, 2, theta)
+                    
+                    B_r = r01 + r11 + r02 + r12 + r22
+                    
+                    theta01 = ((a / r) ** 3) * (args[0] * (dPnm(1, 0, theta)))
+                    theta11 = ((a / r) ** 3) * ((args[1] * np.cos(phi)) + \
+                                      (args[2] * np.sin(phi))) * dPnm(1, 1, theta)
+                    theta02 = ((a / r) ** 4) * (args[3] * dPnm(2, 0, theta))
+                    theta12 = ((a / r) ** 4) * ((args[4] * np.cos(phi)) + \
+                                        (args[5] * np.sin(phi))) * dPnm(2, 1, theta)
+                    theta22 = ((a / r) ** 4) * ((args[6] * np.cos(2 * phi)) + \
+                                        (args[7] * np.sin(2 * phi))) * dPnm(2, 2, theta)
+                    
+                    B_theta = - (theta01 + theta11 + theta02 + theta12 + theta22)
+                    
+                    phi01 = 0
+                    phi11 = ((a / r) ** (3)) * ((args[1] * np.sin(phi)) - (args[2] * np.cos(phi))) \
+                                                    * Pnm(1, 1, theta)
+                    phi02 = 0
+                    phi12 = ((a / r) ** 4) * ((args[4] * np.sin(phi)) - \
+                                        (args[5] * np.cos(phi))) * Pnm(2, 1, theta)
+                    phi22 = (2 * ((a / r) ** 4)) * ((args[6] * np.sin(2 * phi)) - \
+                                        (args[7] * np.cos(2 * phi))) * Pnm(2, 2, theta)
+                    
+                    B_phi = (1 / np.sin(theta)) * (phi01 + phi11 + phi02 + phi12 + phi22)
+                    
+                    B = np.array([B_r, B_theta, B_phi])       
+                    
+                    u = (np.sin(theta)*np.cos(phi) * B[0]) + (np.cos(theta)*np.cos(phi) * B[1])\
+                        + (-np.sin(phi) * B[2])
+                    v = (np.sin(theta)*np.sin(phi) * B[0]) + (np.cos(theta)*np.sin(phi) * B[1])\
+                        +  (np.cos(phi) * B[2])
+                    w = (np.cos(theta) * B[0]) + (-np.sin(theta) * B[1])
+                    
+                    B_rot = np.array([u, v, w])
+                    B_f = np.matmul(R, B_rot)
+                    
+                    x_all.append(x)
+                    y_all.append(y)
+                    z_all.append(z)
+                    u_all.append(B_f[0])
+                    v_all.append(B_f[1])
+                    w_all.append(B_f[2])
+                    
+    x_all = np.array(x_all) / a
+    y_all = np.array(y_all) / a
+    z_all = np.array(z_all) / a
+    u_all = np.array(u_all)
+    v_all = np.array(v_all)
+    w_all = np.array(w_all)
+                    
     return x_all, y_all, z_all, u_all, v_all, w_all
 
 def Get_B_cart(x, y, z, a, args, n, planet = None):
@@ -486,7 +644,7 @@ def Get_B_cart_rot(x, y, z, a, args, n, R, planet = None):
                 for j in z:
                     xyz = np.array([k, i, j])
                     #print(len(xyz))
-                    x_r, y_r, z_r = np.matmul(R, xyz)
+                    x_r, y_r, z_r = np.matmul(np.linalg.inv(R), xyz)
                     r, theta, phi = Cart_to_Sph(x_r, y_r, z_r)
                     
                     r01 = (2 * ((a / r) ** 3)) * (args[0] * Pnm(1, 0, theta))
@@ -516,7 +674,7 @@ def Get_B_cart_rot(x, y, z, a, args, n, R, planet = None):
                     w = (np.cos(theta) * B[0]) + (-np.sin(theta) * B[1])   
                     
                     B_rot = np.array([u, v, w])
-                    B_f = np.matmul(np.linalg.inv(R), B_rot)
+                    B_f = np.matmul(R, B_rot)
                     
                     if planet == True:
                     
