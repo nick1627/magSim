@@ -1004,14 +1004,16 @@ def B_mag_cart(x1, z1, a, args, n, R, phi, matrix = True):
     
     B_mag = np.sqrt((u * u) + (v * v) + (w * w))
 
-    # x = x.reshape((len(x1), len(z1)))
-    # z = z.reshape((len(x1), len(z1)))
-    # u = u.reshape((len(x1), len(z1)))
-    # w = w.reshape((len(x1), len(z1)))
+    x = x.reshape((len(x1), len(z1)))
+    y = y.reshape((len(x1), len(z1)))
+    z = z.reshape((len(x1), len(z1)))
+    u = u.reshape((len(x1), len(z1)))
+    v = v.reshape((len(x1), len(z1)))
+    w = w.reshape((len(x1), len(z1)))
     if matrix == True:
         B_mag = B_mag.reshape((len(x1), len(z1))).T
     
-    return B_mag
+    return x, y, z, u, v, w
 
 def B_spin_aligned(r, theta, phi, a, args, n, R):
     x, y, z, u, v, w = Get_B_sph_rot(r, theta, phi, a, args, n, R)
