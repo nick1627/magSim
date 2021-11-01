@@ -57,9 +57,16 @@ UField.rotate("Field")
 # UField.plotLongitudePlanesB(5, 5, 10)
 
 B, r = UField.getLongitudePlaneB(5, 0, 10)
-print(B)
+x = r[:, :, 0]
+y = r[:, :, 1]
+z = r[:, :, 2]
+u = B[:, :, 0]
+v = B[:, :, 1]
+w = B[:, :, 2]
 
-savedArrays = np.load("Output/complete_field_phi=0_CI.npz")
+xH, yH, zH, uH, vH, wH = tools.loadBField("Output/complete_field_phi=0_CI.npz")
+
+print(u - uH)
 
 plt.show()
 
