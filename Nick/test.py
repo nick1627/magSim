@@ -53,7 +53,11 @@ UField.rotate("Field")
 # print(np.sqrt(a[3][4, 4]**2 + a[4][4, 4]**2 + a[5][4, 4]**2))
 # print(np.sqrt(b[3][4, 4]**2 + b[4][4, 4]**2 + b[5][4, 4]**2))
 
-UField.plotDeviationData(1, 5, 10)
+# UField.plotDeviationData(1, 5, 10)
+# UField.plotLongitudePlanesB(5, 5, 10)
+
+B = UField.getLongitudePlaneB(5, 0, 10)
+print(B)
 
 plt.show()
 

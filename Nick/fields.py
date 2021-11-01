@@ -10,6 +10,7 @@ TODO:  make sure code can handle field at pole somehow
 import numpy as np
 import pyshtools as sh
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 
 class Field:
     def __init__(self):
@@ -235,12 +236,11 @@ class Field:
 
 
         
-        print(biggestLength)
         # u = scaleOverride*scale*u
         # v = scaleOverride*scale*v
         # w = scaleOverride*scale*w
 
-        #Now we plot the vectors.  1 unit of B takes the lenght of biggestLength/vecLength metres (since x in metres)
+        # Now we plot the vectors.  1 unit of B takes the lenght of biggestLength/vecLength metres (since x in metres)
 
         if vectors == "3D":
             ax2 = plt.figure().add_subplot(projection = "3d")
@@ -327,12 +327,8 @@ class SHField(Field):
 
             self.R = np.transpose(np.vstack((xF, yF, zF)))
 
-            # print(np.linalg.norm(self.R[:, 2]))
 
             self.Rinv = np.linalg.inv(self.R)
-
-
-            # print(np.matmul(self.R, self.Rinv))
 
         return
  
@@ -468,7 +464,23 @@ class SHField(Field):
         return planeData
         
 
-    def plotLongitudePlanesB(self, deltaPhi, rMax, N, planetaryFilter = True):
+    def plotLongitudePlanesB(self, deltaPhi, rMax, N, planetaryFilter = True, animate = True):
+        quadrupolePlanes = self.getLongitudePlanesB(deltaPhi, rMax, N, planetaryFilter=True)
+        
+        counter = 0
+
+        def getFrame(fig, data, counter):
+            fig.imshow(data[counter])
+            return
+        
+
+        fig = plt.figure(4)
+        getFrame(fig, quadrupolePlanes, counter)
+        ani = FuncAnimation(fig, getFrame, frames = np.arange(0, 360 + deltaPhi, deltaPhi))
+
+        plt.show()
+
+
         return
 
     def plotDeviationData(self, deltaPhi, rMax, N):
@@ -492,15 +504,19 @@ class SHField(Field):
 
         #Now can do maths on the planes to figure out where the important features should be
         
-        
+        #Find difference between field with quadrupole and field without
         differencePlanes = quadrupolePlanes - dipolePlanes
+        #Get magnitude of this quadrupole only field
         differencePlanesMag = np.linalg.norm(differencePlanes, axis = 3)
+        #Get magnitude of dipole only field
         dipolePlanesMag = np.linalg.norm(dipolePlanes, axis = 3)
         
-
+        #Find ratio at each point
         ratioPlanes = differencePlanesMag/dipolePlanesMag
+        #Replace any nan with 0.0
         ratioPlanes = np.nan_to_num(ratioPlanes) #replace nan with 0.0
 
+        #Find maxiumum on each axis until we have the maximum at each 
         maxRatioQ_D = np.amax(ratioPlanes, axis = 2)
         maxRatioQ_D = np.amax(maxRatioQ_D, axis = 1)
 
