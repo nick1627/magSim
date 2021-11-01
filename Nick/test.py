@@ -56,8 +56,10 @@ UField.rotate("Field")
 # UField.plotDeviationData(1, 5, 10)
 # UField.plotLongitudePlanesB(5, 5, 10)
 
-B = UField.getLongitudePlaneB(5, 0, 10)
+B, r = UField.getLongitudePlaneB(5, 0, 10)
 print(B)
+
+savedArrays = np.load("Output/complete_field_phi=0_CI.npz")
 
 plt.show()
 

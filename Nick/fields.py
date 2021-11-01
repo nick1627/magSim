@@ -432,22 +432,26 @@ class SHField(Field):
         #N is the  number of points on the side length of the rMax x rMax grid, inclusive of endpoints
         
         B = np.zeros((2*N, N, 3))
+        r = np.zeros(np.shape(B))
+        
+
         latticeVecAxial = np.array([0, 0, self.a*rMax/(2*N-1)])
         l = self.a*rMax/(N-1)
         latticeVecRho = np.array([l*np.cos(phi), l*np.sin(phi), 0])
         startVec = -0.5*(2*N - 1)*latticeVecAxial
         for i in range(0, np.shape(B)[0]):
             for j in range(0, np.shape(B)[1]):
-                r = startVec + i*latticeVecAxial + j*latticeVecRho
+                current_r = startVec + i*latticeVecAxial + j*latticeVecRho
+                r[i, j] = current_r
                 if planetaryFilter:
                     if np.linalg.norm(r) < self.a:
                         B[i, j] = np.zeros((3))
                     else:
-                        B[i, j] = self.getField(r)
+                        B[i, j] = self.getField(current_r)
                 else:
-                    B[i, j] = self.getField(r)
+                    B[i, j] = self.getField(current_r)
         
-        return B
+        return B, r
 
 
     
@@ -456,16 +460,17 @@ class SHField(Field):
         deltaPhi = np.abs(deltaPhi)
         deltaPhi = np.pi/180 * deltaPhi
         noPlanes = int(np.round(2*np.pi/deltaPhi))
-        planeData = np.zeros((noPlanes, 2*N, N, 3))
+        planeBData = np.zeros((noPlanes, 2*N, N, 3))
+        planerData = np.zeros(np.shape(planeBData))
         for p in range(0, noPlanes):
             phi = p*deltaPhi
-            planeData[p] = self.getLongitudePlaneB(rMax, phi, N, planetaryFilter)
+            planeBData[p], planerData[p] = self.getLongitudePlaneB(rMax, phi, N, planetaryFilter)
             
-        return planeData
+        return planeBData, planerData
         
 
     def plotLongitudePlanesB(self, deltaPhi, rMax, N, planetaryFilter = True, animate = True):
-        quadrupolePlanes = self.getLongitudePlanesB(deltaPhi, rMax, N, planetaryFilter=True)
+        quadrupolePlanes, positionData = self.getLongitudePlanesB(deltaPhi, rMax, N, planetaryFilter=True)
         
         counter = 0
 
@@ -495,12 +500,12 @@ class SHField(Field):
         true_nMax = self.nMax
         self.nMax = 1
 
-        dipolePlanes = self.getLongitudePlanesB(deltaPhi, rMax, N, planetaryFilter=True)
+        dipolePlanes, positionData = self.getLongitudePlanesB(deltaPhi, rMax, N, planetaryFilter=True)
 
         #Now set nMax back to the full field
         self.nMax = true_nMax
 
-        quadrupolePlanes = self.getLongitudePlanesB(deltaPhi, rMax, N, planetaryFilter=True)
+        quadrupolePlanes, positionData = self.getLongitudePlanesB(deltaPhi, rMax, N, planetaryFilter=True)
 
         #Now can do maths on the planes to figure out where the important features should be
         
