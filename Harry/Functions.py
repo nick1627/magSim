@@ -844,6 +844,219 @@ def getB_fun(x, y, z, a, g, h, n, planet = None):
                 
     return x_all, y_all, z_all, u_all, v_all, w_all
 
+def B_aligned_cart(x, z, a, args, n, R, phi_rot):
+   
+    x_all = []
+    y_all = []
+    z_all = []
+    u_all = []
+    v_all = []
+    w_all = []
+    
+    if n == 1:
+    
+        for k in x:
+            for j in z:
+                xyz = np.array([k, 0, j])
+                R_z = np.array([[np.cos(phi_rot), - np.sin(phi_rot), 0],
+                               [np.sin(phi_rot), np.cos(phi_rot), 0],
+                               [0, 0, 1]])
+                
+                xyz2 = np.matmul(R_z, xyz)
+                
+                x_r, y_r, z_r = np.matmul(np.linalg.inv(R), xyz2)
+                r, theta, phi = Cart_to_Sph(x_r, y_r, z_r)
+                
+                r01 = (2 * ((a / r) ** 3)) * (args[0] * Pnm(1, 0, theta))
+                r11 = (2 * ((a / r) ** 3)) * ((args[1] * np.cos(phi)) + \
+                                    (args[2] * np.sin(phi))) * Pnm(1, 1, theta)
+                
+                B_r = r01 + r11
+                
+                theta01 = ((a / r) ** 3) * (args[0] * (dPnm(1, 0, theta)))
+                theta11 = ((a / r) ** 3) * ((args[1] * np.cos(phi)) + \
+                                  (args[2] * np.sin(phi))) * dPnm(1, 1, theta)
+                
+                B_theta = - (theta01 + theta11)
+                
+                phi01 = 0
+                phi11 = ((a / r) ** (3)) * ((args[1] * np.sin(phi)) - (args[2] * np.cos(phi))) \
+                                                * Pnm(1, 1, theta)
+                
+                B_phi = (1 / np.sin(theta)) * (phi01 + phi11)
+                
+                B = np.array([B_r, B_theta, B_phi])        
+        
+                u = (np.sin(theta)*np.cos(phi) * B[0]) + (np.cos(theta)*np.cos(phi) * B[1])\
+                    + (-np.sin(phi) * B[2])
+                v = (np.sin(theta)*np.sin(phi) * B[0]) + (np.cos(theta)*np.sin(phi) * B[1])\
+                    +  (np.cos(phi) * B[2])
+                w = (np.cos(theta) * B[0]) + (-np.sin(theta) * B[1])   
+                
+                B_rot = np.array([u, v, w])
+                B_f = np.matmul(R, B_rot)
+                
+                if np.sqrt((k * k) + (j * j)) > a:
+                    
+                    x_all.append(k / a)
+                    y_all.append(xyz2[1] / a)
+                    z_all.append(j / a)
+                    u_all.append(B_f[0])
+                    v_all.append(B_f[1])
+                    w_all.append(B_f[2])
+                
+                else:
+                    
+                    x_all.append(float("NaN"))
+                    y_all.append(float("NaN"))
+                    z_all.append(float("NaN"))
+                    u_all.append(float("NaN"))
+                    v_all.append(float("NaN"))
+                    w_all.append(float("NaN"))
+                    
+    if n == 2:
+        for k in x:
+            for j in z:
+                xyz = np.array([k, 0, j])
+                R_z = np.array([[np.cos(phi_rot), - np.sin(phi_rot), 0],
+                               [np.sin(phi_rot), np.cos(phi_rot), 0],
+                               [0, 0, 1]])
+                
+                xyz2 = np.matmul(R_z, xyz)
+                
+                x_r, y_r, z_r = np.matmul(np.linalg.inv(R), xyz2)
+                r, theta, phi = Cart_to_Sph(x_r, y_r, z_r)
+                
+                r01 = (2 * ((a / r) ** 3)) * (args[0] * Pnm(1, 0, theta))
+                r11 = (2 * ((a / r) ** 3)) * ((args[1] * np.cos(phi)) + \
+                                    (args[2] * np.sin(phi))) * Pnm(1, 1, theta)
+                r02 = (3 * ((a / r) ** 4)) * (args[3] * Pnm(2, 0, theta))
+                r12 = (3 * ((a / r) ** 4)) * ((args[4] * np.cos(phi)) + \
+                                    (args[5] * np.sin(phi))) * Pnm(2, 1, theta)
+                r22 = (3 * ((a / r) ** 4)) * ((args[6] * np.cos(2 * phi)) + \
+                                    (args[7] * np.sin(2 * phi))) * Pnm(2, 2, theta)
+                
+                B_r = r01 + r11 + r02 + r12 + r22
+                
+                theta01 = ((a / r) ** 3) * (args[0] * (dPnm(1, 0, theta)))
+                theta11 = ((a / r) ** 3) * ((args[1] * np.cos(phi)) + \
+                                  (args[2] * np.sin(phi))) * dPnm(1, 1, theta)
+                theta02 = ((a / r) ** 4) * (args[3] * dPnm(2, 0, theta))
+                theta12 = ((a / r) ** 4) * ((args[4] * np.cos(phi)) + \
+                                    (args[5] * np.sin(phi))) * dPnm(2, 1, theta)
+                theta22 = ((a / r) ** 4) * ((args[6] * np.cos(2 * phi)) + \
+                                    (args[7] * np.sin(2 * phi))) * dPnm(2, 2, theta)
+                
+                B_theta = - (theta01 + theta11 + theta02 + theta12 + theta22)
+                
+                phi01 = 0
+                phi11 = ((a / r) ** (3)) * ((args[1] * np.sin(phi)) - (args[2] * np.cos(phi))) \
+                                                * Pnm(1, 1, theta)
+                phi02 = 0
+                phi12 = ((a / r) ** 4) * ((args[4] * np.sin(phi)) - \
+                                    (args[5] * np.cos(phi))) * Pnm(2, 1, theta)
+                phi22 = (2 * ((a / r) ** 4)) * ((args[6] * np.sin(2 * phi)) - \
+                                    (args[7] * np.cos(2 * phi))) * Pnm(2, 2, theta)
+                
+                B_phi = (1 / np.sin(theta)) * (phi01 + phi11 + phi02 + phi12 + phi22)
+                
+                B = np.array([B_r, B_theta, B_phi])       
+                
+                u = (np.sin(theta)*np.cos(phi) * B[0]) + (np.cos(theta)*np.cos(phi) * B[1])\
+                    + (-np.sin(phi) * B[2])
+                v = (np.sin(theta)*np.sin(phi) * B[0]) + (np.cos(theta)*np.sin(phi) * B[1])\
+                    +  (np.cos(phi) * B[2])
+                w = (np.cos(theta) * B[0]) + (-np.sin(theta) * B[1])
+                
+                B_rot = np.array([u, v, w])
+                B_f = np.matmul(R, B_rot)
+                
+                if np.sqrt((k * k) + (j * j)) > a:
+                    
+                    x_all.append(k / a)
+                    y_all.append(xyz2[1] / a)
+                    z_all.append(j / a)
+                    u_all.append(B_f[0])
+                    v_all.append(B_f[1])
+                    w_all.append(B_f[2])
+                    
+                else:
+                    
+                    x_all.append(float("NaN"))
+                    y_all.append(float("NaN"))
+                    z_all.append(float("NaN"))
+                    u_all.append(float("NaN"))
+                    v_all.append(float("NaN"))
+                    w_all.append(float("NaN"))
+                    
+    x_all = np.array(x_all)
+    y_all = np.array(y_all)
+    z_all = np.array(z_all)
+    u_all = np.array(u_all)
+    v_all = np.array(v_all)
+    w_all = np.array(w_all)
+    
+    return x_all, y_all, z_all, u_all, v_all, w_all
+
+def B_mag_cart(x1, z1, a, args, n, R, phi, matrix = True):
+    
+    x, y, z, u, v, w = B_aligned_cart(x1, z1, a, args, n, R, phi)
+    
+    B_mag = np.sqrt((u * u) + (v * v) + (w * w))
+
+    # x = x.reshape((len(x1), len(z1)))
+    # z = z.reshape((len(x1), len(z1)))
+    # u = u.reshape((len(x1), len(z1)))
+    # w = w.reshape((len(x1), len(z1)))
+    if matrix == True:
+        B_mag = B_mag.reshape((len(x1), len(z1))).T
+    
+    return B_mag
+
+def B_spin_aligned(r, theta, phi, a, args, n, R):
+    x, y, z, u, v, w = Get_B_sph_rot(r, theta, phi, a, args, n, R)
+
+    R_z = np.array([[np.cos(-phi[0]), - np.sin(-phi[0]), 0],
+                   [np.sin(-phi[0]), np.cos(-phi[0]), 0],
+                   [0, 0, 1]])
+
+    xyz = np.array([x, y, z])
+    x, y, z = np.matmul(R_z, xyz)
+    uvw = np.array([u, v, w])
+    u, v, w = np.matmul(R_z, uvw)
+    
+    return x, y, z, u, v, w
+
+def B_magnitude(r, theta, phi, a, args, n, R):
+    x, y, z, u, v, w = B_spin_aligned(r, theta, phi, a, args, n, R)
+
+    B_mag = np.sqrt((u * u) + (v * v) + (w * w))
+    
+    xyz = np.array([x, y, z])
+    uvw = np.array([u, v, w])
+    
+    return B_mag, xyz, uvw 
+
+def Get_maxB_ratio(r, theta, phi, a, args, R, plot):
+    B_all = []
+    
+    for i in phi:
+        
+        B_mag_quad = B_magnitude(r, theta, [i], a, args, 2, R)[0]
+        B_mag_dip = B_magnitude(r, theta, [i], a, args, 1, R)[0] 
+    
+        B_ratio = abs((B_mag_quad - B_mag_dip) / B_mag_dip)
+        
+        B_all.append(max(B_ratio))
+    
+    if plot == True:
+        plt.plot(phi * 180 / np.pi, B_all)
+        plt.xlabel('Longitude (degrees)')
+        plt.ylabel('Max ratio')
+        plt.show()    
+    
+    return B_all
+
 def TwoD_plot(x1, x2, y1, y2, plane):
     
     params = {
@@ -939,3 +1152,37 @@ def ThreeD_plot(x, y, z, u, v, w):
     # ax.plot3D(zline * 0, zline * 0, zline, 'red')
     ax.quiver(x, y, z, u, v, w, length=0.4, normalize=True)
     plt.show()
+
+def animate_vector(num, qr, r, theta, a, args, R):
+   phi = np.array([num, num + np.pi])
+
+   x, y, z, u, v, w = Get_B_sph_rot(r, theta, phi, a, args, 2, R)
+   
+   R_z = np.array([[np.cos(-phi[0]), - np.sin(-phi[0]), 0],
+                  [np.sin(-phi[0]), np.cos(-phi[0]), 0],
+                  [0, 0, 1]])
+
+   xyz = np.array([x, y, z])
+   x, y, z = np.matmul(R_z, xyz)
+   uvw = np.array([u, v, w])
+   u, v, w = np.matmul(R_z, uvw)
+   qr.set_UVC(u, w)
+   plt.title('Phi = {} $\pi$'.format(num / np.pi))
+   plt.ylabel('z/α')
+   return qr,
+
+def animate_colourmap_ratio(num, scat, r, theta, a, args, R):
+   phi = [num]
+
+   B_mag_quad, xyz_quad, uvw_quad = B_magnitude(r, theta, phi, a, args, 2, R)
+   B_mag_dip, xyz_dip, uvw_dip = B_magnitude(r, theta, phi, a, args, 1, R)
+
+   B_ratio = abs((B_mag_quad - B_mag_dip) / B_mag_dip)
+   
+   scat.set_array(B_ratio)
+   
+   plt.title('Phi = {:.1f} $\pi$'.format(num / np.pi))
+   plt.ylabel('z/α')
+   #plt.colorbar()
+   return scat,
+
