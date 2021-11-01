@@ -226,8 +226,32 @@ fig.colorbar(im)
 plt.show()
 
 #%%
-plt.scatter(x, z, c = B_mag, s = 150)
 
+z1 = np.linspace(-5 * a, 5 * a, 20)
+x1 = np.linspace(0, 5 * a, 10)
+
+phi = np.linspace(0, 2 * np.pi, 500)
+
+B_all = []
+
+for i in tqdm(phi):
+
+    B_mag_quad = B_mag_cart(x1, z1, a, args, 2, R, i, False)
+    B_mag_dip = B_mag_cart(x1, z1, a, args, 1, R, i, False)
+    
+    B_ratio = abs((B_mag_quad - B_mag_dip) / B_mag_dip)
+    
+    B_all.append(max(B_ratio))
+
+plt.plot(phi * 180 / np.pi, B_all)
+plt.xlabel('Longitude (deg)')
+plt.ylabel('Max ratio')
+plt.show()
+#%%
+#plt.scatter(x, z, c = B_mag, s = 150)
+
+x,y,z,u,v,w = B_mag_cart(x1, z1, a, args, 2, R, 0,True)
+np.savez('Output/complete_field_phi=0_CI', x,y,z,u,v,w)
 #%%
 
 xn, yn, zn, un, vn, wn = loadBField('Output/dipole_nick_fieldaligned.npz')
