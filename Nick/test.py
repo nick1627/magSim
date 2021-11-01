@@ -66,6 +66,7 @@ w = B[:, :, 2]
 
 xH, yH, zH, uH, vH, wH = tools.loadBField("Output/complete_field_phi=0_CI.npz")
 
+
 print(u - uH)
 
 plt.show()
