@@ -251,7 +251,9 @@ plt.show()
 #plt.scatter(x, z, c = B_mag, s = 150)
 
 x,y,z,u,v,w = B_mag_cart(x1, z1, a, args, 2, R, 0,True)
-np.savez('Output/complete_field_phi=0_CI', x,y,z,u,v,w)
+saveBField(x, y, z, u, v, w, 'Output/complete_field_phi=0_CI')
+#%%
+loadBField('Output/complete_field_phi=0_CI')
 #%%
 
 xn, yn, zn, un, vn, wn = loadBField('Output/dipole_nick_fieldaligned.npz')
