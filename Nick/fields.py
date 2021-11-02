@@ -434,11 +434,11 @@ class SHField(Field):
         B = np.zeros((2*N, N, 3))
         r = np.zeros(np.shape(B))
         
-
-        latticeVecAxial = np.array([0, 0, self.a*rMax/(2*N-1)])
         l = self.a*rMax/(N-1)
+        latticeVecAxial = np.array([0, 0, 2*self.a*rMax/(2*N-1)])
         latticeVecRho = np.array([l*np.cos(phi), l*np.sin(phi), 0])
-        startVec = -0.5*(2*N - 1)*latticeVecAxial
+        # startVec = -0.5*(2*N - 1)*latticeVecAxial
+        startVec = -(N - 0.5)*latticeVecAxial
         for i in range(0, np.shape(B)[0]):
             for j in range(0, np.shape(B)[1]):
                 current_r = startVec + i*latticeVecAxial + j*latticeVecRho

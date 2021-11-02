@@ -66,8 +66,27 @@ w = B[:, :, 2]
 
 xH, yH, zH, uH, vH, wH = tools.loadBField("Output/complete_field_phi=0_CI.npz")
 
+# print(uH[0, 0]**2 + vH[0, 0]**2 + wH[0, 0]**2)
+# print(u[0, 0]**2 + v[0, 0]**2 + w[0, 0]**2)
 
-print(u - uH)
+# print(u - uH)
+# print(uH)
+
+
+
+# x = np.array([[0, 5, 10], [0, 5, 10], [0, 5, 10]])
+# y = np.array([[0, 0, 0], [5, 5, 5], [10, 10, 10]])
+x = np.array([0, 5, 10])
+y = np.array([0, 5, 10])
+x = x - 2.5
+y = y - 2.5
+c = np.array([[1, 2], [3, 4]])
+
+plt.figure(6)
+plt.pcolormesh(x, y, c,cmap='plasma')
+
+
+
 
 plt.show()
 
