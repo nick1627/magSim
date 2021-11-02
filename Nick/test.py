@@ -56,7 +56,7 @@ UField.rotate("Field")
 # UField.plotDeviationData(1, 5, 10)
 # UField.plotLongitudePlanesB(5, 5, 10)
 
-B, r = UField.getLongitudePlaneB(5, 0, 10)
+B, r = UField.getLongitudePlaneB(5, 137*np.pi/180, 10)
 x = r[:, :, 0]
 y = r[:, :, 1]
 z = r[:, :, 2]
@@ -64,26 +64,28 @@ u = B[:, :, 0]
 v = B[:, :, 1]
 w = B[:, :, 2]
 
-xH, yH, zH, uH, vH, wH = tools.loadBField("Output/complete_field_phi=0_CI.npz")
+xH, yH, zH, uH, vH, wH = tools.loadBField("Output/complete_field_phi=137_CI.npz")
 
 # print(uH[0, 0]**2 + vH[0, 0]**2 + wH[0, 0]**2)
 # print(u[0, 0]**2 + v[0, 0]**2 + w[0, 0]**2)
 
-# print(u - uH)
+print(np.shape(uH))
+print(np.shape(u))
+print(u - uH)
 # print(uH)
 
 
 
 # x = np.array([[0, 5, 10], [0, 5, 10], [0, 5, 10]])
 # y = np.array([[0, 0, 0], [5, 5, 5], [10, 10, 10]])
-x = np.array([0, 5, 10])
-y = np.array([0, 5, 10])
-x = x - 2.5
-y = y - 2.5
-c = np.array([[1, 2], [3, 4]])
+# x = np.array([0, 5, 10])
+# y = np.array([0, 5, 10])
+# x = x - 2.5
+# y = y - 2.5
+# c = np.array([[1, 2], [3, 4]])
 
-plt.figure(6)
-plt.pcolormesh(x, y, c,cmap='plasma')
+# plt.figure(6)
+# plt.pcolormesh(x, y, c,cmap='plasma')
 
 
 

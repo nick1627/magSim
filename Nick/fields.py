@@ -469,7 +469,7 @@ class SHField(Field):
         return planeBData, planerData
         
 
-    def plotLongitudePlanesB(self, deltaPhi, rMax, N, planetaryFilter = True, animate = True):
+    def plotLongitudePlanesB(self, deltaPhi, rMax, N, planetaryFilter = True, animate = False):
         quadrupolePlanes, positionData = self.getLongitudePlanesB(deltaPhi, rMax, N, planetaryFilter=True)
         
         counter = 0
@@ -533,6 +533,40 @@ class SHField(Field):
         ax3.set_title("Field Deviation")
 
         
+    def plotDeviationColourMapLongitudePlanes(self):
+        #Get plane data for complete field
+        #Get plane data for dipole only field
+        #Perform calculations to get the deviation
+        #Now calculate data for magnitude and angle deviation
+        #Plot colour map with arrows superimposed
+
+        #Get plane data for complete field
+        #Get plane data for dipole only field
+        #Perform calculations to get the deviation
+        #Now calculate data for magnitude and angle deviation
+        #Plot colour map with arrows superimposed
+        return
+
+    def getLShellB(self, L, deltaTheta = 1, deltaPhi = 1):
+        #Returns an array of the magnetic field at a particular L-shell 
+        #deltaTheta in degrees
+        #deltaPhi in degrees
+
+        #First get the arrays set up
+        Nx = 360/deltaPhi + 1
+        Ny = 360/deltaTheta + 1
+
+        #There are Ny rows, Nx columns, and each point has 3 things, r theta and phi
+        rF_spherical = np.zeros((Nx, Ny, 3))
+        for i in range(0, Nx):
+            for j in range(0, Ny):
+                rF_spherical[i, j]
+        return
+
+    
+    def plotDeviationColourMapLShells(self, L, deltaTheta = 1, deltaPhi = 1):
+        #L is an array of L-shells to be plotted at
+        return
 
 
 
