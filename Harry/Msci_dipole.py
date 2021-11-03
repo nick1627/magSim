@@ -13,7 +13,7 @@ from tools import *
 from matplotlib import animation
 import matplotlib
 from tqdm import tqdm
-
+from matplotlib import colors
 #%%
 #CONSTANTS    
 a = 25600000 # Uranus' radius
@@ -209,7 +209,9 @@ B_ratio = abs(top) / abs(bottom)
 
 fig, ax = plt.subplots(1, 1)
 
-im = ax.imshow(B_ratio, extent=[0,2,-2,2])
+im = ax.imshow(B_ratio, extent=[0,5,-5,5],  norm=colors.LogNorm())
+fig.colorbar(im)
+plt.show()
 #plt.quiver(x, z, u, w)
 #ax.colorbar()
 
@@ -229,7 +231,7 @@ def animate_im(num, x1, z1, a, args, R):
     B_ratio = abs(top) / abs(bottom)
 
     im.set_array(B_ratio)
-    plt.title('Longitude = {}'.format(num * 180 / np.pi))
+    plt.title('Longitude = {:.0f}'.format(num * 180 / np.pi))
     plt.xlabel('x/a')
     plt.ylabel('z/a')
     return [im]
@@ -239,7 +241,8 @@ anim3 = animation.FuncAnimation(fig, animate_im, frames = num_range, \
 
 fig.colorbar(im)
 plt.show()
-
+#%%
+#anim3.save('Harry/ratio_animation.gif')
 #%%
 
 z1 = np.linspace(-5 * a, 5 * a, 20)
