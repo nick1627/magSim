@@ -53,25 +53,43 @@ UField.rotate("Field")
 # print(np.sqrt(a[3][4, 4]**2 + a[4][4, 4]**2 + a[5][4, 4]**2))
 # print(np.sqrt(b[3][4, 4]**2 + b[4][4, 4]**2 + b[5][4, 4]**2))
 
-# UField.plotDeviationData(1, 5, 10)
+# UField.plotDeviationData(5, 5, 10)
 # UField.plotLongitudePlanesB(5, 5, 10)
 
-B, r = UField.getLongitudePlaneB(5, 137*np.pi/180, 10)
-x = r[:, :, 0]
-y = r[:, :, 1]
-z = r[:, :, 2]
-u = B[:, :, 0]
-v = B[:, :, 1]
-w = B[:, :, 2]
+# true_nMax = UField.nMax
+# UField.nMax = 1
 
-xH, yH, zH, uH, vH, wH = tools.loadBField("Output/complete_field_phi=137_CI.npz")
+# Bd, rd = UField.getLongitudePlaneB(5, 175*np.pi/180, 10)
+
+# UField.nMax = true_nMax
+# Bc, rc = UField.getLongitudePlaneB(5, 175*np.pi/180, 10)
+
+# ratios = np.linalg.norm(Bc - Bd, axis = 2)/np.linalg.norm(Bd)
+# ratios = np.nan_to_num(ratios)
+# print(ratios)
+# maxratio = np.amax(ratios, axis = 1)
+# maxratio = np.amax(maxratio, axis = 0)
+# print(maxratio)
+
+
+# x = r[:, :, 0]
+# y = r[:, :, 1]
+# z = r[:, :, 2]
+# u = B[:, :, 0]
+# v = B[:, :, 1]
+# w = B[:, :, 2]
+
+# BMag = np.linalg.norm(B, axis=2)
+# print(BMag)
+
+# xH, yH, zH, uH, vH, wH = tools.loadBField("Output/complete_field_phi=137_CI.npz")
 
 # print(uH[0, 0]**2 + vH[0, 0]**2 + wH[0, 0]**2)
 # print(u[0, 0]**2 + v[0, 0]**2 + w[0, 0]**2)
 
-print(np.shape(uH))
-print(np.shape(u))
-print(u - uH)
+# print(np.shape(uH))
+# print(np.shape(u))
+# print(u - uH)
 # print(uH)
 
 
@@ -90,7 +108,7 @@ print(u - uH)
 
 
 
-plt.show()
+# plt.show()
 
 
 
@@ -121,6 +139,12 @@ plt.show()
 # # print(v)
 # # print(w)
 
+#========================================================================================
+UField.plotDeviationColourMapLShell(1.5)
+UField.plotDeviationColourMapLShell(2)
+UField.plotDeviationColourMapLShell(2.5)
+UField.plotDeviationColourMapLShell(3)
+UField.plotDeviationColourMapLShell(3.5)
+UField.plotDeviationColourMapLShell(4)
 
-
-#plt.show()
+plt.show()
