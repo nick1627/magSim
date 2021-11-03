@@ -191,32 +191,47 @@ plt.show()
 #anim2.save('Harry/colormap_test.gif')
 
 #%%
-z1 = np.linspace(-2 * a, 2 * a, 20)
-x1 = np.linspace(0, 2 * a, 20)
+z1 = np.linspace(-5 * a, 5 * a, 100)
+x1 = np.linspace(0, 5 * a, 100)
 
 phi = 0#np.pi/0.5
 
-B_mag_quad = B_mag_cart(x1, z1, a, args, 2, R, phi)
-B_mag_dip = B_mag_cart(x1, z1, a, args, 1, R, phi)
+x_quad, y_quad, z_quad, u_quad, v_quad, w_quad = B_aligned_cart(x1, z1, a, args, 2, R, phi)
+x_dip, y_dip, z_dip, u_dip, v_dip, w_dip = B_aligned_cart(x1, z1, a, args, 1, R, phi)
 
-B_ratio = abs((B_mag_quad - B_mag_dip) / B_mag_dip)
+uq_d = u_quad - u_dip
+vq_d = v_quad - v_dip
+wq_d = w_quad - w_dip
+top = np.sqrt((uq_d * uq_d) + (vq_d * vq_d) + (wq_d * wq_d))
+bottom = np.sqrt((u_dip * u_dip) + (v_dip * v_dip) + (w_dip * w_dip))
+
+B_ratio = abs(top) / abs(bottom)
 
 fig, ax = plt.subplots(1, 1)
 
 im = ax.imshow(B_ratio, extent=[0,2,-2,2])
+#plt.quiver(x, z, u, w)
 #ax.colorbar()
 
-num_range = np.linspace(0, 2*np.pi, 5)
+num_range = np.linspace(0, 2*np.pi, 10)
 
 def animate_im(num, x1, z1, a, args, R):
     phi = num
-    B_mag_quad = B_mag_cart(x1, z1, a, args, 2, R, phi)
-    B_mag_dip = B_mag_cart(x1, z1, a, args, 1, R, phi)
-
-    B_ratio = abs((B_mag_quad - B_mag_dip) / B_mag_dip)
+    x_quad, y_quad, z_quad, u_quad, v_quad, w_quad = B_aligned_cart(x1, z1, a, args, 2, R, phi)
+    x_dip, y_dip, z_dip, u_dip, v_dip, w_dip = B_aligned_cart(x1, z1, a, args, 1, R, phi)
+    
+    uq_d = u_quad - u_dip
+    vq_d = v_quad - v_dip
+    wq_d = w_quad - w_dip
+    top = np.sqrt((uq_d * uq_d) + (vq_d * vq_d) + (wq_d * wq_d))
+    bottom = np.sqrt((u_dip * u_dip) + (v_dip * v_dip) + (w_dip * w_dip))
+    
+    B_ratio = abs(top) / abs(bottom)
 
     im.set_array(B_ratio)
     plt.title('Longitude = {}'.format(num * 180 / np.pi))
+    plt.xlabel('x/a')
+    plt.ylabel('z/a')
     return [im]
 
 anim3 = animation.FuncAnimation(fig, animate_im, frames = num_range, \
@@ -230,17 +245,26 @@ plt.show()
 z1 = np.linspace(-5 * a, 5 * a, 20)
 x1 = np.linspace(0, 5 * a, 10)
 
-phi = np.linspace(0, 2 * np.pi, 500)
+phi = np.linspace(0, 2 * np.pi, 100)
 
 B_all = []
 
 for i in tqdm(phi):
 
-    B_mag_quad = B_mag_cart(x1, z1, a, args, 2, R, i, False)
-    B_mag_dip = B_mag_cart(x1, z1, a, args, 1, R, i, False)
+    x_quad, y_quad, z_quad, u_quad, v_quad, w_quad = B_aligned_cart(x1, z1, a, args, 2, R, i)
+    x_dip, y_dip, z_dip, u_dip, v_dip, w_dip = B_aligned_cart(x1, z1, a, args, 1, R, i)
     
-    B_ratio = abs((B_mag_quad - B_mag_dip) / B_mag_dip)
+    uq_d = u_quad - u_dip
+    vq_d = v_quad - v_dip
+    wq_d = w_quad - w_dip
+    top = np.sqrt((uq_d * uq_d) + (vq_d * vq_d) + (wq_d * wq_d))
+    bottom = np.sqrt((u_dip * u_dip) + (v_dip * v_dip) + (w_dip * w_dip))
     
+    # B_mag_quad = np.nan_to_num(B_mag_quad)
+    # B_mag_dip = np.nan_to_num(B_mag_dip)
+    
+    B_ratio = abs(top) / abs(bottom)
+        
     B_all.append(max(B_ratio))
 
 plt.plot(phi * 180 / np.pi, B_all)
@@ -249,11 +273,13 @@ plt.ylabel('Max ratio')
 plt.show()
 #%%
 #plt.scatter(x, z, c = B_mag, s = 150)
+phi = 137 * np.pi / 180
 
-x,y,z,u,v,w = B_mag_cart(x1, z1, a, args, 2, R, 0,True)
-saveBField(x, y, z, u, v, w, 'Output/complete_field_phi=0_CI')
+x,y,z,u,v,w = B_mag_cart(x1, z1, a, args, 2, R, phi,True)
+saveBField(x, y, z, u, v, w, 'Output/complete_field_phi=137_CI')
 #%%
-loadBField('Output/complete_field_phi=0_CI')
+
+#loadBField('Output/complete_field_phi=0_CI.npz')
 #%%
 
 xn, yn, zn, un, vn, wn = loadBField('Output/dipole_nick_fieldaligned.npz')

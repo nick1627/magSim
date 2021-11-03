@@ -989,12 +989,12 @@ def B_aligned_cart(x, z, a, args, n, R, phi_rot):
                     v_all.append(float("NaN"))
                     w_all.append(float("NaN"))
                     
-    x_all = np.array(x_all)
-    y_all = np.array(y_all)
-    z_all = np.array(z_all)
-    u_all = np.array(u_all)
-    v_all = np.array(v_all)
-    w_all = np.array(w_all)
+    x_all = np.array(x_all).reshape((len(x), len(z))).T
+    y_all = np.array(y_all).reshape((len(x), len(z))).T
+    z_all = np.array(z_all).reshape((len(x), len(z))).T
+    u_all = np.array(u_all).reshape((len(x), len(z))).T
+    v_all = np.array(v_all).reshape((len(x), len(z))).T
+    w_all = np.array(w_all).reshape((len(x), len(z))).T
     
     return x_all, y_all, z_all, u_all, v_all, w_all
 
@@ -1012,8 +1012,9 @@ def B_mag_cart(x1, z1, a, args, n, R, phi, matrix = True):
     w = w.reshape((len(x1), len(z1))).T
     if matrix == True:
         B_mag = B_mag.reshape((len(x1), len(z1))).T
-    
-    return x, y, z, u, v, w
+    else:
+        B_mag = B_mag.T
+    return B_mag
 
 def B_spin_aligned(r, theta, phi, a, args, n, R):
     x, y, z, u, v, w = Get_B_sph_rot(r, theta, phi, a, args, n, R)
