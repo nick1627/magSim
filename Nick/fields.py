@@ -11,6 +11,7 @@ import numpy as np
 import pyshtools as sh
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+from matplotlib.colors import LogNorm
 
 class Field:
     def __init__(self):
@@ -432,22 +433,26 @@ class SHField(Field):
         #N is the  number of points on the side length of the rMax x rMax grid, inclusive of endpoints
         
         B = np.zeros((2*N, N, 3))
-        latticeVecAxial = np.array([0, 0, self.a*rMax/(2*N-1)])
+        r = np.zeros(np.shape(B))
+        
         l = self.a*rMax/(N-1)
+        latticeVecAxial = np.array([0, 0, 2*self.a*rMax/(2*N-1)])
         latticeVecRho = np.array([l*np.cos(phi), l*np.sin(phi), 0])
-        startVec = -0.5*(2*N - 1)*latticeVecAxial
+        # startVec = -0.5*(2*N - 1)*latticeVecAxial
+        startVec = -(N - 0.5)*latticeVecAxial
         for i in range(0, np.shape(B)[0]):
             for j in range(0, np.shape(B)[1]):
-                r = startVec + i*latticeVecAxial + j*latticeVecRho
+                current_r = startVec + i*latticeVecAxial + j*latticeVecRho
+                r[i, j] = current_r
                 if planetaryFilter:
-                    if np.linalg.norm(r) < self.a:
+                    if np.linalg.norm(current_r) < self.a:
                         B[i, j] = np.zeros((3))
                     else:
-                        B[i, j] = self.getField(r)
+                        B[i, j] = self.getField(current_r)
                 else:
-                    B[i, j] = self.getField(r)
+                    B[i, j] = self.getField(current_r)
         
-        return B
+        return B, r
 
 
     
@@ -456,16 +461,17 @@ class SHField(Field):
         deltaPhi = np.abs(deltaPhi)
         deltaPhi = np.pi/180 * deltaPhi
         noPlanes = int(np.round(2*np.pi/deltaPhi))
-        planeData = np.zeros((noPlanes, 2*N, N, 3))
+        planeBData = np.zeros((noPlanes, 2*N, N, 3))
+        planerData = np.zeros(np.shape(planeBData))
         for p in range(0, noPlanes):
             phi = p*deltaPhi
-            planeData[p] = self.getLongitudePlaneB(rMax, phi, N, planetaryFilter)
+            planeBData[p], planerData[p] = self.getLongitudePlaneB(rMax, phi, N, planetaryFilter)
             
-        return planeData
+        return planeBData, planerData
         
 
-    def plotLongitudePlanesB(self, deltaPhi, rMax, N, planetaryFilter = True, animate = True):
-        quadrupolePlanes = self.getLongitudePlanesB(deltaPhi, rMax, N, planetaryFilter=True)
+    def plotLongitudePlanesB(self, deltaPhi, rMax, N, planetaryFilter = True, animate = False):
+        quadrupolePlanes, positionData = self.getLongitudePlanesB(deltaPhi, rMax, N, planetaryFilter=True)
         
         counter = 0
 
@@ -492,20 +498,21 @@ class SHField(Field):
         #Assume the field has been rotated to F, but it shouldn't be a problem if it's in R
 
         #First get the dipole data
-        true_nMax = self.nMax
+        true_nMax = np.copy.deepcopy(self.nMax)
         self.nMax = 1
 
-        dipolePlanes = self.getLongitudePlanesB(deltaPhi, rMax, N, planetaryFilter=True)
+        dipolePlanes, positionData = self.getLongitudePlanesB(deltaPhi, rMax, N, planetaryFilter=True)
 
         #Now set nMax back to the full field
-        self.nMax = true_nMax
+        self.nMax = np.copy.deepcopy(true_nMax)
 
-        quadrupolePlanes = self.getLongitudePlanesB(deltaPhi, rMax, N, planetaryFilter=True)
+        quadrupolePlanes, positionData2 = self.getLongitudePlanesB(deltaPhi, rMax, N, planetaryFilter=True)
 
         #Now can do maths on the planes to figure out where the important features should be
         
         #Find difference between field with quadrupole and field without
         differencePlanes = quadrupolePlanes - dipolePlanes
+        print(differencePlanes)
         #Get magnitude of this quadrupole only field
         differencePlanesMag = np.linalg.norm(differencePlanes, axis = 3)
         #Get magnitude of dipole only field
@@ -528,6 +535,107 @@ class SHField(Field):
         ax3.set_title("Field Deviation")
 
         
+    def plotDeviationColourMapLongitudePlanes(self):
+        #Get plane data for complete field
+        #Get plane data for dipole only field
+        #Perform calculations to get the deviation
+        #Now calculate data for magnitude and angle deviation
+        #Plot colour map with arrows superimposed
+
+        #Get plane data for complete field
+        #Get plane data for dipole only field
+        #Perform calculations to get the deviation
+        #Now calculate data for magnitude and angle deviation
+        #Plot colour map with arrows superimposed
+        return
+
+    def getLShellB(self, L, NTheta = 100, NPhi = 361):
+        #Returns an array of the magnetic field at a particular L-shell 
+        #deltaTheta in degrees
+        #deltaPhi in degrees
+
+        #First get the arrays set up
+        #Calculate cut-off angle
+        cutOffTheta = np.arcsin(np.sqrt(1/L))
+        thetaArray = np.linspace(cutOffTheta, np.pi - cutOffTheta, NTheta)
+        deltaPhi = 2*np.pi/(NPhi-1)
+
+        #There are Ny rows, Nx columns, and each point has 3 things, r theta and phi
+        rF_spherical = np.zeros((NPhi, NTheta, 3))
+        rF_cartesian = np.zeros(np.shape(rF_spherical))
+        bF = np.zeros(np.shape(rF_cartesian))
+        for i in range(0, NPhi):
+            for j in range(0, NTheta):
+                #set theta
+                rF_spherical[i, j, 1] = np.copy(thetaArray[j])
+                #set phi
+                rF_spherical[i, j, 2] = deltaPhi * i
+                #set r
+                rF_spherical[i, j, 0] = self.a*L*np.power(np.sin(rF_spherical[i, j, 1]), 2)
+
+                 #Now have the coordinates in field-aligned spherical polars
+                #Need to convert to field aligned cartesian
+
+                theta = np.copy(rF_spherical[i, j, 1])
+                phi = np.copy(rF_spherical[i, j, 2])
+                rF_spherical[i, j, 1] = 0
+                rF_spherical[i, j, 2] = 0
+                rF_cartesian[i, j, :] = self.convertPolarToCartesian(rF_spherical[i, j, :], theta, phi)
+
+                #Now get B field at each point
+                bF[i, j, :] = self.getField(rF_cartesian[i, j, :])
+
+                rF_spherical[i, j, 1] = theta
+                rF_spherical[i, j, 2] = phi
+ 
+               
+        return rF_spherical, rF_cartesian, bF
+
+    
+    def plotDeviationColourMapLShell(self, L, NTheta = 100, NPhi = 361):
+        #L is the L shell to plot at
+        #deltaTheta is the interval in degrees between points
+        #deltaPhi is the interval in degrees between points in the phi direction
+
+        #returns a plot
+
+        if L < 1:
+            raise(Exception("Warning!  You're attempting to plot at an L-shell inside the planet!"))
+
+        #Get L-shell data for complete field
+      
+        rF_spherical, rF_cartesian, LShellData_complete = self.getLShellB(L, NTheta = NTheta, NPhi = NPhi)
+        
+        #change nMax to get dipole field only
+        true_nMax = np.copy(self.nMax)
+        self.nMax = 1
+
+        rF_spherical, rF_cartesian, LShellData_dipole = self.getLShellB(L, NTheta = NTheta, NPhi = NPhi)
+
+        #change nMax back so it's the full field
+        self.nMax = np.copy(true_nMax)
+
+        LShellData_quadrupole = LShellData_complete - LShellData_dipole
+        ratio = np.linalg.norm(LShellData_quadrupole, axis = 2)/np.linalg.norm(LShellData_dipole, axis = 2)
+
+        thetaAxis = rF_spherical[0, :, 1]*180/np.pi
+        phiAxis = rF_spherical[:, 0, 2]*180/np.pi
+        # phiAxis = np.arange(0, 360 + deltaPhi, deltaPhi)
+        
+        ax6 = plt.figure().add_subplot()
+        # imshowObject = ax6.imshow(np.transpose(ratio), cmap = "plasma", norm=LogNorm(vmin=0.1, vmax=1))
+        # imshowObject = ax6.imshow(np.transpose(ratio), cmap = "plasma", norm=LogNorm())
+        obj = ax6.pcolormesh(phiAxis, thetaAxis, np.transpose(ratio), cmap = "plasma", norm=LogNorm())
+        ax6.set_ylim(ax6.get_ylim()[::-1])
+        plt.colorbar(obj)
+        ax6.set_xlabel("Phi (º)")
+        ax6.set_ylabel("Theta (º)")
+        titleString = "Diagnostic on L = " + str(L)
+        ax6.set_title(titleString)
+
+
+
+        return
 
 
 
