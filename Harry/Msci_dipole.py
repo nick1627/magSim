@@ -53,7 +53,18 @@ g22 = 1453
 h22 = 4220
 
 args = np.array([g01, g11, h11, g02, g12, h12, g22, h22])
-
+plt.rcParams["figure.autolayout"] = True
+params = {
+'axes.labelsize': 20,
+'font.size': 20,
+#'font.family': 'sans-serif', # Optionally change the font family to sans-serif
+#'font.serif': 'Arial', # Optionally change the font to Arial
+'legend.fontsize': 20,
+'xtick.labelsize': 20,
+'ytick.labelsize': 20, 
+'figure.figsize': [10, 10]
+} 
+plt.rcParams.update(params)
 #%%
 
 r = np.linspace(2 * a, 3 * a, 5)
@@ -139,7 +150,7 @@ plt.show()
 #anim_vector.save('Harry/quadrupole_test.gif')
 
 #%%
-plt.rcParams["figure.figsize"] = [10, 8]
+plt.rcParams["figure.figsize"] = [10, 10]
 plt.rcParams["figure.autolayout"] = True
 plt.scatter(x=x,y=z,c=B_ratio, s=40, norm=matplotlib.colors.LogNorm())
 plt.colorbar()
@@ -150,9 +161,9 @@ plt.show()
 
 #%%
 
-r = np.linspace(1*a, 2 * a, 10)
+r = np.linspace(2*a, 5 * a, 10)
 theta = np.linspace(0, np.pi, 10)
-phi = np.linspace(0, 2*np.pi, 20)#np.array([0, np.pi])
+phi = np.linspace(0, 2*np.pi, 100)#np.array([0, np.pi])
 
 B_rall = Get_maxB_ratio(r, theta, phi, a, args, R, True) 
     
@@ -192,7 +203,7 @@ plt.show()
 
 #%%
 z1 = np.linspace(-5 * a, 5 * a, 100)
-x1 = np.linspace(0, 5 * a, 100)
+x1 = np.linspace(0, 5 * a, 50)
 
 phi = 0#np.pi/0.5
 
@@ -208,12 +219,14 @@ bottom = np.sqrt((u_dip * u_dip) + (v_dip * v_dip) + (w_dip * w_dip))
 B_ratio = abs(top) / abs(bottom)
 
 fig, ax = plt.subplots(1, 1)
+mag_vec = np.sqrt((u_quad * u_quad) + (w_quad * w_quad))
+u_norm = u_quad / mag_vec
+w_norm = w_quad / mag_vec
 
 im = ax.imshow(B_ratio, extent=[0,5,-5,5],  norm=colors.LogNorm())
-fig.colorbar(im)
-plt.show()
-#plt.quiver(x, z, u, w)
-#ax.colorbar()
+qr = ax.quiver(x_quad[::2], z_quad[::2], u_norm[::2], w_norm[::2], pivot = 'mid', scale = 50)
+#fig.colorbar(im)
+#plt.show()
 
 num_range = np.linspace(0, 2*np.pi, 10)
 
@@ -229,12 +242,17 @@ def animate_im(num, x1, z1, a, args, R):
     bottom = np.sqrt((u_dip * u_dip) + (v_dip * v_dip) + (w_dip * w_dip))
     
     B_ratio = abs(top) / abs(bottom)
-
+    
+    mag_vec = np.sqrt((u_quad * u_quad) + (w_quad * w_quad))
+    u_norm = u_quad / mag_vec
+    w_norm = w_quad / mag_vec
+    
     im.set_array(B_ratio)
+    qr.set_UVC(u_norm[::2], w_norm[::2])
     plt.title('Longitude = {:.0f}'.format(num * 180 / np.pi))
     plt.xlabel('x/a')
     plt.ylabel('z/a')
-    return [im]
+    return im, qr
 
 anim3 = animation.FuncAnimation(fig, animate_im, frames = num_range, \
                                 fargs=(x1, z1, a, args, R),interval=500, blit=False)
@@ -242,7 +260,7 @@ anim3 = animation.FuncAnimation(fig, animate_im, frames = num_range, \
 fig.colorbar(im)
 plt.show()
 #%%
-#anim3.save('Harry/ratio_animation.gif')
+anim3.save('Harry/ratio_animation.gif')
 #%%
 
 z1 = np.linspace(-5 * a, 5 * a, 20)
@@ -273,6 +291,42 @@ for i in tqdm(phi):
 plt.plot(phi * 180 / np.pi, B_all)
 plt.xlabel('Longitude (deg)')
 plt.ylabel('Max ratio')
+plt.show()
+#%%
+L = 2
+
+theta_thr = np.arcsin(L ** (-0.5)) 
+
+theta_in = np.linspace(theta_thr, np.pi - theta_thr, 100)
+phi_in = np.linspace(0, 2 * np.pi, 100)
+theta_deg = theta_in * 180 / np.pi
+phi_deg = phi_in * 180 / np.pi
+
+x_quad, y_quad, z_quad, u_quad, v_quad, w_quad = B_Lshell(L, theta_in, phi_in, a, args, 2, R)
+x_dip, y_dip, z_dip, u_dip, v_dip, w_dip = B_Lshell(L, theta_in, phi_in, a, args, 1, R)
+
+uq_d = u_quad - u_dip
+vq_d = v_quad - v_dip
+wq_d = w_quad - w_dip
+top = np.sqrt((uq_d * uq_d) + (vq_d * vq_d) + (wq_d * wq_d))
+bottom = np.sqrt((u_dip * u_dip) + (v_dip * v_dip) + (w_dip * w_dip))
+
+# B_mag_quad = np.nan_to_num(B_mag_quad)
+# B_mag_dip = np.nan_to_num(B_mag_dip)
+
+B_ratio = abs(top) / abs(bottom)
+
+B_ratio = B_ratio.reshape((len(theta_in), len(phi_in)))
+
+fig, ax = plt.subplots(1, 1)
+im = ax.imshow(B_ratio,  extent=[phi_deg[0],phi_deg[-1],theta_deg[-1],theta_deg[0]], norm=colors.LogNorm(), aspect='auto')
+#im = ax.pcolormesh(B_ratio,  norm=colors.LogNorm())
+#ax.set_xticks(np.linspace(0, 360, 100))
+#ax.set_xticklabels(np.linspace(0, 360, 5))
+fig.colorbar(im)
+plt.xlabel('Longitude (deg)', fontsize=16)
+plt.ylabel('Latitude (deg)', fontsize=16)
+plt.title('Max ratio, L = 2', fontsize=16)
 plt.show()
 #%%
 #plt.scatter(x, z, c = B_mag, s = 150)
