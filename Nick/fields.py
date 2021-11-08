@@ -5,13 +5,21 @@ There is an overarching class called Field, from which SHField is derived (along
 
 TODO:  make sure code can handle field at pole somehow
 
+TODO:  Convert all graph-plotting code to the following format:
+        1.  All start with plot rather than get data
+        2.  An array is input to define which bits to plot, eg an array of longitudes or L-shells
+        3.  For each element of the array, the data will be found and the graph is optionally plotted
+        4.  The data is returned
+
 """
 
 import numpy as np
+from numpy.lib.arraysetops import isin
 import pyshtools as sh
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.colors import LogNorm
+import copy
 
 class Field:
     def __init__(self):
@@ -471,6 +479,9 @@ class SHField(Field):
         
 
     def plotLongitudePlanesB(self, deltaPhi, rMax, N, planetaryFilter = True, animate = False):
+        #This function should be plotting the magnetic field at multiple longitudes.
+        #It isn't
+        #You might want to fix that at some point.
         quadrupolePlanes, positionData = self.getLongitudePlanesB(deltaPhi, rMax, N, planetaryFilter=True)
         
         counter = 0
@@ -534,8 +545,86 @@ class SHField(Field):
         ax3.set_ylabel("Maximum ratio of absolute deviation from dipole against dipole field")
         ax3.set_title("Field Deviation")
 
+    def plotDeviationColourMapLongitudePlane(self, phi, rMax, N, planetaryFilter = True, plot=True):
+        #This plots the deviation of the complete field from a dipole for a single plane of constant longitude
+
+        #First some input checks on phi:
+        if isinstance(phi, int):
+            phiArray = np.array([phi])
+        elif isinstance(phi, list):
+            phiArray = np.array(phi)
+        else:
+            phiArray = copy.deepcopy(phi)
+
         
-    def plotDeviationColourMapLongitudePlanes(self):
+        
+        diagnostic = np.zeros((np.shape(phi)[0], 2*N, N))
+        vectors = np.zeros((np.shape(phi)[0], 2*N, N, 2))
+        counter = 0
+
+        phiArrayDeg = copy.deepcopy(phiArray)
+        phiArray = np.deg2rad(phiArray)
+
+        for phi in phiArray:
+            #Get complete B field for a particular plane
+            completePlane, positionData = self.getLongitudePlaneB(rMax, phi, N, planetaryFilter=planetaryFilter)
+            #Get dipole only B field for a particular plane
+            true_nMax = copy.deepcopy(self.nMax)
+            self.nMax = 1
+            dipolePlane, positionData = self.getLongitudePlaneB(rMax, phi, N, planetaryFilter=planetaryFilter)
+            self.nMax = copy.deepcopy(true_nMax)
+
+            #Now find the difference between the fields
+            quadrupolePlane = completePlane - dipolePlane
+            #Calculate the diagnostic
+            diagnostic[counter] = np.nan_to_num(np.linalg.norm(quadrupolePlane, axis = 2)/np.linalg.norm(dipolePlane, axis = 2))
+            #Now need to calculate the vectors to be plotted
+
+            a = np.array([np.cos(phi), np.sin(phi), 0])
+            b = np.array([0, 0, 1])
+            planeVec = np.array([np.dot(completePlane, a), np.dot(completePlane, b)])
+            #The dimension layout of the above array is disgusting
+            vectors[counter, :, :, 0] = planeVec[0]
+            vectors[counter, :, :, 1] = planeVec[1]
+
+            counter+=1
+
+        #Now on to the plotting
+        phiArray = np.rad2deg(phiArray)
+        # print(phiArray)
+        # print(type(phiArray))
+
+        if plot:
+            noFigs = np.shape(phiArray)[0]
+            maxCols = 6
+            figCols = int(min([maxCols, noFigs]))
+            figRows = int(np.ceil(noFigs/figCols))
+            fig, axs = plt.subplots(nrows=figRows, ncols=figCols)
+            rhoAxis = np.linspace(0, rMax, N)
+            zAxis = np.linspace(-rMax, rMax, 2*N)
+            counter = 0
+            print(noFigs)
+            print(figRows)
+            print(figCols)
+            for j in range(0, figRows):
+                for i in range(0, figCols):
+                    if counter < noFigs:
+                        # obj = axs[i].pcolormesh(rhoAxis, zAxis, diagnostic, cmap = "plasma", norm=LogNorm())
+                        axs[j, i].pcolormesh(rhoAxis, zAxis, diagnostic[counter, :, :], cmap = "plasma", norm=LogNorm())
+
+                        # plt.colorbar(obj)
+                        axs[j, i].set_xlabel("rho")
+                        axs[j, i].set_ylabel("z")
+                        titleString = "Phi = " + str(phiArrayDeg[counter] + "º")
+                        axs[j, i].set_title(titleString)
+                        axs[j, i].set_aspect("equal") 
+                        counter += 1
+        
+        return
+        
+
+        
+    def plotDeviationColourMapLongitudePlanes(self, deltaPhi, rMax, N, planetaryFilter = True):
         #Get plane data for complete field
         #Get plane data for dipole only field
         #Perform calculations to get the deviation
@@ -543,8 +632,33 @@ class SHField(Field):
         #Plot colour map with arrows superimposed
 
         #Get plane data for complete field
+        completePlanes, positionData = self.getLongitudePlanesB(deltaPhi, rMax, N, planetaryFilter=True)
+
         #Get plane data for dipole only field
+
+        true_nMax = np.copy.deepcopy(self.nMax)
+        self.nMax = 1
+
+        dipolePlanes, positionData = self.getLongitudePlanesB(deltaPhi, rMax, N, planetaryFilter=True)
+
+        #Now set nMax back to the full field
+        self.nMax = np.copy.deepcopy(true_nMax)
+
         #Perform calculations to get the deviation
+        quadrupolePlanes = completePlanes - dipolePlanes
+        
+        #Get magnitude of this quadrupole only field
+        differencePlanesMag = np.linalg.norm(differencePlanes, axis = 3)
+        #Get magnitude of dipole only field
+        dipolePlanesMag = np.linalg.norm(dipolePlanes, axis = 3)
+        
+        #Find ratio at each point
+        ratioPlanes = differencePlanesMag/dipolePlanesMag
+        #Replace any nan with 0.0
+        ratioPlanes = np.nan_to_num(ratioPlanes) #replace nan with 0.0
+
+
+
         #Now calculate data for magnitude and angle deviation
         #Plot colour map with arrows superimposed
         return
