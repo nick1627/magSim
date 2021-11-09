@@ -49,6 +49,10 @@ class Field:
 
         return np.matmul(T, rvec)
 
+    def rotate2D(self, vec, theta):
+        R = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
+        return(np.matmul(R, vec))
+
 
     def getField(self, posVec):
         #This is a placeholder
@@ -559,8 +563,8 @@ class SHField(Field):
 
         
         
-        diagnostic = np.zeros((np.shape(phi)[0], 2*N, N))
-        vectors = np.zeros((np.shape(phi)[0], 2*N, N, 2))
+        diagnostic = np.zeros((np.shape(phiArray)[0], 2*N, N))
+        vectors = np.zeros((np.shape(phiArray)[0], 2*N, N, 2))
         vecPos = np.zeros(np.shape(vectors))
         counter = 0
 
@@ -666,23 +670,23 @@ class SHField(Field):
         deltaPhi = 2*np.pi/(NPhi-1)
 
         #There are Ny rows, Nx columns, and each point has 3 things, r theta and phi
-        rF_spherical = np.zeros((NPhi, NTheta, 3))
+        rF_spherical = np.zeros((NTheta, NPhi, 3))
         rF_cartesian = np.zeros(np.shape(rF_spherical))
         bF = np.zeros(np.shape(rF_cartesian))
-        for i in range(0, NPhi):
-            for j in range(0, NTheta):
+        for i in range(0, NTheta):
+            for j in range(0, NPhi):
                 #set theta
-                rF_spherical[i, j, 1] = np.copy(thetaArray[j])
+                rF_spherical[i, j, 1] = np.copy(thetaArray[i])
                 #set phi
-                rF_spherical[i, j, 2] = deltaPhi * i
+                rF_spherical[i, j, 2] = deltaPhi * j
                 #set r
                 rF_spherical[i, j, 0] = self.a*L*np.power(np.sin(rF_spherical[i, j, 1]), 2)
 
                  #Now have the coordinates in field-aligned spherical polars
                 #Need to convert to field aligned cartesian
 
-                theta = np.copy(rF_spherical[i, j, 1])
-                phi = np.copy(rF_spherical[i, j, 2])
+                theta = copy.deepcopy(rF_spherical[i, j, 1])
+                phi = copy.deepcopy(rF_spherical[i, j, 2])
                 rF_spherical[i, j, 1] = 0
                 rF_spherical[i, j, 2] = 0
                 rF_cartesian[i, j, :] = self.convertPolarToCartesian(rF_spherical[i, j, :], theta, phi)
@@ -690,17 +694,18 @@ class SHField(Field):
                 #Now get B field at each point
                 bF[i, j, :] = self.getField(rF_cartesian[i, j, :])
 
-                rF_spherical[i, j, 1] = theta
-                rF_spherical[i, j, 2] = phi
+                rF_spherical[i, j, 1] = copy.copy(theta)
+                rF_spherical[i, j, 2] = copy.copy(phi)
  
                
         return rF_spherical, rF_cartesian, bF
 
     
-    def plotDeviationColourMapLShell(self, L, NTheta = 100, NPhi = 361):
+    def plotDeviationColourMapLShell(self, L, NTheta = 100, NPhi = 361, vectorStep = 10, plot=True):
         #L is the L shell to plot at
         #deltaTheta is the interval in degrees between points
         #deltaPhi is the interval in degrees between points in the phi direction
+        
 
         #returns a plot
 
@@ -714,29 +719,57 @@ class SHField(Field):
         #change nMax to get dipole field only
         true_nMax = np.copy(self.nMax)
         self.nMax = 1
-
         rF_spherical, rF_cartesian, LShellData_dipole = self.getLShellB(L, NTheta = NTheta, NPhi = NPhi)
-
         #change nMax back so it's the full field
         self.nMax = np.copy(true_nMax)
 
         LShellData_quadrupole = LShellData_complete - LShellData_dipole
         ratio = np.linalg.norm(LShellData_quadrupole, axis = 2)/np.linalg.norm(LShellData_dipole, axis = 2)
 
-        thetaAxis = rF_spherical[0, :, 1]*180/np.pi
-        phiAxis = rF_spherical[:, 0, 2]*180/np.pi
-        # phiAxis = np.arange(0, 360 + deltaPhi, deltaPhi)
-        
-        ax6 = plt.figure().add_subplot()
-        # imshowObject = ax6.imshow(np.transpose(ratio), cmap = "plasma", norm=LogNorm(vmin=0.1, vmax=1))
-        # imshowObject = ax6.imshow(np.transpose(ratio), cmap = "plasma", norm=LogNorm())
-        obj = ax6.pcolormesh(phiAxis, thetaAxis, np.transpose(ratio), cmap = "plasma", norm=LogNorm())
-        ax6.set_ylim(ax6.get_ylim()[::-1])
-        plt.colorbar(obj)
-        ax6.set_xlabel("Phi (º)")
-        ax6.set_ylabel("Theta (º)")
-        titleString = "Diagnostic on L = " + str(L)
-        ax6.set_title(titleString)
+        #Now need to compute data for vectors
+        #First get an array of deviation angles
+        vectors = np.zeros((NTheta, NPhi, 2))
+        vectors[:,:,1] = 1
+        print(vectors[0, 0, :])
+        #vectors is now a grid of (0, 1) vectors pointing up
+        for i in range(0, NTheta):
+            for j in range(0, NPhi):
+                gamma = np.arccos(((np.dot(LShellData_complete[i, j, :], LShellData_dipole[i, j, :]))/(np.linalg.norm(LShellData_complete[i, j, :])*np.linalg.norm(LShellData_dipole[i, j, :]))))
+                vectors[i, j, :] = self.rotate2D(vectors[i, j, :], gamma)
+
+        vecPos = np.zeros(np.shape(vectors))
+        vecPos[:, :, 0] = rF_spherical[:, :, 1]
+        vecPos[:, :, 1] = rF_spherical[:, :, 2]
+        vecPos = vecPos*180/np.pi
+
+        if plot:
+            vectors2 = np.zeros((int(np.ceil(np.shape(vectors)[0]/vectorStep)), int(np.ceil(np.shape(vectors)[1]/vectorStep)), np.shape(vectors)[2]))
+            vecPos2 = np.zeros(np.shape(vectors2))
+            for i in range(0, np.shape(vectors2)[0]):
+                for j in range(0, np.shape(vectors2)[1]):
+                    vecPos2[i, j, :] = vecPos[vectorStep*i, vectorStep*j, :]
+                    vectors2[i, j, :] = vectors[vectorStep*i, vectorStep*j, :]
+                
+                
+                
+            
+            
+            thetaAxis = rF_spherical[:, 0, 1]*180/np.pi
+            phiAxis = rF_spherical[0, :, 2]*180/np.pi
+            # phiAxis = np.arange(0, 360 + deltaPhi, deltaPhi)
+            
+            ax6 = plt.figure().add_subplot()
+            # imshowObject = ax6.imshow(np.transpose(ratio), cmap = "plasma", norm=LogNorm(vmin=0.1, vmax=1))
+            # imshowObject = ax6.imshow(np.transpose(ratio), cmap = "plasma", norm=LogNorm())
+            obj = ax6.pcolormesh(phiAxis, thetaAxis, ratio, cmap = "plasma", norm=LogNorm())
+            ax6.quiver(vecPos2[:, :, 1], vecPos2[:, :, 0], vectors2[:, :, 0], vectors2[:, :, 1])
+            ax6.set_ylim(ax6.get_ylim()[::-1])
+            plt.colorbar(obj)
+            ax6.set_xlabel("Phi (º)")
+            ax6.set_ylabel("Theta (º)")
+            titleString = "Diagnostic on L = " + str(L)
+            ax6.set_title(titleString)
+            ax6.set_aspect("equal")
 
 
 
