@@ -464,39 +464,40 @@ class SHField(Field):
 
         #Nine individual gradients must be computed
         dBrdr = 0
-        dBthetadr = 0
-        dBphidr = 0
         dBrdtheta = 0
-        dBthetadtheta = 0
-        dBphidtheta = 0
         dBrdphi = 0
+        dBthetadr = 0
+        dBthetadtheta = 0
         dBthetadphi = 0
+        dBphidr = 0
+        dBphidtheta = 0
         dBphidphi = 0
 
         for n in range(1, self.nMax+1):
             #Acquire some common factors for speed of computation
             common_rFactor = np.power((self.a/r), n+2)
             for m in range(0, n+1):
-                common_phiFactor1 = self.g[n-1, m]*np.cos(m*phi) + self.h[n-1, m]*np.sin(m*phi)
-                common_phiFactor2 = self.g[n-1, m]*np.sin(m*phi) - self.h[n-1, m]*np.cos(m*phi)
+                C = np.cos(m*phi)
+                S = np.sin(m*phi)
+                common_phiFactor1 = self.g[n-1, m]*C + self.h[n-1, m]*S
+                common_phiFactor2 = self.g[n-1, m]*S - self.h[n-1, m]*C
                 common_thetaFactor1 = self.PnmCos(n, m, theta)
                 common_thetaFactor2 = self.PnmCosDerivative(n, m, theta)
                 common_thetaFactor3 = self.PnmCosDerivative2(n, m, theta)
 
                 #Now construct the derivatives
                 dBrdr -= (n+1)*(n+2)*np.power(self.a, n+2)*np.power(r, -(n+3))*common_phiFactor1*common_thetaFactor1
-                dBthetadr = 
-                dBphidr = 
-                dBrdtheta = 
-                dBthetadtheta = 
-                dBphidtheta = 
-                dBrdphi = 
-                dBthetadphi = 
-                dBphidphi = 
+                dBrdtheta += (n+1)*common_rFactor*common_phiFactor1*common_thetaFactor2
+                dBrdphi += (n+1)*common_rFactor*m*(-self.g[n-1, m]*S + self.h[n-1, m]*C)*common_thetaFactor1
+                dBthetadr += (n+2)*np.power(self.a, n+2)*np.power(r, -(n+3))*common_phiFactor1*common_thetaFactor2
+                dBthetadtheta -= common_rFactor*common_phiFactor1*common_thetaFactor3
+                dBthetadphi -= common_rFactor*m*(-self.g[n-1, m]*S + self.h[n-1, m]*C)*common_thetaFactor2
+                dBphidr -= m*np.power(self.a, n+2)*(n+2)*np.power(r, -(n+3))*common_phiFactor2*common_thetaFactor1
+                dBphidtheta += m*common_rFactor*common_phiFactor2*(np.sin(theta)*common_thetaFactor2-np.cos(theta)*common_thetaFactor1)/(np.power(np.sin(theta), 2))
+                dBphidphi += m*common_rFactor*m*common_phiFactor1*common_thetaFactor1
 
-
-
-
+        dBphidr = dBphidr/np.sin(theta)
+        dBphidphi = dBphidphi/np.sin(theta)
 
 
         #Now we can assemble the next gradients
