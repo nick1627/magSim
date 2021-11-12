@@ -485,7 +485,14 @@ class SHField(Field):
 
                 #Now construct the derivatives
                 dBrdr -= (n+1)*(n+2)*np.power(self.a, n+2)*np.power(r, -(n+3))*common_phiFactor1*common_thetaFactor1
-                
+                dBthetadr = 
+                dBphidr = 
+                dBrdtheta = 
+                dBthetadtheta = 
+                dBphidtheta = 
+                dBrdphi = 
+                dBthetadphi = 
+                dBphidphi = 
 
 
 
