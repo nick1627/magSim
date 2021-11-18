@@ -29,14 +29,29 @@ class Field:
         #     #we assume that the field wants to be in cartesian at the base level
         return
 
-    def convertCartesianToPolar(self, rvec):
-        #converts vectors from the origin only
-        
-        r = np.sqrt(rvec[0]**2 + rvec[1]**2 + rvec[2]**2)
-        theta = np.arctan2(np.sqrt(rvec[0]**2 + rvec[1]**2), rvec[2])
-        phi = np.arctan2(rvec[1], rvec[0])
 
-        return np.array([r, theta, phi])
+    def convertCartesianToPolar(self, rvec, theta=0, phi=0, origin=True):
+        if origin:
+        
+            r = np.sqrt(np.power(rvec[0], 2) + np.power(rvec[1], 2) + np.power(rvec[2], 2))
+            theta = np.arctan2(np.sqrt(np.power(rvec[0], 2) + np.power(rvec[1], 2)), rvec[2])
+            phi = np.arctan2(rvec[1], rvec[0])
+
+            result = np.array([r, theta, phi])
+        
+        else:
+            Sp = np.sin(phi)
+            St = np.sin(theta)
+            Cp = np.cos(phi)
+            Ct = np.cos(theta)
+
+            T = np.array([[St*Cp, St*Sp, Ct], 
+                            [Ct*Cp, Ct*Sp, -St],
+                            [-Sp, Cp, 0]])
+
+            result = np.matmul(T, rvec)
+        
+        return result
 
 
     def convertPolarToCartesian(self, rvec, theta, phi):
@@ -49,6 +64,7 @@ class Field:
 
         return np.matmul(T, rvec)
 
+
     def rotate2D(self, vec, theta):
         R = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
         return(np.matmul(R, vec))
@@ -57,6 +73,7 @@ class Field:
     def getField(self, posVec):
         #This is a placeholder
         return self.B
+
 
     def plot3DField(self, xmin, xmax, ymin, ymax, zmin, zmax, noPoints, planetRadius, planetaryFilter = True, scaleOverride = 1):
         xstep = (xmax - xmin)/(noPoints - 1)
@@ -306,7 +323,7 @@ class SHField(Field):
         self.R = np.identity(3)
         self.Rinv = np.identity(3)
 
-    def rotate(self, rotationKey):
+    def rotate(self, rotationKey): #Sets the rotation matrix for the whole system.
         #rotationKey is a string that tells you what system to rotate into.
         #rotationKey can take values "Field" and "Rotation", or "F" and "R"
 
@@ -367,7 +384,8 @@ class SHField(Field):
 
         else:
             raise Exception("Error:  n = " + n + " is invalid!")
-        
+
+
     def PnmCosDerivative(self, n, m, theta): #Returns derivative of Pnm(cos(theta)) wrt theta for n up to 2
         if n == 2:
             if m == 0:
@@ -390,12 +408,34 @@ class SHField(Field):
         else:
             raise Exception("Error:  n = " + n + " is invalid!")
 
-    def PnmCosDerivative2(self):
-        return
 
-    
-    def getField(self, rvec, returnCartesian=True):
+    def PnmCosDerivative2(self, n, m, theta): #Returns second derivative of Pnm(cos(theta)) wrt theta for n up to 2
+        if n == 2:
+            if m == 0:
+                return -3*np.cos(2*theta)
+            elif m == 1:
+                return -2*np.sqrt(3)*np.sin(2*theta)
+            elif m == 2:
+                return np.sqrt(3)*np.cos(2*theta)
+            else:
+                raise Exception("Error:  m = " + m + " is invalid!")
+
+        elif n == 1:
+            if m == 0:
+                return -np.cos(theta)
+            elif m == 1:
+                return -np.sin(theta)
+            else:
+                raise Exception("Error:  m = " + m + " is invalid!")
+
+        else:
+            raise Exception("Error:  n = " + n + " is invalid!")
+        
+
+    def getField(self, rvec, returnCartesian=True): #Returns the cartesian magnetic field at the specified cartesian position (either frame)
         #Input rvec will always be cartesian
+        #Input can either be in F frame or R frame.  
+        #output will match the input frame, no matter the coordinate system
 
         #First we convert rvec to the cartesian frame where the field is defined (rotation axis frame R)
         rvec = np.matmul(self.R, rvec)
@@ -433,23 +473,33 @@ class SHField(Field):
         #Now need to recover cartesian mag field components
         Bspherical = np.array([Br, Btheta, Bphi])
 
+        #Get Bcartesian in R frame
+        Bcartesian = self.convertPolarToCartesian(Bspherical, theta, phi)
+        #Now convert back to the desired frame
+        Bcartesian = np.matmul(self.Rinv, Bcartesian)
+
         if returnCartesian:
-            Bcartesian = self.convertPolarToCartesian(Bspherical, theta, phi)
-
-            #Now need to convert back to the desired frame
-            Bcartesian = np.matmul(self.Rinv, Bcartesian)
-
             return np.array(Bcartesian)
         else:
+            #Get position vector in original frame
+            rvec = np.matmul(self.Rinv, rvec)
+            #Extract theta and phi from it 
+            thetaOriginal = np.arccos(rvec[2]/np.linalg.norm(rvec))
+            phiOriginal = np.arctan2(rvec[1], rvec[0])
+            #Calculate Bspherical in original frame 
+            Bspherical = self.convertCartesianToPolar(Bcartesian, thetaOriginal, phiOriginal, origin=False)
+
             return Bspherical
 
-    def getGradField(self, rvec):
+
+    def getGradB(self, rvec, returnCartesian=True):
          #Input rvec will always be cartesian
          #The gradient of the magnetic field will be computed analytically
 
         #Need the actual field at each point -- may wish to consider incorporating the field to save
         #computational time.
-        Bspherical = self.getField(rvec)
+        #THIS IS THE FIELD IN R FRAME, SPHERICAL POLAR
+        Bspherical = self.getField(rvec, returnCartesian=False)
 
         #First we convert rvec to the cartesian frame where the field is defined (rotation axis frame R)
         rvec = np.matmul(self.R, rvec)
@@ -457,10 +507,11 @@ class SHField(Field):
 
         #Assume spherical coordinate system
         #we want positions in r, theta, phi 
+        rvec = self.convertCartesianToPolar(rvec, origin = True)
+        r = rvec[0]
+        theta = rvec[1]
+        phi = rvec[2]
 
-        r = np.sqrt(np.power(rvec[0], 2) + np.power(rvec[1], 2) + np.power(rvec[2], 2))
-        theta = np.arctan2(np.sqrt(np.power(rvec[0], 2) + np.power(rvec[1], 2)), rvec[2])
-        phi = np.arctan2(rvec[1], rvec[0])
 
         #Nine individual gradients must be computed
         dBrdr = 0
@@ -485,19 +536,31 @@ class SHField(Field):
                 common_thetaFactor2 = self.PnmCosDerivative(n, m, theta)
                 common_thetaFactor3 = self.PnmCosDerivative2(n, m, theta)
 
+                
+
                 #Now construct the derivatives
-                dBrdr -= (n+1)*(n+2)*np.power(self.a, n+2)*np.power(r, -(n+3))*common_phiFactor1*common_thetaFactor1
+                dBrdr -= (n+1)*(n+2)*self.a**(n+2)*r**(-(n+3))*common_phiFactor1*common_thetaFactor1
                 dBrdtheta += (n+1)*common_rFactor*common_phiFactor1*common_thetaFactor2
                 dBrdphi += (n+1)*common_rFactor*m*(-self.g[n-1, m]*S + self.h[n-1, m]*C)*common_thetaFactor1
-                dBthetadr += (n+2)*np.power(self.a, n+2)*np.power(r, -(n+3))*common_phiFactor1*common_thetaFactor2
+                dBthetadr += (n+2)*self.a**(n+2)*r**(-(n+3))*common_phiFactor1*common_thetaFactor2
                 dBthetadtheta -= common_rFactor*common_phiFactor1*common_thetaFactor3
                 dBthetadphi -= common_rFactor*m*(-self.g[n-1, m]*S + self.h[n-1, m]*C)*common_thetaFactor2
-                dBphidr -= m*np.power(self.a, n+2)*(n+2)*np.power(r, -(n+3))*common_phiFactor2*common_thetaFactor1
+                dBphidr -= m*(n+2)*self.a**(n+2)*r**(-(n+3))*common_phiFactor2*common_thetaFactor1
                 dBphidtheta += m*common_rFactor*common_phiFactor2*(np.sin(theta)*common_thetaFactor2-np.cos(theta)*common_thetaFactor1)/(np.power(np.sin(theta), 2))
                 dBphidphi += m*common_rFactor*m*common_phiFactor1*common_thetaFactor1
 
         dBphidr = dBphidr/np.sin(theta)
         dBphidphi = dBphidphi/np.sin(theta)
+
+        # print(dBrdr)
+        # print(dBrdtheta)
+        # print(dBrdphi)
+        # print(dBthetadr)
+        # print(dBthetadtheta)
+        # print(dBthetadphi)
+        # print(dBphidr)
+        # print(dBphidtheta)
+        # print(dBphidphi)
 
 
         #Now we can assemble the next gradients
@@ -507,9 +570,33 @@ class SHField(Field):
         dBdphi = (Bspherical[0]*dBrdphi + Bspherical[1]*dBthetadphi + Bspherical[2]*dBphidphi)/normSpherical
 
         gradB = np.array([dBdr, (1/r)*dBdtheta, (1/(r*np.sin(theta)))*dBdphi])
+
+        if not(returnCartesian):
+            raise Exception("spherical polar output of gradient not yet possible")
         
+        #Get gradient of field in cartesian (R frame)
+        gradB = self.convertPolarToCartesian(gradB, theta, phi)
+        
+        #Now convert to desired frame
+        gradB = np.matmul(self.Rinv, gradB)
+
         return gradB
 
+
+    def getBCrossGradB(self, rvec):
+        B = self.getField(rvec)
+        gradB = self.getGradField(rvec)
+
+        return np.cross(B, gradB)
+        
+    
+    def getComponents(a, b):
+        #a and b are both vectors
+        #Vector components of a parallel to b and perpendicular to b are returned
+        para = np.dot(a, b)*b/np.linalg.norm(b)
+        perp = a - para
+        return para, perp
+        
 
     def getLongitudePlaneB(self, rMax, phi, N, planetaryFilter = True):
         #rMax is the maximum r to plot out to in  units of self.a
@@ -539,6 +626,45 @@ class SHField(Field):
         
         return B, r
 
+
+    def getLongitudePlaneGradB(self, rMax, phi, N, planetaryFilter = True):
+        #rMax is the maximum r to plot out to in  units of self.a
+        #phi is the particular longitude to plot at in radians
+        #planetaryFilter tells teh function whether or not to plot where the planet is
+        #N is the  number of points on the side length of the rMax x rMax grid, inclusive of endpoints
+        
+        gradB = np.zeros((2*N, N, 3))
+        r = np.zeros(np.shape(gradB))
+        
+        l = self.a*rMax/(N-1)
+        latticeVecAxial = np.array([0, 0, 2*self.a*rMax/(2*N-1)])
+        latticeVecRho = np.array([l*np.cos(phi), l*np.sin(phi), 0])
+        # startVec = -0.5*(2*N - 1)*latticeVecAxial
+        startVec = -(N - 0.5)*latticeVecAxial
+        for i in range(0, np.shape(gradB)[0]):
+            for j in range(0, np.shape(gradB)[1]):
+                current_r = startVec + i*latticeVecAxial + j*latticeVecRho
+                r[i, j] = current_r
+                if planetaryFilter:
+                    if np.linalg.norm(current_r) < self.a:
+                        gradB[i, j] = np.zeros((3))
+                    else:
+                        gradB[i, j] = self.getGradB(current_r)
+                else:
+                    gradB[i, j] = self.getGradB(current_r)
+        
+        return gradB, r
+
+
+    def getLongitudePlaneDriftDirection(self, rMax, phi, N):
+        #First get B
+        BPlane, r = self.getLongitudePlaneB(rMax, phi, N)
+        #Now get gradB
+        gradBPlane, r = self.getLongitudePlaneGradB(rMax, phi, N)
+        #Now have to combine the two
+        drift = np.cross(BPlane, gradBPlane)
+        drift = drift/np.linalg.norm(drift, axis=-1)
+        return drift, r
 
     
     def getLongitudePlanesB(self, deltaPhi, rMax, N, planetaryFilter = True):
@@ -576,6 +702,7 @@ class SHField(Field):
 
 
         return
+
 
     def plotDeviationData(self, deltaPhi, rMax, N):
         #This function plots data about how the field deviates from that of a dipole.
@@ -621,6 +748,7 @@ class SHField(Field):
         ax3.set_xlabel("Longitude (º)")
         ax3.set_ylabel("Maximum ratio of absolute deviation from dipole against dipole field")
         ax3.set_title("Field Deviation")
+
 
     def plotDeviationColourMapLongitudePlane(self, phi, rMax, N, vectorStep = 10, planetaryFilter = True, plot=True):
         #This plots the deviation of the complete field from a dipole for a single plane of constant longitude
@@ -747,8 +875,6 @@ class SHField(Field):
         return
         
 
-     
-
     def getLShellB(self, L, NTheta = 100, NPhi = 361):
         #Returns an array of the magnetic field at a particular L-shell 
         #deltaTheta in degrees
@@ -862,11 +988,13 @@ class SHField(Field):
             ax6.set_title(titleString)
             ax6.set_aspect("equal")
 
-
-
         return
 
-def plotDeviationColourMapLShell2(self, L, NTheta = 100, NPhi = 361, vectorStep = 10, plot=True):
+
+    def plotDeviationColourMapLShell2(self, L, NTheta = 100, NPhi = 361, vectorStep = 10, plot=True):
+        #UNFINISHED:  purpose is to plot multiple L shell graphs as subplots.  THe plots change size, so you'll have
+        #to find a way to deal with that
+
         #L is the L shell to plot at
         #deltaTheta is the interval in degrees between points
         #deltaPhi is the interval in degrees between points in the phi direction
@@ -977,6 +1105,104 @@ def plotDeviationColourMapLShell2(self, L, NTheta = 100, NPhi = 361, vectorStep 
 
 
 
+        return
+
+
+    def plotDriftDirectionLongitudePlane(self, phi, rMax, N, plot=True):
+        #phi in degrees
+
+
+        #Check field orientation
+        if self.rotationFlag == "R":
+            raise(Exception("The field must be rotated first!"))
+        #First some input checks on phi:
+        if isinstance(phi, int):
+            phiArray = np.array([phi])
+        elif isinstance(phi, list):
+            phiArray = np.array(phi)
+        else:
+            phiArray = copy.deepcopy(phi)
+
+        phiArrayDeg = copy.deepcopy(phiArray)
+        phiArray = np.deg2rad(phiArray)
+
+        drift = np.zeros((np.shape(phiArray)[0], 2*N, N, 3)) #drift direction vectors
+        positions = np.zeros(np.shape(drift)) #position vectors cartesian F frame
+        normalVec = np.zeros(np.shape(drift))
+        counter = 0
+        for phi in phiArray:
+            #Obtain plane of drift vectors
+            drift[counter, :, :, :], positions[counter, :, :, :] = self.getLongitudePlaneDriftDirection(rMax, phi, N)
+            #Obtain the cartesian components of each plane's normal vector
+            normalVec[counter, :, :, 0] = np.sin(phi)
+            normalVec[counter, :, :, 1] = -np.cos(phi)
+            counter += 1
+
+        #We now have the drift direction vectors in cartesian, oriented with z parallel to dipole axis.
+        #Drift vectors are already normalised
+        #Also have plane normal vectors.
+        
+        #Compute normal component for colour map
+        normalComponent = np.dot(drift, normalVec)
+
+        #Now need to compute the vector components within the plane
+        planeVecs = np.zeros((np.shape(phiArray)[0], 2*N, N, 2))
+
+        counter = 0
+        for phi in phiArray:
+            planeVecs[counter, :, :, 0] = np.cos(phi)*drift[counter, :, :, 0] + np.sin(phi)*drift[counter, :, :, 1]
+            counter += 1
+        planeVecs[:, :, :, 1] = drift[:, :, :, 2]
+
+        #Now plot
+
+        if plot:
+            noFigs = np.shape(phiArray)[0]
+            maxCols = 6
+            figCols = int(min([maxCols, noFigs]))
+            figRows = int(np.ceil(noFigs/figCols))
+            fig, axs = plt.subplots(nrows=figRows, ncols=figCols, squeeze=False)
+            rhoAxis = np.linspace(0, rMax, N)
+            zAxis = np.linspace(-rMax, rMax, 2*N)
+
+            flatNormal = normalComponent.flatten()
+            flatNormal = np.sort(flatNormal)
+            found = False
+            counter = 0
+            while found == False:
+                if flatNormal[counter] != 0.0:
+                    found = True
+                    colourMin = flatNormal[counter]
+                else:
+                    counter+=1
+
+            colourMax = np.max(flatNormal)
+            
+            counter = 0
+            for i in range(0, figRows):
+                for j in range(0, figCols):
+                    if counter < noFigs:
+                        # obj = axs[i].pcolormesh(rhoAxis, zAxis, diagnostic, cmap = "plasma", norm=LogNorm())
+                        obj = axs[i, j].pcolormesh(rhoAxis, zAxis, normalComponent[counter, :, :], cmap = "plasma", norm=LogNorm(), vmax=colourMax, vmin=colourMin)
+                        axs[i, j].quiver(vecPos2[counter, :, :, 0], vecPos2[counter, :, :, 1], vectors2[counter, :, :, 0], vectors2[counter, :, :, 1])
+                        
+                        axs[i, j].set_xlabel("rho")
+                        axs[i, j].set_ylabel("z")
+                        titleString = "Phi = " + str(phiArrayDeg[counter]) + "º"
+                        axs[i, j].set_title(titleString)
+                        axs[i, j].set_aspect("equal") 
+                        counter += 1
+            
+            fig.colorbar(obj, ax = axs.ravel().tolist())
+
+
+
+
+
+        return
+
+
+    def plotDriftDirectionLShell(self):
         return
 
 
