@@ -1,6 +1,4 @@
-#!/bin/sh
-'''exec' "/Users/nicholasrayns/Documents/Physics/Year 4/Project/Code/magSim/venv/bin/python3" "$0" "$@"
-' '''
+#!/home/pi/Documents/magSim/venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys
