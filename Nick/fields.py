@@ -432,13 +432,14 @@ class SHField(Field):
             raise Exception("Error:  n = " + n + " is invalid!")
         
 
-    def getField(self, rvec, returnCartesian=True): #Returns the cartesian magnetic field at the specified cartesian position (either frame)
+    def getField(self, rvec, returnCartesian=True, returnR = False): #Returns the cartesian magnetic field at the specified cartesian position (either frame)
         #Input rvec will always be cartesian
         #Input can either be in F frame or R frame.  
         #output will match the input frame, no matter the coordinate system
 
         #First we convert rvec to the cartesian frame where the field is defined (rotation axis frame R)
-        rvec = np.matmul(self.R, rvec)
+        if self.rotationFlag == "F":
+            rvec = np.matmul(self.R, rvec)
 
 
         #Assume spherical coordinate system
@@ -473,33 +474,44 @@ class SHField(Field):
         #Now need to recover cartesian mag field components
         Bspherical = np.array([Br, Btheta, Bphi])
 
-        #Get Bcartesian in R frame
-        Bcartesian = self.convertPolarToCartesian(Bspherical, theta, phi)
-        #Now convert back to the desired frame
-        Bcartesian = np.matmul(self.Rinv, Bcartesian)
-
-        if returnCartesian:
-            return np.array(Bcartesian)
+        if returnR:
+            #In this case, we ignore the rotation flag
+            if returnCartesian:
+                #Get Bcartesian in R frame
+                Bcartesian = self.convertPolarToCartesian(Bspherical, theta, phi)
+                #Already in R frame
+                return Bcartesian
+            else:
+                return Bspherical
         else:
-            #Get position vector in original frame
-            rvec = np.matmul(self.Rinv, rvec)
-            #Extract theta and phi from it 
-            thetaOriginal = np.arccos(rvec[2]/np.linalg.norm(rvec))
-            phiOriginal = np.arctan2(rvec[1], rvec[0])
-            #Calculate Bspherical in original frame 
-            Bspherical = self.convertCartesianToPolar(Bcartesian, thetaOriginal, phiOriginal, origin=False)
+            #In this case, the rotation flag is respected
+            #Get Bcartesian in R frame
+            Bcartesian = self.convertPolarToCartesian(Bspherical, theta, phi)
+            #Now convert back to the desired frame
+            Bcartesian = np.matmul(self.Rinv, Bcartesian)
 
-            return Bspherical
+            if returnCartesian:
+                return np.array(Bcartesian)
+            else:
+                #Get position vector in original frame (F)
+                rvec = np.matmul(self.Rinv, rvec)
+                #Extract theta and phi from it 
+                thetaOriginal = np.arccos(rvec[2]/np.linalg.norm(rvec))
+                phiOriginal = np.arctan2(rvec[1], rvec[0])
+                #Calculate Bspherical in original frame 
+                Bspherical = self.convertCartesianToPolar(Bcartesian, thetaOriginal, phiOriginal, origin=False)
+
+                return Bspherical
 
 
     def getGradB(self, rvec, returnCartesian=True):
-         #Input rvec will always be cartesian
-         #The gradient of the magnetic field will be computed analytically
+        #Input rvec will always be cartesian
+        #The gradient of the magnetic field will be computed analytically
 
         #Need the actual field at each point -- may wish to consider incorporating the field to save
         #computational time.
         #THIS IS THE FIELD IN R FRAME, SPHERICAL POLAR
-        Bspherical = self.getField(rvec, returnCartesian=False)
+        Bspherical = self.getField(rvec, returnCartesian=False, returnR=True)
 
         #First we convert rvec to the cartesian frame where the field is defined (rotation axis frame R)
         rvec = np.matmul(self.R, rvec)
@@ -661,8 +673,9 @@ class SHField(Field):
         BPlane, r = self.getLongitudePlaneB(rMax, phi, N)
         #Now get gradB
         gradBPlane, r = self.getLongitudePlaneGradB(rMax, phi, N)
-        #Now have to combine the two
+        #Now have to combine the two to get the drift direction
         drift = np.cross(BPlane, gradBPlane)
+        #Normalise
         drift = drift/np.linalg.norm(drift, axis=-1)
         return drift, r
 
@@ -1147,8 +1160,10 @@ class SHField(Field):
 
         #Now need to compute the vector components within the plane
         planeVecs = np.zeros((np.shape(phiArray)[0], 2*N, N, 2))
+        vecPos = np.zeros(np.shape(planeVecs))
+        vecPos[:, :, :, 1] = positions[:, :, :, 2]
+        vecPos[:, :, :, 0] = np.sqrt(positions[:, :, :, 0]**2 + positions[:, :, :, 1]**2)
 
-        counter = 0
         for phi in phiArray:
             planeVecs[counter, :, :, 0] = np.cos(phi)*drift[counter, :, :, 0] + np.sin(phi)*drift[counter, :, :, 1]
             counter += 1
@@ -1184,7 +1199,7 @@ class SHField(Field):
                     if counter < noFigs:
                         # obj = axs[i].pcolormesh(rhoAxis, zAxis, diagnostic, cmap = "plasma", norm=LogNorm())
                         obj = axs[i, j].pcolormesh(rhoAxis, zAxis, normalComponent[counter, :, :], cmap = "plasma", norm=LogNorm(), vmax=colourMax, vmin=colourMin)
-                        axs[i, j].quiver(vecPos2[counter, :, :, 0], vecPos2[counter, :, :, 1], vectors2[counter, :, :, 0], vectors2[counter, :, :, 1])
+                        axs[i, j].quiver(vecPos[counter, :, :, 0], vecPos[counter, :, :, 1], planeVecs[counter, :, :, 0], planeVecs[counter, :, :, 1])
                         
                         axs[i, j].set_xlabel("rho")
                         axs[i, j].set_ylabel("z")
@@ -1203,6 +1218,7 @@ class SHField(Field):
 
 
     def plotDriftDirectionLShell(self):
+        
         return
 
 
