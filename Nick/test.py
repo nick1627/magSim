@@ -140,11 +140,30 @@ UField.rotate("Field")
 # # print(w)
 
 #========================================================================================
-UField.plotDeviationColourMapLShell(1.5)
-UField.plotDeviationColourMapLShell(2)
-UField.plotDeviationColourMapLShell(2.5)
-UField.plotDeviationColourMapLShell(3)
-UField.plotDeviationColourMapLShell(3.5)
-UField.plotDeviationColourMapLShell(4)
+# UField.plotDeviationColourMapLShell(6.5)
+# UField.plotDeviationColourMapLShell(2)
+# UField.plotDeviationColourMapLShell(2.5)
+# UField.plotDeviationColourMapLShell(3)
+# UField.plotDeviationColourMapLShell(3.5)
+# UField.plotDeviationColourMapLShell(4)
+
+# UField.plotDeviationColourMapLongitudePlane([0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110], 5, 50)
+
+#==================================================
+# GRADIENT TESTING
+rA = np.array([0, 0, 4])*Ru
+rB = np.array([1, 2, 3])*Ru
+rC = np.array([-4, 2.5, 6])*Ru
+
+print("Gradient at A:")
+print(UField.getGradB(rA))
+
+gradient = UField.getGradB(rB)
+print("Gradient at B:")
+print(gradient)
+# print("magnitude of gradient")
+# print(np.linalg.norm(gradient))
+print("Gradient at C:")
+print(UField.getGradB(rC))
 
 plt.show()
