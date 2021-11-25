@@ -52,17 +52,22 @@ h12 = 6405
 g22 = 1453
 h22 = 4220
 
+g = np.array([[g01, g11], 
+              [g02, g12, g22]], dtype = object)
+h = np.array([[0, h11], 
+              [0, h12, h22]], dtype = object)
+
 args = np.array([g01, g11, h11, g02, g12, h12, g22, h22])
 plt.rcParams["figure.autolayout"] = True
 params = {
-'axes.labelsize': 20,
-'font.size': 20,
+'axes.labelsize': 12,
+'font.size': 12,
 #'font.family': 'sans-serif', # Optionally change the font family to sans-serif
 #'font.serif': 'Arial', # Optionally change the font to Arial
-'legend.fontsize': 20,
-'xtick.labelsize': 20,
-'ytick.labelsize': 20, 
-'figure.figsize': [10, 10]
+'legend.fontsize': 11,
+'xtick.labelsize': 12,
+'ytick.labelsize': 12, 
+'figure.figsize': [8, 8]
 } 
 plt.rcParams.update(params)
 #%%
@@ -203,7 +208,7 @@ plt.show()
 
 #%%
 z1 = np.linspace(-5 * a, 5 * a, 100)
-x1 = np.linspace(0, 5 * a, 50)
+x1 = np.linspace(0, 5 * a, 100)
 
 phi = 0#np.pi/0.5
 
@@ -220,11 +225,31 @@ B_ratio = abs(top) / abs(bottom)
 
 fig, ax = plt.subplots(1, 1)
 mag_vec = np.sqrt((u_quad * u_quad) + (w_quad * w_quad))
-u_norm = u_quad / mag_vec
-w_norm = w_quad / mag_vec
+u = u_quad / mag_vec
+w = w_quad / mag_vec
 
-im = ax.imshow(B_ratio, extent=[0,5,-5,5],  norm=colors.LogNorm())
-qr = ax.quiver(x_quad[::2], z_quad[::2], u_norm[::2], w_norm[::2], pivot = 'mid', scale = 50)
+u = np.delete(u, slice(0, 100, 2), 0)
+u = np.delete(u, slice(0, 100, 2), 1)
+u = np.delete(u, slice(0, 50, 2), 0)
+u = np.delete(u, slice(0, 50, 2), 1)
+
+w = np.delete(w, slice(0, 100, 2), 0)
+w = np.delete(w, slice(0, 100, 2), 1)
+w = np.delete(w, slice(0, 50, 2), 0)
+w = np.delete(w, slice(0, 50, 2), 1)
+
+x_quad = np.delete(x_quad, slice(0, 100, 2), 0)
+x_quad = np.delete(x_quad, slice(0, 100, 2), 1)
+x_quad = np.delete(x_quad, slice(0, 50, 2), 0)
+x_quad = np.delete(x_quad, slice(0, 50, 2), 1)
+
+z_quad = np.delete(z_quad, slice(0, 100, 2), 0)
+z_quad = np.delete(z_quad, slice(0, 100, 2), 1)
+z_quad = np.delete(z_quad, slice(0, 50, 2), 0)
+z_quad = np.delete(z_quad, slice(0, 50, 2), 1)
+
+im = ax.imshow(B_ratio, extent=[0,5,-5,5],  norm=colors.LogNorm(), cmap = 'plasma')
+qr = ax.quiver(x_quad, z_quad, u, w, pivot = 'mid', scale = 30)
 #fig.colorbar(im)
 #plt.show()
 
@@ -244,11 +269,21 @@ def animate_im(num, x1, z1, a, args, R):
     B_ratio = abs(top) / abs(bottom)
     
     mag_vec = np.sqrt((u_quad * u_quad) + (w_quad * w_quad))
-    u_norm = u_quad / mag_vec
-    w_norm = w_quad / mag_vec
+    u = u_quad / mag_vec
+    w = w_quad / mag_vec
+    
+    u = np.delete(u, slice(0, 100, 2), 0)
+    u = np.delete(u, slice(0, 100, 2), 1)
+    u = np.delete(u, slice(0, 50, 2), 0)
+    u = np.delete(u, slice(0, 50, 2), 1)
+
+    w = np.delete(w, slice(0, 100, 2), 0)
+    w = np.delete(w, slice(0, 100, 2), 1)
+    w = np.delete(w, slice(0, 50, 2), 0)
+    w = np.delete(w, slice(0, 50, 2), 1)
     
     im.set_array(B_ratio)
-    qr.set_UVC(u_norm[::2], w_norm[::2])
+    qr.set_UVC(u, w)
     plt.title('Longitude = {:.0f}'.format(num * 180 / np.pi))
     plt.xlabel('x/a')
     plt.ylabel('z/a')
@@ -259,8 +294,77 @@ anim3 = animation.FuncAnimation(fig, animate_im, frames = num_range, \
 
 fig.colorbar(im)
 plt.show()
+
+anim3.save('Harry/ratio_animation_with_vectors.gif')
+
 #%%
-anim3.save('Harry/ratio_animation.gif')
+
+z1 = np.linspace(-5 * a, 5 * a, 100)
+x1 = np.linspace(0, 5 * a, 100)
+
+phi = np.linspace(0, 2 * np.pi, 10)
+
+fig, axs = plt.subplots(2, 5)
+
+for i in range(len(phi)):
+    
+    L = np.array([2, 3, 4])
+    for j in L:
+        
+        theta_thr = np.arcsin(j ** (-0.5)) 
+    
+        theta_in = np.linspace(theta_thr, np.pi - theta_thr, 100)
+        
+        r_L = j * np.sin(theta_in) * np.sin(theta_in)
+        
+        y = r_L * np.cos(theta_in)
+        x = r_L * np.sin(theta_in)
+        axs[int(i / 5)][i%5].plot(x, y, label = 'L = {}'.format(j))
+    
+    axs[int(i / 5)][i%5].legend()
+    
+    x_quad, y_quad, z_quad, u_quad, v_quad, w_quad = B_aligned_cart(x1, z1, a, args, 2, R, phi[i])
+    x_dip, y_dip, z_dip, u_dip, v_dip, w_dip = B_aligned_cart(x1, z1, a, args, 1, R, phi[i])
+    
+    uq_d = u_quad - u_dip
+    vq_d = v_quad - v_dip
+    wq_d = w_quad - w_dip
+    top = np.sqrt((uq_d * uq_d) + (vq_d * vq_d) + (wq_d * wq_d))
+    bottom = np.sqrt((u_dip * u_dip) + (v_dip * v_dip) + (w_dip * w_dip))
+    
+    B_ratio = abs(top) / abs(bottom)
+    
+    mag_vec = np.sqrt((u_quad * u_quad) + (w_quad * w_quad))
+    u = u_quad / mag_vec
+    w = w_quad / mag_vec
+    
+    u = np.delete(u, slice(0, 100, 2), 0)
+    u = np.delete(u, slice(0, 100, 2), 1)
+    u = np.delete(u, slice(0, 50, 2), 0)
+    u = np.delete(u, slice(0, 50, 2), 1)
+    
+    w = np.delete(w, slice(0, 100, 2), 0)
+    w = np.delete(w, slice(0, 100, 2), 1)
+    w = np.delete(w, slice(0, 50, 2), 0)
+    w = np.delete(w, slice(0, 50, 2), 1)
+    
+    x_quad = np.delete(x_quad, slice(0, 100, 2), 0)
+    x_quad = np.delete(x_quad, slice(0, 100, 2), 1)
+    x_quad = np.delete(x_quad, slice(0, 50, 2), 0)
+    x_quad = np.delete(x_quad, slice(0, 50, 2), 1)
+    
+    z_quad = np.delete(z_quad, slice(0, 100, 2), 0)
+    z_quad = np.delete(z_quad, slice(0, 100, 2), 1)
+    z_quad = np.delete(z_quad, slice(0, 50, 2), 0)
+    z_quad = np.delete(z_quad, slice(0, 50, 2), 1)
+    
+    im = axs[int(i / 5)][i%5].imshow(B_ratio, extent=[0,5,-5,5], norm=colors.LogNorm(vmin=0.1, vmax=1.3), cmap = 'plasma')
+    qr = axs[int(i / 5)][i%5].quiver(x_quad, z_quad, u, w, pivot = 'mid', scale = 30)
+    axs[int(i / 5)][i%5].set_title('Longitude = {:.0f} deg'.format(phi[i] * 180 / np.pi))
+    axs[int(i / 5)][i%5].set(xlabel='x / a', ylabel='z / a')
+    fig.colorbar(im, ax= axs[int(i / 5)][i%5])
+    
+plt.show()
 #%%
 
 z1 = np.linspace(-5 * a, 5 * a, 20)
@@ -286,8 +390,10 @@ for i in tqdm(phi):
     
     B_ratio = abs(top) / abs(bottom)
         
-    B_all.append(max(B_ratio))
-
+    B_all.append(np.amax(B_ratio))
+    
+    
+    
 plt.plot(phi * 180 / np.pi, B_all)
 plt.xlabel('Longitude (deg)')
 plt.ylabel('Max ratio')
@@ -318,22 +424,322 @@ B_ratio = abs(top) / abs(bottom)
 
 B_ratio = B_ratio.reshape((len(theta_in), len(phi_in)))
 
+u_all = []
+v_all = []
+
+for i in range(len(u_quad)):
+    uvw_quad = np.array([u_quad[i], v_quad[i], w_quad[i]])
+    quad_norm = uvw_quad / np.linalg.norm(uvw_quad)
+    
+    uvw_dip = np.array([u_dip[i], v_dip[i], w_dip[i]])
+    dip_norm = uvw_dip / np.linalg.norm(uvw_dip)
+    
+    dot = np.dot(quad_norm, dip_norm)
+    angle = np.arccos(dot)
+
+    rot_matrix = np.array([[np.cos(angle), -np.sin(angle)],
+                       [np.sin(angle), np.cos(angle)]])
+    
+    u, v = np.matmul(rot_matrix, np.array([0, 1]))
+    u_all.append(u)
+    v_all.append(v)
+    
+u = np.array(u_all)
+v = np.array(v_all)
+u = u.reshape((len(theta_in), len(phi_in)))    
+v = v.reshape((len(theta_in), len(phi_in)))
+
+u = np.delete(u, slice(0, 100, 2), 0)
+u = np.delete(u, slice(0, 100, 2), 1)
+u = np.delete(u, slice(0, 50, 2), 0)
+u = np.delete(u, slice(0, 50, 2), 1)
+
+v = np.delete(v, slice(0, 100, 2), 0)
+v = np.delete(v, slice(0, 100, 2), 1)
+v = np.delete(v, slice(0, 50, 2), 0)
+v = np.delete(v, slice(0, 50, 2), 1)
+
+phi_vec = phi_deg[::2]
+phi_vec = phi_vec[::2]
+
+theta_vec = theta_deg[::2]
+theta_vec = theta_vec[::2]
+
 fig, ax = plt.subplots(1, 1)
-im = ax.imshow(B_ratio,  extent=[phi_deg[0],phi_deg[-1],theta_deg[-1],theta_deg[0]], norm=colors.LogNorm(), aspect='auto')
-#im = ax.pcolormesh(B_ratio,  norm=colors.LogNorm())
-#ax.set_xticks(np.linspace(0, 360, 100))
-#ax.set_xticklabels(np.linspace(0, 360, 5))
+im = ax.imshow(B_ratio,  extent=[phi_deg[0],phi_deg[-1],theta_deg[-1],theta_deg[0]], cmap = 'plasma', norm=colors.LogNorm(), aspect='auto')
 fig.colorbar(im)
+ax.quiver(phi_vec, theta_vec, u, v, scale = 30, pivot = 'mid')
 plt.xlabel('Longitude (deg)', fontsize=16)
 plt.ylabel('Latitude (deg)', fontsize=16)
 plt.title('Max ratio, L = 2', fontsize=16)
 plt.show()
 #%%
-#plt.scatter(x, z, c = B_mag, s = 150)
-phi = 137 * np.pi / 180
+L = np.arange(2, 10)
+fig, axs = plt.subplots(2, 4)
 
-x,y,z,u,v,w = B_mag_cart(x1, z1, a, args, 2, R, phi,True)
-saveBField(x, y, z, u, v, w, 'Output/complete_field_phi=137_CI')
+for j in range(len(L)):
+
+    theta_thr = np.arcsin(L[j] ** (-0.5)) 
+    
+    theta_in = np.linspace(theta_thr, np.pi - theta_thr, 100)
+    phi_in = np.linspace(0, 2 * np.pi, 100)
+    theta_deg = theta_in * 180 / np.pi
+    phi_deg = phi_in * 180 / np.pi
+    
+    x_quad, y_quad, z_quad, u_quad, v_quad, w_quad = B_Lshell(L[j], theta_in, phi_in, a, args, 2, R)
+    x_dip, y_dip, z_dip, u_dip, v_dip, w_dip = B_Lshell(L[j], theta_in, phi_in, a, args, 1, R)
+    
+    uq_d = u_quad - u_dip
+    vq_d = v_quad - v_dip
+    wq_d = w_quad - w_dip
+    top = np.sqrt((uq_d * uq_d) + (vq_d * vq_d) + (wq_d * wq_d))
+    bottom = np.sqrt((u_dip * u_dip) + (v_dip * v_dip) + (w_dip * w_dip))
+    
+    B_ratio = abs(top) / abs(bottom)
+    
+    B_ratio = B_ratio.reshape((len(theta_in), len(phi_in)))
+    
+    u_all = []
+    v_all = []
+    
+    for i in range(len(u_quad)):
+        uvw_quad = np.array([u_quad[i], v_quad[i], w_quad[i]])
+        quad_norm = uvw_quad / np.linalg.norm(uvw_quad)
+        
+        uvw_dip = np.array([u_dip[i], v_dip[i], w_dip[i]])
+        dip_norm = uvw_dip / np.linalg.norm(uvw_dip)
+        
+        dot = np.dot(quad_norm, dip_norm)
+        angle = np.arccos(dot)
+    
+        rot_matrix = np.array([[np.cos(angle), -np.sin(angle)],
+                           [np.sin(angle), np.cos(angle)]])
+        
+        u, v = np.matmul(rot_matrix, np.array([0, 1]))
+        u_all.append(u)
+        v_all.append(v)
+        
+    u = np.array(u_all)
+    v = np.array(v_all)
+    u = u.reshape((len(theta_in), len(phi_in)))    
+    v = v.reshape((len(theta_in), len(phi_in)))
+    
+    u = np.delete(u, slice(0, 100, 2), 0)
+    u = np.delete(u, slice(0, 100, 2), 1)
+    u = np.delete(u, slice(0, 50, 2), 0)
+    u = np.delete(u, slice(0, 50, 2), 1)
+    
+    v = np.delete(v, slice(0, 100, 2), 0)
+    v = np.delete(v, slice(0, 100, 2), 1)
+    v = np.delete(v, slice(0, 50, 2), 0)
+    v = np.delete(v, slice(0, 50, 2), 1)
+    
+    phi_vec = phi_deg[::2]
+    phi_vec = phi_vec[::2]
+    
+    theta_vec = theta_deg[::2]
+    theta_vec = theta_vec[::2]
+    
+    im = axs[int(j / 4)][j%4].imshow(B_ratio,  extent=[phi_deg[0],phi_deg[-1],\
+            theta_deg[-1],theta_deg[0]], cmap = 'plasma', norm=colors.LogNorm(vmin = 0.1, vmax = 1.369632402682142), aspect='auto')
+    axs[int(j / 4)][j%4].quiver(phi_vec, theta_vec, u, v, scale = 40, headwidth = 6, pivot = 'mid')
+    axs[int(j / 4)][j%4].set_title('Max ratio, L = {}'.format(L[j]))
+    axs[int(j / 4)][j%4].set(xlabel='Longitude (deg)', ylabel='Latitude (deg)')
+    fig.colorbar(im, ax= axs[int(j / 4)][j%4])
+plt.show()
+#%%
+# z1 = np.linspace(-5 * a, 5 * a, 20)
+# x1 = np.linspace(0, 5 * a, 10)
+# y1 = [0]
+
+# coords, dB, B = gradB_fun(x1, y1, z1, a, g, h, 2, R)
+
+#test points
+
+x1 = [0 * a]
+y1 = [0 * a]
+z1 = [4 * a]
+
+coords, dB1, B = gradB_fun(x1, y1, z1, a, g, h, 2, R)
+
+print('A',dB1)
+
+x1 = [1 * a]
+y1 = [2 * a]
+z1 = [3 * a]
+
+coords, dB2, B = gradB_fun(x1, y1, z1, a, g, h, 2, R)
+
+print('B', dB2, np.linalg.norm(dB2))
+
+x1 = [-4 * a]
+y1 = [2.5 * a]
+z1 = [6 * a]
+
+coords, dB3, B = gradB_fun(x1, y1, z1, a, g, h, 2, R)
+
+print('C', dB3)
+
+#%%
+x1 = np.linspace(0, 5 * a, 10)
+y1 = [0]
+z1 = np.linspace(-5 * a, 5 * a, 20)
+
+coords, dB, B = gradB_fun(x1, y1, z1, a, g, h, 1, R)
+
+du = dB[0]
+dv = dB[1]
+dw = dB[2]
+
+du = du.reshape((len(x1), len(z1))).T
+dv = dv.reshape((len(x1), len(z1))).T
+dw = dw.reshape((len(x1), len(z1))).T
+
+x, y, z = coords
+
+x = x.reshape((len(x1), len(z1))).T
+y = y.reshape((len(x1), len(z1))).T
+z = z.reshape((len(x1), len(z1))).T
+
+plt.quiver(x, z, du, dw)
+
+#%%
+
+x1 = np.linspace(0, 5 * a, 20)
+z1 = np.linspace(-5 * a, 5 * a, 20)
+phi_rot = 1 * np.pi#np.linspace(0, 2 * np.pi, 5)
+
+coords, dB, B = gradB_long(x1, z1, a, g, h, 1, R, phi_rot)
+
+x, y, z = coords
+du, dv, dw = dB
+u, v, w = B
+
+plt.quiver(x, z, du, dw, pivot = 'mid')
+plt.show()
+
+#%%
+x1 = np.linspace(0, 5 * a, 100)
+z1 = np.linspace(-5 * a, 5 * a, 100)
+phi_rot = 1.5 * np.pi#np.linspace(0, 2 * np.pi, 5)
+
+coords, dB, B = gradB_long(x1, z1, a, g, h, 2, R, phi_rot)
+
+x, y, z = coords
+du, dv, dw = dB
+u, v, w = B
+
+drift = np.zeros((3, len(u), len(u[0])))
+
+for i in range(len(u)):
+    for j in range(len(u[0])):
+        dB_temp = np.array([du[i][j], dv[i][j], dw[i][j]])
+        B_temp = np.array([u[i][j], v[i][j], w[i][j]])
+        
+        cross_temp = np.cross(B_temp, dB_temp)
+        drift[0][i][j] = cross_temp[0] / np.linalg.norm(cross_temp)
+        drift[1][i][j] = cross_temp[1] / np.linalg.norm(cross_temp)
+        drift[2][i][j] = cross_temp[2] / np.linalg.norm(cross_temp)
+
+u_dr, v_dr, w_dr = drift
+
+u_dr = np.delete(u_dr, slice(0, 100, 2), 0)
+u_dr = np.delete(u_dr, slice(0, 100, 2), 1)
+u_dr = np.delete(u_dr, slice(0, 50, 2), 0)
+u_dr = np.delete(u_dr, slice(0, 50, 2), 1)
+
+w_dr = np.delete(w_dr, slice(0, 100, 2), 0)
+w_dr = np.delete(w_dr, slice(0, 100, 2), 1)
+w_dr = np.delete(w_dr, slice(0, 50, 2), 0)
+w_dr = np.delete(w_dr, slice(0, 50, 2), 1)
+
+x = np.delete(x, slice(0, 100, 2), 0)
+x = np.delete(x, slice(0, 100, 2), 1)
+x = np.delete(x, slice(0, 50, 2), 0)
+x = np.delete(x, slice(0, 50, 2), 1)
+
+z = np.delete(z, slice(0, 100, 2), 0)
+z = np.delete(z, slice(0, 100, 2), 1)
+z = np.delete(z, slice(0, 50, 2), 0)
+z = np.delete(z, slice(0, 50, 2), 1)
+#%%
+plt.quiver(x, z[::-1], u_dr, w_dr[::-1], pivot = 'mid', width = 0.005, scale = 4, scale_units = 'x')
+plt.imshow(v_dr,  extent=[0, 5, -5, 5], cmap = 'plasma', vmin = -1, vmax = 1)#, aspect='auto')
+plt.colorbar()
+plt.xlabel('x/a', fontsize=16)
+plt.ylabel('z/a', fontsize=16)
+plt.title('Drift', fontsize=16)
+plt.show()
+
+#%%
+x1 = np.linspace(0, 5 * a, 100)
+z1 = np.linspace(-5 * a, 5 * a, 100)
+phi = np.linspace(0, 2 * np.pi, 10)
+
+fig, axs = plt.subplots(2, 5)
+
+for k in range(len(phi)):
+
+    coords, dB, B = gradB_long(x1, z1, a, g, h, 2, R, phi[k])
+    
+    x, y, z = coords
+    du, dv, dw = dB
+    u, v, w = B
+    
+    drift = np.zeros((3, len(u), len(u[0])))
+    
+    for i in range(len(u)):
+        for j in range(len(u[0])):
+            dB_temp = np.array([du[i][j], dv[i][j], dw[i][j]])
+            B_temp = np.array([u[i][j], v[i][j], w[i][j]])
+            
+            cross_temp = np.cross(B_temp, dB_temp)
+            drift[0][i][j] = cross_temp[0] / np.linalg.norm(cross_temp)
+            drift[1][i][j] = cross_temp[1] / np.linalg.norm(cross_temp)
+            drift[2][i][j] = cross_temp[2] / np.linalg.norm(cross_temp)
+    
+    u_dr, v_dr, w_dr = drift
+    
+    u_dr = np.delete(u_dr, slice(0, 100, 2), 0)
+    u_dr = np.delete(u_dr, slice(0, 100, 2), 1)
+    u_dr = np.delete(u_dr, slice(0, 50, 2), 0)
+    u_dr = np.delete(u_dr, slice(0, 50, 2), 1)
+    
+    w_dr = np.delete(w_dr, slice(0, 100, 2), 0)
+    w_dr = np.delete(w_dr, slice(0, 100, 2), 1)
+    w_dr = np.delete(w_dr, slice(0, 50, 2), 0)
+    w_dr = np.delete(w_dr, slice(0, 50, 2), 1)
+    
+    x = np.delete(x, slice(0, 100, 2), 0)
+    x = np.delete(x, slice(0, 100, 2), 1)
+    x = np.delete(x, slice(0, 50, 2), 0)
+    x = np.delete(x, slice(0, 50, 2), 1)
+    
+    z = np.delete(z, slice(0, 100, 2), 0)
+    z = np.delete(z, slice(0, 100, 2), 1)
+    z = np.delete(z, slice(0, 50, 2), 0)
+    z = np.delete(z, slice(0, 50, 2), 1)
+    
+    axs[int(k / 5)][k%5].quiver(x, z[::-1], u_dr, w_dr[::-1], pivot = 'mid', width = 0.005, scale = 4, scale_units = 'x')
+    im = axs[int(k / 5)][k%5].imshow(v_dr,  extent=[0, 5, -5, 5], cmap = 'plasma', vmin = -1, vmax = 1)#, aspect='auto')
+    fig.colorbar(im, ax= axs[int(k / 5)][k%5])
+    axs[int(k / 5)][k%5].set(xlabel='x/a', ylabel='z/a')
+    axs[int(k / 5)][k%5].set_title('Longitude = {:.0f} deg'.format(phi[k] * 180 / np.pi))
+plt.show()
+
+#%%
+L = 3
+
+theta_thr = np.arcsin(L ** (-0.5)) 
+
+theta_in = np.linspace(theta_thr, np.pi - theta_thr, 10)
+phi_in = np.linspace(0, 2 * np.pi, 10)
+theta_deg = theta_in * 180 / np.pi
+phi_deg = phi_in * 180 / np.pi
+
+coords, dB, B = dB_Lshell(L, theta_in, phi_in, a, g, h, 1, R)
+
+du, dv, dw = dB
 #%%
 
 #loadBField('Output/complete_field_phi=0_CI.npz')
