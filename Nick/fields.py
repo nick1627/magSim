@@ -888,47 +888,101 @@ class SHField(Field):
         return
         
 
-    def getLShellB(self, L, NTheta = 100, NPhi = 361):
-        #Returns an array of the magnetic field at a particular L-shell 
-        #deltaTheta in degrees
-        #deltaPhi in degrees
+    # def getLShellB(self, L, NTheta = 100, NPhi = 361):
+    #     #Returns an array of the magnetic field at a particular L-shell 
+    #     #deltaTheta in degrees
+    #     #deltaPhi in degrees
 
-        #First get the arrays set up
-        #Calculate cut-off angle
-        cutOffTheta = np.arcsin(np.sqrt(1/L))
-        thetaArray = np.linspace(cutOffTheta, np.pi - cutOffTheta, NTheta)
-        deltaPhi = 2*np.pi/(NPhi-1)
+    #     #First get the arrays set up
+    #     #Calculate cut-off angle
+    #     cutOffTheta = np.arcsin(np.sqrt(1/L))
+    #     thetaArray = np.linspace(cutOffTheta, np.pi - cutOffTheta, NTheta)
+    #     deltaPhi = 2*np.pi/(NPhi-1)
 
-        #There are Ny rows, Nx columns, and each point has 3 things, r theta and phi
-        rF_spherical = np.zeros((NTheta, NPhi, 3))
-        rF_cartesian = np.zeros(np.shape(rF_spherical))
-        bF = np.zeros(np.shape(rF_cartesian))
-        for i in range(0, NTheta):
-            for j in range(0, NPhi):
-                #set theta
-                rF_spherical[i, j, 1] = np.copy(thetaArray[i])
-                #set phi
-                rF_spherical[i, j, 2] = deltaPhi * j
-                #set r
-                rF_spherical[i, j, 0] = self.a*L*np.power(np.sin(rF_spherical[i, j, 1]), 2)
+    #     #There are Ny rows, Nx columns, and each point has 3 things, r theta and phi
+    #     rF_spherical = np.zeros((NTheta, NPhi, 3))
+    #     rF_cartesian = np.zeros(np.shape(rF_spherical))
+    #     bF = np.zeros(np.shape(rF_cartesian))
+    #     for i in range(0, NTheta):
+    #         for j in range(0, NPhi):
+    #             #set theta
+    #             rF_spherical[i, j, 1] = np.copy(thetaArray[i])
+    #             #set phi
+    #             rF_spherical[i, j, 2] = deltaPhi * j
+    #             #set r
+    #             rF_spherical[i, j, 0] = self.a*L*np.power(np.sin(rF_spherical[i, j, 1]), 2)
 
-                 #Now have the coordinates in field-aligned spherical polars
-                #Need to convert to field aligned cartesian
+    #              #Now have the coordinates in field-aligned spherical polars
+    #             #Need to convert to field aligned cartesian
 
-                theta = copy.deepcopy(rF_spherical[i, j, 1])
-                phi = copy.deepcopy(rF_spherical[i, j, 2])
-                rF_spherical[i, j, 1] = 0
-                rF_spherical[i, j, 2] = 0
-                rF_cartesian[i, j, :] = self.convertPolarToCartesian(rF_spherical[i, j, :], theta, phi)
+    #             theta = copy.deepcopy(rF_spherical[i, j, 1])
+    #             phi = copy.deepcopy(rF_spherical[i, j, 2])
+    #             rF_spherical[i, j, 1] = 0
+    #             rF_spherical[i, j, 2] = 0
+    #             rF_cartesian[i, j, :] = self.convertPolarToCartesian(rF_spherical[i, j, :], theta, phi)
 
-                #Now get B field at each point
-                bF[i, j, :] = self.getField(rF_cartesian[i, j, :])
+    #             #Now get B field at each point
+    #             bF[i, j, :] = self.getField(rF_cartesian[i, j, :])
 
-                rF_spherical[i, j, 1] = copy.copy(theta)
-                rF_spherical[i, j, 2] = copy.copy(phi)
+    #             rF_spherical[i, j, 1] = copy.copy(theta)
+    #             rF_spherical[i, j, 2] = copy.copy(phi)
  
                
-        return rF_spherical, rF_cartesian, bF
+    #     return rF_spherical, rF_cartesian, bF
+
+    def getLShellB(self, L, deltaTheta = 1, deltaPhi = 1):
+        #Calculate cut-off angle
+        cutOffTheta = np.arcsin(np.sqrt(1/L))
+        thetaArray = np.arange(0, 2*np.pi + deltaTheta*np.pi/180, deltaTheta*np.pi/180)
+        phiArray = np.arange(0, 2*np.pi + deltaPhi*np.pi/180, deltaPhi*np.pi/180)
+
+        positions = np.zeros((np.shape(thetaArray), np.shape(phiArray), 3))
+        B = np.zeros(np.shape(positions))
+
+        #calculate positions
+        for i in range(0, len(thetaArray)):
+            r = self.a*L*np.sin(thetaArray[i])**2
+            for j in range(0, len(phiArray)):
+                positions[i, j, :] = self.convertPolarToCartesian(np.array([r, thetaArray[i], phiArray[j]]))
+                if abs(thetaArray[i]) < cutOffTheta:
+                    B[i, j, :] = self.getGradB(positions[i, j, :])
+                else:
+                    B[i, j, :] = 0
+        
+        return positions, B
+
+    def getLShellGradB(self, L, deltaTheta = 1, deltaPhi = 1):
+        #Calculate cut-off angle
+        cutOffTheta = np.arcsin(np.sqrt(1/L))
+        thetaArray = np.arange(0, 2*np.pi + deltaTheta*np.pi/180, deltaTheta*np.pi/180)
+        phiArray = np.arange(0, 2*np.pi + deltaPhi*np.pi/180, deltaPhi*np.pi/180)
+
+        positions = np.zeros((np.shape(thetaArray), np.shape(phiArray), 3))
+        gradB = np.zeros(np.shape(positions))
+
+        #calculate positions
+        for i in range(0, len(thetaArray)):
+            r = self.a*L*np.sin(thetaArray[i])**2
+            for j in range(0, len(phiArray)):
+                positions[i, j, :] = self.convertPolarToCartesian(np.array([r, thetaArray[i], phiArray[j]]))
+                if abs(thetaArray[i]) < cutOffTheta:
+                    gradB[i, j, :] = self.getGradB(positions[i, j, :])
+                else:
+                    gradB[i, j, :] = 0
+        
+        return positions, gradB
+
+    def getLShellDriftDirection(self,  L, deltaTheta = 1, deltaPhi = 1):
+        positions, B = self.getLShellB(L, deltaTheta=deltaTheta, deltaPhi=deltaPhi)
+        positions, gradB = self.getLShellGradB(L, deltaTheta=deltaTheta, deltaPhi=deltaPhi)
+
+        #Compute the drift direction
+        drift = np.cross(B, gradB)
+        #Normalise
+        drift = drift/np.linalg.norm(drift, axis=-1)
+
+        return drift, positions
+
 
     
     def plotDeviationColourMapLShell(self, L, NTheta = 100, NPhi = 361, vectorStep = 10, plot=True):
@@ -1217,10 +1271,86 @@ class SHField(Field):
         return
 
 
-    def plotDriftDirectionLShell(self):
+    def plotDriftDirectionLShell(self, LArray, deltaTheta = 1, deltaPhi = 1):
+        #Drift will be plotted outward from the equator
+        if isinstance(LArray, int):
+            LArray = np.array([LArray])
+        elif isinstance(LArray, list):
+            LArray = np.array(LArray)
+        else:
+            LArray = copy.deepcopy(LArray)
+
+        thetaArray = np.arange(0, np.pi + deltaTheta*np.pi/180, deltaTheta*np.pi/180)
+        phiArray = np.arange(0, 2*np.pi + deltaPhi*np.pi/180, deltaPhi*np.pi/180)
+        driftPlanes = np.zeros((np.shape(LArray)[0], np.shape(thetaArray)[0], np.shape(phiArray)[0], 3))
+        driftPositions = np.zeros(np.shape(driftPlanes))
+
+        counter = 0
+        for L in LArray:
+            driftPlanes[counter, :, :, :], driftPositions[counter, :, :, :] = self.getLShellDriftDirection(L, deltaTheta=deltaTheta, deltaPhi=deltaPhi)
+            counter += 1
         
+        #Compute the normal vectors at each point (not normalised)
+        normalVecs = driftPositions -2*((driftPositions[:, :, :, 2]**2)/(driftPositions[:, :, :, 0]**2 + driftPositions[:, :, :, 1]**2))*np.array([driftPositions[:, :, :, 0], driftPositions[:, :, :, 1], 0]) + 2*np.array([0, 0, driftPositions[:, :, :, 2]])  
+        #Now normalise them
+        normalVecs = normalVecs/np.linalg.norm(normalVecs, axis=-1)
+        #Extract drift components
+        normalDrifts = np.dot(driftPlanes, normalVecs)
+        inPlaneDrifts = driftPlanes - normalDrifts*normalVecs
+        #Now need to convert the 3D in-plane drifts into their 2D equivalents 
+        #Define phi hat direction
+        phiHat = (np.array([-driftPositions[:, :, :, 1], driftPositions[:, :, :, 0]]))/(np.sqrt(driftPositions[:, :, :, 0]**2 + driftPositions[:, :, :, 1]**2))
+        #Define the sigma hat direction to be in the plane, perpendicular to the normal vec and the phi hat direction, "going downwards in same-ish direction as theta hat"
+        sigmaHat = np.cross(phiHat, normalVecs)
+        v = -np.dot(inPlaneDrifts, sigmaHat) #-alpha
+        u  = np.dot(inPlaneDrifts, phiHat) #beta
+        vectorData = np.zeros((np.shape(LArray)[0], np.shape(thetaArray)[0], np.shape(phiArray)[0], 2))
+        vectorData[:, :, :, 0] = u
+        vectorData[:, :, :, 1] = v      
+
+        colourMin = np.min(normalDrifts)
+        colourMax = np.max(normalDrifts)
+
+        #you have screwed up here -- the positions of the data points are not correct.  They should be on an even grid I think, and positions defined by
+        #angles are not an even grid
+        #TODO: fix this!!!!
+        #actually it might be ok, since the axis is the angle 
+        self.generalLShellPlot(LArray, vectorData = vectorData, colourData = normalDrifts, colourMin=colourMin, colourMax=colourMax)
         return
 
+    def generalLShellPlot(self, LArray, positionData, vectorData = 0, colourData = 0, colourMin = 0.1, colourMax = 1):
+        #All vectors in cartesian, F frame
+        #Vector positions already given relative to the plotting surface
+
+        #Need to extract phi axis and theta axis from 
+        
+        noFigs = np.shape(LArray)[0]
+        maxCols = 4
+        figCols = int(min([maxCols, noFigs]))
+        figRows = int(np.ceil(noFigs/figCols))
+        fig, axs = plt.subplots(nrows=figRows, ncols=figCols, squeeze=False)  
+            
+            
+        thetaAxis = positionData[0, :, 0, 0]
+        phiAxis = positionData[0, 0, :, 1]
+        counter = 0
+        for i in range(0, figRows):
+            for j in range(0, figCols):
+                if counter < noFigs:
+                    # imshowObject = ax6.imshow(np.transpose(ratio), cmap = "plasma", norm=LogNorm(vmin=0.1, vmax=1))
+                    # imshowObject = ax6.imshow(np.transpose(ratio), cmap = "plasma", norm=LogNorm())
+                    obj = axs[i, j].pcolormesh(phiAxis, thetaAxis, colourData[counter, :, :], cmap = "plasma", norm=LogNorm(), vmax=colourMax, vmin=colourMin)
+                    axs[i, j].quiver(positionData[counter, :, :, 0], positionData[counter, :, :, 1], vectorData[counter, :, :, 0], vectorData[counter, :, :, 1])
+                    axs[i, j].set_ylim(axs[i, j].get_ylim()[::-1])
+                    axs[i, j].set_xlabel("Phi (º)")
+                    axs[i, j].set_ylabel("Theta (º)")
+                    titleString = "Diagnostic on L = " + str(LArray[counter])
+                    axs[i, j].set_title(titleString)
+                    axs[i, j].set_aspect("equal")
+
+        fig.colorbar(obj, ax = axs.ravel().tolist())
+
+        return
 
 
 
