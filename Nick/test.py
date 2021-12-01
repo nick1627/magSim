@@ -151,19 +151,30 @@ UField.rotate("Field")
 
 #==================================================
 # GRADIENT TESTING
-rA = np.array([0, 0, 4])*Ru
-rB = np.array([1, 2, 3])*Ru
-rC = np.array([-4, 2.5, 6])*Ru
+# rA = np.array([0, 0, 4])*Ru
+# rB = np.array([1, 2, 3])*Ru
+# rC = np.array([-4, 2.5, 6])*Ru
 
-print("Gradient at A:")
-print(UField.getGradB(rA))
+# print("Gradient at A:")
+# print(UField.getGradB(rA))
 
-gradient = UField.getGradB(rB)
-print("Gradient at B:")
-print(gradient)
-# print("magnitude of gradient")
-# print(np.linalg.norm(gradient))
-print("Gradient at C:")
-print(UField.getGradB(rC))
+# gradient = UField.getGradB(rB)
+# print("Gradient at B:")
+# print(gradient)
+# # print("magnitude of gradient")
+# # print(np.linalg.norm(gradient))
+# print("Gradient at C:")
+# print(UField.getGradB(rC))
+
+
+#================================================
+#UField.plotDriftDirectionLongitudePlane([0, 5, 10], 5, 100)
+UField.plotDriftDirectionLShell([2, 5, 7, 10])
+
+
+# A = np.array([[[1, 2, 3], [4, 5, 6]]])
+# B = np.array([[2], [1]])
+# result = np.multiply(A, B)#, out=np.zeros(np.shape(A)))
+# print(result)
 
 plt.show()
