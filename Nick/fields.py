@@ -1272,13 +1272,17 @@ class SHField(Field):
                     counter+=1
 
             colourMax = np.max(flatNormal)
+
+            #diagnostic pixel
+            # normalComponent[0, 0, 0] = -1
+            # planeVecs2[0, 0, 0, 1] = 10
             
             counter = 0
             for i in range(0, figRows):
                 for j in range(0, figCols):
                     if counter < noFigs:
                         # obj = axs[i].pcolormesh(rhoAxis, zAxis, diagnostic, cmap = "plasma", norm=LogNorm())
-                        obj = axs[i, j].pcolormesh(rhoAxis, zAxis, normalComponent[counter, :, :], cmap = "plasma")#, norm=LogNorm(vmin=colourMin, vmax=colourMax))
+                        obj = axs[i, j].pcolormesh(rhoAxis, zAxis, normalComponent[counter, :, :], cmap = "plasma", vmin = -1, vmax = 1)#, norm=LogNorm(vmin=colourMin, vmax=colourMax))
                         axs[i, j].quiver(vecPos2[counter, :, :, 0], vecPos2[counter, :, :, 1], planeVecs2[counter, :, :, 0], planeVecs2[counter, :, :, 1])
                         
                         axs[i, j].set_xlabel("rho")
@@ -1289,7 +1293,7 @@ class SHField(Field):
                         counter += 1
             
             fig.colorbar(obj, ax = axs.ravel().tolist())
-
+            fig.suptitle("Drift direction vector on slices of constant longitude")
 
 
 
@@ -1386,16 +1390,17 @@ class SHField(Field):
         print(np.shape(vec_y))
         print(np.shape(vectorData))
         print(np.shape(vectorData2))
-        self.generalLShellPlot(LArray, vec_x = vec_x, vec_y=vec_y, vectorData = vectorData2, colour_x=phiArray, colour_y=thetaArray, colourData = normalDrifts, colourMin=colourMin, colourMax=colourMax)
+        superTitle = "Drift direction vector on planes of constant L-shell"
+        self.generalLShellPlot(LArray, vec_x = vec_x, vec_y=vec_y, vectorData = vectorData2, colour_x=phiArray, colour_y=thetaArray, colourData = normalDrifts, colourMin=colourMin, colourMax=colourMax, title=superTitle)
 
         return
 
 
-    def generalLShellPlot(self, LArray, vec_x = 0, vec_y = 0, vectorData = 0, colour_x = 0, colour_y = 0, colourData = 0, colourMin = 0.1, colourMax = 1):
+    def generalLShellPlot(self, LArray, vec_x = 0, vec_y = 0, vectorData = 0, colour_x = 0, colour_y = 0, colourData = 0, colourMin = 0.1, colourMax = 1, title=""):
         #All vectors in cartesian, F frame
         #Vector positions already given relative to the plotting surface
-        print("WARNING!!! GRAPHS DO NOT SHARE THE SAME SCALE")
         #Need to extract phi axis and theta axis from 
+        print("Warning:  Normalisation needs more options.")
         
         noFigs = np.shape(LArray)[0]
         maxCols = 2
@@ -1403,7 +1408,10 @@ class SHField(Field):
         figRows = int(np.ceil(noFigs/figCols))
         fig, axs = plt.subplots(nrows=figRows, ncols=figCols, squeeze=False)  
 
-    
+        # #Diagnostic pixel
+        # colourData[0, 0, 0] = 1
+        # vectorData[0, 0, 0, 0] = 10
+        # vectorData[0, 0, 0, 1] = -10
             
         counter = 0
         for i in range(0, figRows):
@@ -1416,12 +1424,13 @@ class SHField(Field):
                     axs[i, j].set_ylim(axs[i, j].get_ylim()[::-1])
                     axs[i, j].set_xlabel("Phi ($\degree$)")
                     axs[i, j].set_ylabel("Theta ($\degree$)")
-                    titleString = "Drift direction on L = " + str(LArray[counter])
+                    titleString = "L = " + str(LArray[counter])
                     axs[i, j].set_title(titleString)
                     axs[i, j].set_aspect("equal")
                     counter+=1
 
         fig.colorbar(obj, ax = axs.ravel().tolist())
+        fig.suptitle(title)
 
         return
 
