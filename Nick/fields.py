@@ -14,8 +14,8 @@ TODO:  Convert all graph-plotting code to the following format:
 """
 
 import numpy as np
-from numpy.lib.arraysetops import isin
-import pyshtools as sh
+# from numpy.lib.arraysetops import isin
+#import pyshtools as sh
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.colors import LogNorm
@@ -671,12 +671,18 @@ class SHField(Field):
     def getLongitudePlaneDriftDirection(self, rMax, phi, N):
         #First get B
         BPlane, r = self.getLongitudePlaneB(rMax, phi, N)
+        
         #Now get gradB
         gradBPlane, r = self.getLongitudePlaneGradB(rMax, phi, N)
+
         #Now have to combine the two to get the drift direction
         drift = np.cross(BPlane, gradBPlane)
         #Normalise
-        drift = drift/np.linalg.norm(drift, axis=-1)
+        drift = drift/np.linalg.norm(drift, axis=-1, keepdims=True)
+        
+        #nans may emerge so remove - TODO check origin of the nans
+        drift = np.nan_to_num(drift)
+
         return drift, r
 
     
@@ -758,7 +764,7 @@ class SHField(Field):
         ax3 = plt.figure().add_subplot()
         xAxis = np.arange(0, 360, deltaPhi)
         ax3.plot(xAxis, maxRatioQ_D)
-        ax3.set_xlabel("Longitude (º)")
+        ax3.set_xlabel("Longitude ($\degree$)")
         ax3.set_ylabel("Maximum ratio of absolute deviation from dipole against dipole field")
         ax3.set_title("Field Deviation")
 
@@ -878,7 +884,7 @@ class SHField(Field):
                             axs[i, j].plot(L_x[k,:], L_y[k,:], color = "black")
                         axs[i, j].set_xlabel("rho")
                         axs[i, j].set_ylabel("z")
-                        titleString = "Phi = " + str(phiArrayDeg[counter]) + "º"
+                        titleString = "Phi = " + str(phiArrayDeg[counter]) + "$\degree$"
                         axs[i, j].set_title(titleString)
                         axs[i, j].set_aspect("equal") 
                         counter += 1
@@ -888,47 +894,104 @@ class SHField(Field):
         return
         
 
-    def getLShellB(self, L, NTheta = 100, NPhi = 361):
-        #Returns an array of the magnetic field at a particular L-shell 
-        #deltaTheta in degrees
-        #deltaPhi in degrees
+    # def getLShellB(self, L, NTheta = 100, NPhi = 361):
+    #     #Returns an array of the magnetic field at a particular L-shell 
+    #     #deltaTheta in degrees
+    #     #deltaPhi in degrees
 
-        #First get the arrays set up
-        #Calculate cut-off angle
-        cutOffTheta = np.arcsin(np.sqrt(1/L))
-        thetaArray = np.linspace(cutOffTheta, np.pi - cutOffTheta, NTheta)
-        deltaPhi = 2*np.pi/(NPhi-1)
+    #     #First get the arrays set up
+    #     #Calculate cut-off angle
+    #     cutOffTheta = np.arcsin(np.sqrt(1/L))
+    #     thetaArray = np.linspace(cutOffTheta, np.pi - cutOffTheta, NTheta)
+    #     deltaPhi = 2*np.pi/(NPhi-1)
 
-        #There are Ny rows, Nx columns, and each point has 3 things, r theta and phi
-        rF_spherical = np.zeros((NTheta, NPhi, 3))
-        rF_cartesian = np.zeros(np.shape(rF_spherical))
-        bF = np.zeros(np.shape(rF_cartesian))
-        for i in range(0, NTheta):
-            for j in range(0, NPhi):
-                #set theta
-                rF_spherical[i, j, 1] = np.copy(thetaArray[i])
-                #set phi
-                rF_spherical[i, j, 2] = deltaPhi * j
-                #set r
-                rF_spherical[i, j, 0] = self.a*L*np.power(np.sin(rF_spherical[i, j, 1]), 2)
+    #     #There are Ny rows, Nx columns, and each point has 3 things, r theta and phi
+    #     rF_spherical = np.zeros((NTheta, NPhi, 3))
+    #     rF_cartesian = np.zeros(np.shape(rF_spherical))
+    #     bF = np.zeros(np.shape(rF_cartesian))
+    #     for i in range(0, NTheta):
+    #         for j in range(0, NPhi):
+    #             #set theta
+    #             rF_spherical[i, j, 1] = np.copy(thetaArray[i])
+    #             #set phi
+    #             rF_spherical[i, j, 2] = deltaPhi * j
+    #             #set r
+    #             rF_spherical[i, j, 0] = self.a*L*np.power(np.sin(rF_spherical[i, j, 1]), 2)
 
-                 #Now have the coordinates in field-aligned spherical polars
-                #Need to convert to field aligned cartesian
+    #              #Now have the coordinates in field-aligned spherical polars
+    #             #Need to convert to field aligned cartesian
 
-                theta = copy.deepcopy(rF_spherical[i, j, 1])
-                phi = copy.deepcopy(rF_spherical[i, j, 2])
-                rF_spherical[i, j, 1] = 0
-                rF_spherical[i, j, 2] = 0
-                rF_cartesian[i, j, :] = self.convertPolarToCartesian(rF_spherical[i, j, :], theta, phi)
+    #             theta = copy.deepcopy(rF_spherical[i, j, 1])
+    #             phi = copy.deepcopy(rF_spherical[i, j, 2])
+    #             rF_spherical[i, j, 1] = 0
+    #             rF_spherical[i, j, 2] = 0
+    #             rF_cartesian[i, j, :] = self.convertPolarToCartesian(rF_spherical[i, j, :], theta, phi)
 
-                #Now get B field at each point
-                bF[i, j, :] = self.getField(rF_cartesian[i, j, :])
+    #             #Now get B field at each point
+    #             bF[i, j, :] = self.getField(rF_cartesian[i, j, :])
 
-                rF_spherical[i, j, 1] = copy.copy(theta)
-                rF_spherical[i, j, 2] = copy.copy(phi)
+    #             rF_spherical[i, j, 1] = copy.copy(theta)
+    #             rF_spherical[i, j, 2] = copy.copy(phi)
  
                
-        return rF_spherical, rF_cartesian, bF
+    #     return rF_spherical, rF_cartesian, bF
+
+    def getLShellB(self, L, deltaTheta = 1, deltaPhi = 1):
+        #Calculate cut-off angle
+        cutOffTheta = abs(np.arcsin(np.sqrt(1/L)))
+        thetaArray = np.arange(0, np.pi + deltaTheta*np.pi/180, deltaTheta*np.pi/180)
+        phiArray = np.arange(0, 2*np.pi + deltaPhi*np.pi/180, deltaPhi*np.pi/180)
+
+        positions = np.zeros((np.shape(thetaArray)[0], np.shape(phiArray)[0], 3))
+        B = np.zeros(np.shape(positions))
+
+        #calculate positions
+        for i in range(0, len(thetaArray)):
+            r = self.a*L*np.sin(thetaArray[i])**2
+            for j in range(0, len(phiArray)):
+                positions[i, j, :] = self.convertPolarToCartesian(np.array([r, 0, 0]), thetaArray[i], phiArray[j])
+                if (thetaArray[i] >= cutOffTheta) and (thetaArray[i] <= (np.pi - cutOffTheta)):
+                    B[i, j, :] = self.getField(positions[i, j, :])
+                else:
+                    B[i, j, :] = 0
+        
+        return positions, B
+
+    def getLShellGradB(self, L, deltaTheta = 1, deltaPhi = 1):
+        #Calculate cut-off angle
+        cutOffTheta = np.arcsin(np.sqrt(1/L))
+        thetaArray = np.arange(0, np.pi + deltaTheta*np.pi/180, deltaTheta*np.pi/180)
+        phiArray = np.arange(0, 2*np.pi + deltaPhi*np.pi/180, deltaPhi*np.pi/180)
+
+        positions = np.zeros((np.shape(thetaArray)[0], np.shape(phiArray)[0], 3))
+        gradB = np.zeros(np.shape(positions))
+
+        #calculate positions
+        for i in range(0, len(thetaArray)):
+            r = self.a*L*np.sin(thetaArray[i])**2
+            for j in range(0, len(phiArray)):
+                positions[i, j, :] = self.convertPolarToCartesian(np.array([r, 0, 0]), thetaArray[i], phiArray[j])
+                if (thetaArray[i] >= cutOffTheta) and (thetaArray[i] <= (np.pi - cutOffTheta)):
+                    gradB[i, j, :] = self.getGradB(positions[i, j, :])
+                else:
+                    gradB[i, j, :] = 0
+        
+        return positions, gradB
+
+    def getLShellDriftDirection(self,  L, deltaTheta = 1, deltaPhi = 1):
+        positions, B = self.getLShellB(L, deltaTheta=deltaTheta, deltaPhi=deltaPhi)
+        positions, gradB = self.getLShellGradB(L, deltaTheta=deltaTheta, deltaPhi=deltaPhi)
+
+    
+
+        #Compute the drift direction
+        drift = np.cross(B, gradB)
+        #Normalise
+        drift = drift/np.linalg.norm(drift, axis=-1, keepdims=True)
+        
+
+        return drift, positions
+
 
     
     def plotDeviationColourMapLShell(self, L, NTheta = 100, NPhi = 361, vectorStep = 10, plot=True):
@@ -995,8 +1058,8 @@ class SHField(Field):
             ax6.quiver(vecPos2[:, :, 1], vecPos2[:, :, 0], vectors2[:, :, 0], vectors2[:, :, 1])
             ax6.set_ylim(ax6.get_ylim()[::-1])
             plt.colorbar(obj)
-            ax6.set_xlabel("Phi (º)")
-            ax6.set_ylabel("Theta (º)")
+            ax6.set_xlabel("Phi ($\degree$)")
+            ax6.set_ylabel("Theta ($\degree$)")
             titleString = "Diagnostic on L = " + str(L)
             ax6.set_title(titleString)
             ax6.set_aspect("equal")
@@ -1089,8 +1152,8 @@ class SHField(Field):
                         obj = axs[i, j].pcolormesh(phiAxis, thetaAxis, diagnostic, cmap = "plasma", norm=LogNorm())
                         axs[i, j].quiver(vecPos2[:, :, 1], vecPos2[:, :, 0], vectors2[:, :, 0], vectors2[:, :, 1])
                         axs[i, j].set_ylim(axs[i, j].get_ylim()[::-1])
-                        axs[i, j].set_xlabel("Phi (º)")
-                        axs[i, j].set_ylabel("Theta (º)")
+                        axs[i, j].set_xlabel("Phi ($\degree$)")
+                        axs[i, j].set_ylabel("Theta ($\degree$)")
                         titleString = "Diagnostic on L = " + str(L)
                         axs[i, j].set_title(titleString)
                         axs[i, j].set_aspect("equal")
@@ -1109,7 +1172,7 @@ class SHField(Field):
             #                 axs[i, j].plot(L_x[k,:], L_y[k,:], color = "black")
             #             axs[i, j].set_xlabel("rho")
             #             axs[i, j].set_ylabel("z")
-            #             titleString = "Phi = " + str(phiArrayDeg[counter]) + "º"
+            #             titleString = "Phi = " + str(phiArrayDeg[counter]) + "$\degree$"
             #             axs[i, j].set_title(titleString)
             #             axs[i, j].set_aspect("equal") 
             #             counter += 1
@@ -1121,7 +1184,7 @@ class SHField(Field):
         return
 
 
-    def plotDriftDirectionLongitudePlane(self, phi, rMax, N, plot=True):
+    def plotDriftDirectionLongitudePlane(self, phi, rMax, N, plot=True, vectorStep = 10):
         #phi in degrees
 
 
@@ -1151,23 +1214,40 @@ class SHField(Field):
             normalVec[counter, :, :, 1] = -np.cos(phi)
             counter += 1
 
+
         #We now have the drift direction vectors in cartesian, oriented with z parallel to dipole axis.
         #Drift vectors are already normalised
         #Also have plane normal vectors.
         
         #Compute normal component for colour map
-        normalComponent = np.dot(drift, normalVec)
+        normalComponent = np.multiply(drift, normalVec)
+        normalComponent = np.sum(normalComponent, axis = -1)
+       
 
         #Now need to compute the vector components within the plane
         planeVecs = np.zeros((np.shape(phiArray)[0], 2*N, N, 2))
         vecPos = np.zeros(np.shape(planeVecs))
-        vecPos[:, :, :, 1] = positions[:, :, :, 2]
-        vecPos[:, :, :, 0] = np.sqrt(positions[:, :, :, 0]**2 + positions[:, :, :, 1]**2)
-
+        vecPos[:, :, :, 1] = positions[:, :, :, 2]/self.a
+        vecPos[:, :, :, 0] = np.sqrt(positions[:, :, :, 0]**2 + positions[:, :, :, 1]**2)/self.a
+        counter = 0
         for phi in phiArray:
             planeVecs[counter, :, :, 0] = np.cos(phi)*drift[counter, :, :, 0] + np.sin(phi)*drift[counter, :, :, 1]
             counter += 1
         planeVecs[:, :, :, 1] = drift[:, :, :, 2]
+
+        #Now reduce density of vectors
+        #Vectors are usually plotted at a lesser density than the colour map
+        #every vectorStep'th value is plotted
+
+        planeVecs2 = np.zeros((np.shape(planeVecs)[0], int(np.ceil(np.shape(planeVecs)[1]/(vectorStep))), int(np.ceil(np.shape(planeVecs)[2]/vectorStep)), np.shape(planeVecs)[3]))
+        vecPos2 = np.zeros((np.shape(planeVecs)[0], int(np.ceil(np.shape(planeVecs)[1]/(vectorStep))), int(np.ceil(np.shape(planeVecs)[2]/vectorStep)), np.shape(planeVecs)[3]))
+
+        for i in range(0, np.shape(planeVecs2)[1]):
+            for j in range(0, np.shape(planeVecs2)[2]):
+                vecPos2[:, i, j, :] = vecPos[:, vectorStep*i, vectorStep*j, :]
+                planeVecs2[:, i, j, :] = planeVecs[:, vectorStep*i, vectorStep*j, :]
+
+
 
         #Now plot
 
@@ -1198,12 +1278,12 @@ class SHField(Field):
                 for j in range(0, figCols):
                     if counter < noFigs:
                         # obj = axs[i].pcolormesh(rhoAxis, zAxis, diagnostic, cmap = "plasma", norm=LogNorm())
-                        obj = axs[i, j].pcolormesh(rhoAxis, zAxis, normalComponent[counter, :, :], cmap = "plasma", norm=LogNorm(), vmax=colourMax, vmin=colourMin)
-                        axs[i, j].quiver(vecPos[counter, :, :, 0], vecPos[counter, :, :, 1], planeVecs[counter, :, :, 0], planeVecs[counter, :, :, 1])
+                        obj = axs[i, j].pcolormesh(rhoAxis, zAxis, normalComponent[counter, :, :], cmap = "plasma")#, norm=LogNorm(vmin=colourMin, vmax=colourMax))
+                        axs[i, j].quiver(vecPos2[counter, :, :, 0], vecPos2[counter, :, :, 1], planeVecs2[counter, :, :, 0], planeVecs2[counter, :, :, 1])
                         
                         axs[i, j].set_xlabel("rho")
                         axs[i, j].set_ylabel("z")
-                        titleString = "Phi = " + str(phiArrayDeg[counter]) + "º"
+                        titleString = "Phi = " + str(phiArrayDeg[counter]) + "$\degree$"
                         axs[i, j].set_title(titleString)
                         axs[i, j].set_aspect("equal") 
                         counter += 1
@@ -1217,10 +1297,133 @@ class SHField(Field):
         return
 
 
-    def plotDriftDirectionLShell(self):
+    def plotDriftDirectionLShell(self, LArray, deltaTheta = 1, deltaPhi = 1, vectorStep = 10):
+        #Drift will be plotted outward from the equator
+        if isinstance(LArray, int):
+            LArray = np.array([LArray])
+        elif isinstance(LArray, list):
+            LArray = np.array(LArray)
+        else:
+            LArray = copy.deepcopy(LArray)
+
+        thetaArray = np.arange(0, np.pi + deltaTheta*np.pi/180, deltaTheta*np.pi/180)
+        phiArray = np.arange(0, 2*np.pi + deltaPhi*np.pi/180, deltaPhi*np.pi/180)
+        driftPlanes = np.zeros((np.shape(LArray)[0], np.shape(thetaArray)[0], np.shape(phiArray)[0], 3))
+        driftPositions = np.zeros(np.shape(driftPlanes))
+
+        counter = 0
+        for L in LArray:
+            driftPlanes[counter, :, :, :], driftPositions[counter, :, :, :] = self.getLShellDriftDirection(L, deltaTheta=deltaTheta, deltaPhi=deltaPhi)
+            counter += 1
         
+        #Compute the normal vectors at each point (not normalised)
+        xxHat = copy.deepcopy(driftPositions)
+        xxHat[:, :, :, 1] = 0
+        xxHat[:, :, :, 2] = 0
+        yyHat = copy.deepcopy(driftPositions)
+        yyHat[:, :, :, 0] = 0
+        yyHat[:, :, :, 2] = 0
+        zzHat = copy.deepcopy(driftPositions)
+        zzHat[:, :, :, 0] = 0
+        zzHat[:, :, :, 1] = 0
+
+        secondFactor = (driftPositions[:, :, :, 2]**2)/(driftPositions[:, :, :, 0]**2 + driftPositions[:, :, :, 1]**2)
+        secondFactor = np.array([secondFactor, secondFactor, secondFactor])
+
+        secondFactor = np.transpose(secondFactor, (1, 2, 3, 0))
+        normalVecs = driftPositions[:,:,:,:] -2*secondFactor*(xxHat + yyHat) + 2*zzHat  
+        #Now normalise them
+        normalVecs = normalVecs/np.linalg.norm(normalVecs, axis=-1, keepdims=True)
+        #Extract drift components
+        normalDrifts = np.multiply(driftPlanes, normalVecs)
+        normalDrifts = np.sum(normalDrifts, axis=-1)
+        normalDrifts2 = np.array([normalDrifts, normalDrifts, normalDrifts])
+        normalDrifts2 = np.transpose(normalDrifts2, (1, 2, 3, 0))
+        inPlaneDrifts = driftPlanes - normalDrifts2*normalVecs
+        #Now need to convert the 3D in-plane drifts into their 2D equivalents 
+        #Define phi hat direction
+        phiFactor = 1/(np.sqrt(driftPositions[:, :, :, 0]**2 + driftPositions[:, :, :, 1]**2))
+        phiFactor = np.array([phiFactor, phiFactor, phiFactor])
+        phiHat = (np.array([-driftPositions[:, :, :, 1], driftPositions[:, :, :, 0], np.zeros(np.shape(driftPositions[:, :, :, 0]))]))/phiFactor
+ 
+        
+        phiHat = np.transpose(phiHat, (1, 2, 3, 0))
+        #Define the sigma hat direction to be in the plane, perpendicular to the normal vec and the phi hat direction, "going downwards in same-ish direction as theta hat"
+
+        sigmaHat = np.cross(phiHat, normalVecs)
+        v = -np.sum(np.multiply(inPlaneDrifts, sigmaHat), axis = -1) #-alpha
+        u  = np.sum(np.multiply(inPlaneDrifts, phiHat), axis=-1) #beta
+        vectorData = np.zeros((np.shape(LArray)[0], np.shape(thetaArray)[0], np.shape(phiArray)[0], 2))
+        vectorData[:, :, :, 0] = u
+        vectorData[:, :, :, 1] = v      
+
+        colourMin = -1
+        colourMax = 1
+        print(colourMin, colourMax)
+
+        phiArray = np.rad2deg(phiArray)
+        thetaArray = np.rad2deg(thetaArray)
+
+        #Now reduce density of vectors
+        #Vectors are usually plotted at a lesser density than the colour map
+        #every vectorStep'th value is plotted
+
+        vectorData2 = np.zeros((np.shape(vectorData)[0], int(np.ceil(np.shape(vectorData)[1]/(vectorStep))), int(np.ceil(np.shape(vectorData)[2]/vectorStep)), np.shape(vectorData)[3]))
+        vec_x = np.zeros((int(np.ceil(np.shape(phiArray)[0]/(vectorStep)))))
+        vec_y = np.zeros((int(np.ceil(np.shape(thetaArray)[0]/(vectorStep)))))
+
+        for i in range(0, np.shape(vectorData2)[1]):
+            for j in range(0, np.shape(vectorData2)[2]):
+                vectorData2[:, i, j, :] = vectorData[:, vectorStep*i, vectorStep*j, :]
+        
+        for i in range(0, np.shape(vec_x)[0]):
+            vec_x[i] = phiArray[vectorStep*i]
+        
+        for i in range(0, np.shape(vec_y)[0]):
+            vec_y[i] = thetaArray[vectorStep*i]
+
+        print(np.shape(vec_x))
+        print(np.shape(vec_y))
+        print(np.shape(vectorData))
+        print(np.shape(vectorData2))
+        self.generalLShellPlot(LArray, vec_x = vec_x, vec_y=vec_y, vectorData = vectorData2, colour_x=phiArray, colour_y=thetaArray, colourData = normalDrifts, colourMin=colourMin, colourMax=colourMax)
+
         return
 
+
+    def generalLShellPlot(self, LArray, vec_x = 0, vec_y = 0, vectorData = 0, colour_x = 0, colour_y = 0, colourData = 0, colourMin = 0.1, colourMax = 1):
+        #All vectors in cartesian, F frame
+        #Vector positions already given relative to the plotting surface
+        print("WARNING!!! GRAPHS DO NOT SHARE THE SAME SCALE")
+        #Need to extract phi axis and theta axis from 
+        
+        noFigs = np.shape(LArray)[0]
+        maxCols = 2
+        figCols = int(min([maxCols, noFigs]))
+        figRows = int(np.ceil(noFigs/figCols))
+        fig, axs = plt.subplots(nrows=figRows, ncols=figCols, squeeze=False)  
+
+    
+            
+        counter = 0
+        for i in range(0, figRows):
+            for j in range(0, figCols):
+                if counter < noFigs:
+                
+
+                    obj = axs[i, j].pcolormesh(colour_x, colour_y, colourData[counter, :, :], cmap = "plasma", vmin=colourMin, vmax=colourMax)#, norm=LogNorm(), vmax=colourMax, vmin=colourMin)
+                    axs[i, j].quiver(vec_x, vec_y, vectorData[counter, :, :, 0], vectorData[counter, :, :, 1])
+                    axs[i, j].set_ylim(axs[i, j].get_ylim()[::-1])
+                    axs[i, j].set_xlabel("Phi ($\degree$)")
+                    axs[i, j].set_ylabel("Theta ($\degree$)")
+                    titleString = "Drift direction on L = " + str(LArray[counter])
+                    axs[i, j].set_title(titleString)
+                    axs[i, j].set_aspect("equal")
+                    counter+=1
+
+        fig.colorbar(obj, ax = axs.ravel().tolist())
+
+        return
 
 
 
