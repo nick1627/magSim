@@ -1535,102 +1535,119 @@ def dB_Lshell(L, theta_in, phi_in, a, g, h, n, R):
     u_all = []
     v_all = []
     w_all = []
+    normal_all = []
+    phi_hat_all = []
+    sigma_all = []
     
     
-    if n == 1:
-        for j in theta_in:
-            for k in phi_in:
+    for j in theta_in:
+        for k in phi_in:
+            
+            r_L = L * np.sin(j) * np.sin(j) * a
+            
+            x, y, z = Sph_to_Cart(r_L, j, k)
+            xyz = np.array([x, y, z])
+            x_r, y_r, z_r = np.matmul(np.linalg.inv(R), xyz)
+            r, theta, phi = Cart_to_Sph(x_r, y_r, z_r)
+            
+            frac = a/r
+            
+            Brdr = 0
+            Brdtheta = 0
+            Brdphi = 0
+            Bthetadr = 0
+            Bthetadtheta = 0
+            Bthetadphi = 0
+            Bphidr = 0
+            Bphidtheta = 0
+            Bphidphi = 0
+            
+            for l in range(1, n+1):
+                frac2 = frac ** (l+2)
                 
-                r_L = L * np.sin(j) * np.sin(j) * a
-                
-                x, y, z = Sph_to_Cart(r_L, j, k)
-                xyz = np.array([x, y, z])
-                x_r, y_r, z_r = np.matmul(np.linalg.inv(R), xyz)
-                r, theta, phi = Cart_to_Sph(x_r, y_r, z_r)
-                
-                frac = a/r
-                
-                Brdr = 0
-                Brdtheta = 0
-                Brdphi = 0
-                Bthetadr = 0
-                Bthetadtheta = 0
-                Bthetadphi = 0
-                Bphidr = 0
-                Bphidtheta = 0
-                Bphidphi = 0
-                
-                for l in range(1, n+1):
-                    frac2 = frac ** (l+2)
+                for m in range(l+1):
                     
-                    for m in range(l+1):
+                    cos = np.cos(m * phi)
+                    sin = np.sin(m * phi)
+                    
+                    Brdr -= (l+1) * (l+2) * (a ** (l+2)) * (r ** (-l-3)) * ((g[l-1][m] * cos) \
+                        + (h[l-1][m] * sin)) * Pnm(l, m, theta)
+                    
+                    Brdtheta += (l+1) * frac2 * ((g[l-1][m] * cos) \
+                        + (h[l-1][m] * sin)) * dPnm(l, m, theta)
                         
-                        cos = np.cos(m * phi)
-                        sin = np.sin(m * phi)
-                        
-                        Brdr -= (l+1) * (l+2) * (a ** (l+2)) * (r ** (-l-3)) * ((g[l-1][m] * cos) \
-                            + (h[l-1][m] * sin)) * Pnm(l, m, theta)
-                        
-                        Brdtheta += (l+1) * frac2 * ((g[l-1][m] * cos) \
+                    Brdphi += (l+1) * frac2 * ((g[l-1][m] * (-m) * sin) \
+                        + (h[l-1][m] * m * cos)) * Pnm(l, m, theta)
+                    
+                    Bthetadr += (l+2) * (a ** (l+2)) * (r ** (-l-3)) * ((g[l-1][m] * cos) \
                             + (h[l-1][m] * sin)) * dPnm(l, m, theta)
-                            
-                        Brdphi += (l+1) * frac2 * ((g[l-1][m] * (-m) * sin) \
-                            + (h[l-1][m] * m * cos)) * Pnm(l, m, theta)
+                    
+                    Bthetadtheta -= frac2 * ((g[l-1][m] * cos) \
+                            + (h[l-1][m] * sin)) * d2Pnm(l, m, theta)
                         
-                        Bthetadr += (l+2) * (a ** (l+2)) * (r ** (-l-3)) * ((g[l-1][m] * cos) \
-                                + (h[l-1][m] * sin)) * dPnm(l, m, theta)
+                    Bthetadphi -= frac2 * ((g[l-1][m] * (-m) * sin) \
+                            + (h[l-1][m] * m * cos)) * dPnm(l, m, theta)
                         
-                        Bthetadtheta -= frac2 * ((g[l-1][m] * cos) \
-                                + (h[l-1][m] * sin)) * d2Pnm(l, m, theta)
-                            
-                        Bthetadphi -= frac2 * ((g[l-1][m] * (-m) * sin) \
-                                + (h[l-1][m] * m * cos)) * dPnm(l, m, theta)
-                            
-                        Bphidr -= (1 / np.sin(theta)) * m * (l+2) * (a ** (l+2)) * (r ** (-l-3))\
-                            * ((g[l-1][m] * sin) - (h[l-1][m] * cos)) * Pnm(l, m, theta)
-                        
-                        Bphidtheta += m * frac2 * ((g[l-1][m] * sin) - (h[l-1][m] * cos)) * \
-                            (((np.sin(theta) * dPnm(l, m, theta)) - (Pnm(l, m, theta) * \
-                            np.cos(theta))) / (np.sin(theta) ** 2))
-                        
-                        Bphidphi += (1 / np.sin(theta)) * m * frac2 * ((g[l-1][m] * m * cos) \
-                                + (h[l-1][m] * m * sin)) * Pnm(l, m, theta)
-                
-                B = B_sph(r, theta, phi, a, g, h, n)
-                
-                dBdr = ((B[0] * Brdr) + (B[1] * Bthetadr) + (B[2] * Bphidr)) / np.linalg.norm(B)           
-                dBdtheta = ((B[0] * Brdtheta) + (B[1] * Bthetadtheta) + (B[2] * Bphidtheta)) / np.linalg.norm(B) 
-                dBdphi = ((B[0] * Brdphi) + (B[1] * Bthetadphi) + (B[2] * Bphidphi)) / np.linalg.norm(B)
-                
-                dB = np.array([dBdr, dBdtheta / r, dBdphi / (r * np.sin(theta))])        
-    
-                du = (np.sin(theta)*np.cos(phi) * dB[0]) + (np.cos(theta)*np.cos(phi) * dB[1])\
-                    + (-np.sin(phi) * dB[2])
-                dv = (np.sin(theta)*np.sin(phi) * dB[0]) + (np.cos(theta)*np.sin(phi) * dB[1])\
-                    +  (np.cos(phi) * dB[2])
-                dw = (np.cos(theta) * dB[0]) + (-np.sin(theta) * dB[1])
-                
-                dB_rot = np.array([du, dv, dw])
-                dB_f = np.matmul(R, dB_rot)
-                
-                u = (np.sin(theta)*np.cos(phi) * B[0]) + (np.cos(theta)*np.cos(phi) * B[1])\
-                    + (-np.sin(phi) * B[2])
-                v = (np.sin(theta)*np.sin(phi) * B[0]) + (np.cos(theta)*np.sin(phi) * B[1])\
-                    +  (np.cos(phi) * B[2])
-                w = (np.cos(theta) * B[0]) + (-np.sin(theta) * B[1])
-                
-                B_rot = np.array([u, v, w])
-                B_f = np.matmul(R, B_rot)
-                
-                x_all.append(x)
-                y_all.append(y)
-                z_all.append(z)
-                du_all.append(dB_f[0])
-                dv_all.append(dB_f[1])
-                dw_all.append(dB_f[2])
-                u_all.append(B_f[0])
-                v_all.append(B_f[1])
-                w_all.append(B_f[2])
+                    Bphidr -= (1 / np.sin(theta)) * m * (l+2) * (a ** (l+2)) * (r ** (-l-3))\
+                        * ((g[l-1][m] * sin) - (h[l-1][m] * cos)) * Pnm(l, m, theta)
+                    
+                    Bphidtheta += m * frac2 * ((g[l-1][m] * sin) - (h[l-1][m] * cos)) * \
+                        (((np.sin(theta) * dPnm(l, m, theta)) - (Pnm(l, m, theta) * \
+                        np.cos(theta))) / (np.sin(theta) ** 2))
+                    
+                    Bphidphi += (1 / np.sin(theta)) * m * frac2 * ((g[l-1][m] * m * cos) \
+                            + (h[l-1][m] * m * sin)) * Pnm(l, m, theta)
+            
+            B = B_sph(r, theta, phi, a, g, h, n)
+            
+            dBdr = ((B[0] * Brdr) + (B[1] * Bthetadr) + (B[2] * Bphidr)) / np.linalg.norm(B)           
+            dBdtheta = ((B[0] * Brdtheta) + (B[1] * Bthetadtheta) + (B[2] * Bphidtheta)) / np.linalg.norm(B) 
+            dBdphi = ((B[0] * Brdphi) + (B[1] * Bthetadphi) + (B[2] * Bphidphi)) / np.linalg.norm(B)
+            
+            dB = np.array([dBdr, dBdtheta / r, dBdphi / (r * np.sin(theta))])        
+
+            du = (np.sin(theta)*np.cos(phi) * dB[0]) + (np.cos(theta)*np.cos(phi) * dB[1])\
+                + (-np.sin(phi) * dB[2])
+            dv = (np.sin(theta)*np.sin(phi) * dB[0]) + (np.cos(theta)*np.sin(phi) * dB[1])\
+                +  (np.cos(phi) * dB[2])
+            dw = (np.cos(theta) * dB[0]) + (-np.sin(theta) * dB[1])
+            
+            dB_rot = np.array([du, dv, dw])
+            dB_f = np.matmul(R, dB_rot)
+            
+            u = (np.sin(theta)*np.cos(phi) * B[0]) + (np.cos(theta)*np.cos(phi) * B[1])\
+                + (-np.sin(phi) * B[2])
+            v = (np.sin(theta)*np.sin(phi) * B[0]) + (np.cos(theta)*np.sin(phi) * B[1])\
+                +  (np.cos(phi) * B[2])
+            w = (np.cos(theta) * B[0]) + (-np.sin(theta) * B[1])
+            
+            B_rot = np.array([u, v, w])
+            B_f = np.matmul(R, B_rot)
+            
+            xn =  x - ((2 * z * z * x) / ((x * x) + (y * y)))
+            yn =  y - ((2 * z * z * y) / ((x * x) + (y * y)))
+            zn = z + (2 * z)
+
+            normal = np.array([xn, yn, zn])
+            normal = normal / np.linalg.norm(normal)
+            
+            phi_hat = np.array([-y, x, 0]) / np.sqrt((x * x) + (y * y))
+            
+            sigma = np.cross(phi_hat, normal)
+            sigma = sigma / np.linalg.norm(sigma)
+            
+            x_all.append(x)
+            y_all.append(y)
+            z_all.append(z)
+            du_all.append(dB_f[0])
+            dv_all.append(dB_f[1])
+            dw_all.append(dB_f[2])
+            u_all.append(B_f[0])
+            v_all.append(B_f[1])
+            w_all.append(B_f[2])
+            normal_all.append(normal)
+            phi_hat_all.append(phi_hat)
+            sigma_all.append(sigma)
                     
     x_all = np.array(x_all) / a
     y_all = np.array(y_all) / a
@@ -1646,7 +1663,7 @@ def dB_Lshell(L, theta_in, phi_in, a, g, h, n, R):
     dB = np.array([du_all, dv_all, dw_all])
     B = np.array([u_all, v_all, w_all])
     
-    return coords, dB, B
+    return coords, dB, B, normal_all, phi_hat_all, sigma_all
 
 def TwoD_plot(x1, x2, y1, y2, plane):
     """
@@ -1661,7 +1678,7 @@ def TwoD_plot(x1, x2, y1, y2, plane):
        'figure.figsize': [10, 10]
     } 
     plt.rcParams.update(params)
-    
+    """
     if plane == 'x':
         y = x1
         z = x2

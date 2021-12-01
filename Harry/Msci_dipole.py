@@ -732,14 +732,185 @@ L = 3
 
 theta_thr = np.arcsin(L ** (-0.5)) 
 
-theta_in = np.linspace(theta_thr, np.pi - theta_thr, 10)
-phi_in = np.linspace(0, 2 * np.pi, 10)
+theta_in = np.linspace(theta_thr, np.pi - theta_thr, 15)
+phi_in = [np.pi * 1]#np.linspace(0, 2 * np.pi, 10)
+
+for i in theta_in:
+    # theta_deg = theta_in * 180 / np.pi
+    # phi_deg = phi_in * 180 / np.pi
+    
+    coords, dB, B, normal, phi_hat, sigma = dB_Lshell(L, [i], phi_in, a, g, h, 2, R)
+    
+    du, dv, dw = dB
+    x, y, z = coords
+    x = x[0]
+    y = y[0]
+    z = z[0]
+    
+    
+    phi_rot = phi_in[0]
+    
+    R_z = np.array([[np.cos(phi_rot), - np.sin(phi_rot), 0],
+                   [np.sin(phi_rot), np.cos(phi_rot), 0],
+                   [0, 0, 1]])
+    
+    normal = np.matmul(np.linalg.inv(R_z), normal[0])
+    coords = np.matmul(np.linalg.inv(R_z), coords)
+
+    phi_hat = np.matmul(np.linalg.inv(R_z), phi_hat[0])
+    
+    sigma = np.matmul(np.linalg.inv(R_z), sigma[0])
+    
+    t = np.linspace(0, np.pi, 1000)
+    p = np.array([0]) 
+    r = 3 * np.sin(t) * np.sin(t)
+    
+    xp, yp, zp = Sph_to_Cart(r, t, p)
+    
+    plt.quiver(coords[0], coords[2], normal[0], normal[2])
+    plt.quiver(coords[0], coords[2], sigma[0], sigma[2])
+plt.plot(xp, zp)
+plt.ylim(-1.5, 1.5)
+plt.xlabel('x/a', fontsize = 16)
+plt.ylabel('z/a', fontsize = 16)
+plt.title('Direction test')
+plt.show()
+
+#%%
+L = 3
+
+theta_thr = np.arcsin(L ** (-0.5)) 
+
+theta_in = np.linspace(theta_thr, np.pi - theta_thr, 100)
+phi_in = np.linspace(0, 2 * np.pi, 100)
 theta_deg = theta_in * 180 / np.pi
 phi_deg = phi_in * 180 / np.pi
 
-coords, dB, B = dB_Lshell(L, theta_in, phi_in, a, g, h, 1, R)
+coords, dB, B, normal, phi_hat, sigma = dB_Lshell(L, theta_in, phi_in, a, g, h, 2, R)
 
 du, dv, dw = dB
+x, y, z = coords
+
+drift_n = []
+drift_sigma = []
+drift_phi = []
+# b_n = []
+# b_sigma = []
+# b_phi = []
+phi_vec = []
+theta_vec = []
+
+for i in range(len(dB[0])):
+    Bt = np.array([B[0][i], B[1][i], B[2][i]])
+    dBt = np.array([dB[0][i], dB[1][i], dB[2][i]])
+    dt = np.cross(Bt, dBt)
+    dt = dt / np.linalg.norm(dt)
+    
+    drift_n.append(np.dot(dt, normal[i]))
+    drift_sigma.append(np.dot(dt, sigma[i]))
+    drift_phi.append(np.dot(dt, phi_hat[i]))
+    
+    # b_n.append(np.dot(Bt, normal[i]))
+    # b_sigma.append(np.dot(Bt, sigma[i]))
+    # b_phi.append(np.dot(Bt, phi_hat[i]))
+
+drift_n = np.array(drift_n).reshape((len(theta_in), len(phi_in)))
+drift_sigma = np.array(drift_sigma).reshape((len(theta_in), len(phi_in)))
+drift_phi = np.array(drift_phi).reshape((len(theta_in), len(phi_in)))
+
+# b_n = np.array(b_n).reshape((len(theta_in), len(phi_in)))
+# b_sigma = np.array(b_sigma).reshape((len(theta_in), len(phi_in)))
+# b_phi = np.array(b_phi).reshape((len(theta_in), len(phi_in)))
+
+drift_phi = np.delete(drift_phi, slice(0, 100, 2), 0)
+drift_phi = np.delete(drift_phi, slice(0, 100, 2), 1)
+drift_phi = np.delete(drift_phi, slice(0, 50, 2), 0)
+drift_phi = np.delete(drift_phi, slice(0, 50, 2), 1)
+
+drift_sigma = np.delete(drift_sigma, slice(0, 100, 2), 0)
+drift_sigma = np.delete(drift_sigma, slice(0, 100, 2), 1)
+drift_sigma = np.delete(drift_sigma, slice(0, 50, 2), 0)
+drift_sigma = np.delete(drift_sigma, slice(0, 50, 2), 1)
+
+phi_vec = phi_deg[::2]
+phi_vec = phi_vec[::2]
+
+theta_vec = theta_deg[::2]
+theta_vec = theta_vec[::2]
+
+im = plt.imshow(drift_n,  extent=[phi_deg[0],phi_deg[-1],\
+        theta_deg[-1],theta_deg[0]], cmap = 'plasma', aspect = 'auto')
+plt.quiver(phi_vec, theta_vec, drift_phi, drift_sigma, pivot = 'mid')
+plt.colorbar(im)
+#.quiver(phi_deg, theta_deg, b_phi, b_sigma, pivot = 'mid')
+plt.xlabel('Longitude (deg)', fontsize = 16)
+plt.ylabel('Latitude (deg)', fontsize = 16)
+plt.title('L = 3', fontsize = 16)
+plt.show()
+#%%
+print(phi_deg[2], theta_deg[4])
+#%%
+L = np.arange(2, 10)
+fig, axs = plt.subplots(2, 4)
+
+for j in range(len(L)):
+
+    theta_thr = np.arcsin(L[j] ** (-0.5))
+    
+    theta_in = np.linspace(theta_thr, np.pi - theta_thr, 100)
+    phi_in = np.linspace(0, 2 * np.pi, 100)
+    theta_deg = theta_in * 180 / np.pi
+    phi_deg = phi_in * 180 / np.pi
+
+    coords, dB, B, normal, phi_hat, sigma = dB_Lshell(L[j], theta_in, phi_in, a, g, h, 2, R)
+
+    du, dv, dw = dB
+    x, y, z = coords
+
+    drift_n = []
+    drift_sigma = []
+    drift_phi = []
+    phi_vec = []
+    theta_vec = []
+
+    for i in range(len(dB[0])):
+        Bt = np.array([B[0][i], B[1][i], B[2][i]])
+        dBt = np.array([dB[0][i], dB[1][i], dB[2][i]])
+        dt = np.cross(Bt, dBt)
+        dt = dt / np.linalg.norm(dt)
+        
+        drift_n.append(np.dot(dt, normal[i]))
+        drift_sigma.append(np.dot(dt, sigma[i]))
+        drift_phi.append(np.dot(dt, phi_hat[i]))
+
+    drift_n = np.array(drift_n).reshape((len(theta_in), len(phi_in)))
+    drift_sigma = np.array(drift_sigma).reshape((len(theta_in), len(phi_in)))
+    drift_phi = np.array(drift_phi).reshape((len(theta_in), len(phi_in)))
+
+    drift_phi = np.delete(drift_phi, slice(0, 100, 2), 0)
+    drift_phi = np.delete(drift_phi, slice(0, 100, 2), 1)
+    drift_phi = np.delete(drift_phi, slice(0, 50, 2), 0)
+    drift_phi = np.delete(drift_phi, slice(0, 50, 2), 1)
+
+    drift_sigma = np.delete(drift_sigma, slice(0, 100, 2), 0)
+    drift_sigma = np.delete(drift_sigma, slice(0, 100, 2), 1)
+    drift_sigma = np.delete(drift_sigma, slice(0, 50, 2), 0)
+    drift_sigma = np.delete(drift_sigma, slice(0, 50, 2), 1)
+
+    phi_vec = phi_deg[::2]
+    phi_vec = phi_vec[::2]
+
+    theta_vec = theta_deg[::2]
+    theta_vec = theta_vec[::2]
+
+    im = axs[int(j / 4)][j%4].imshow(drift_n,  extent=[phi_deg[0],phi_deg[-1],\
+            theta_deg[-1],theta_deg[0]], cmap = 'plasma', aspect='auto')
+    axs[int(j / 4)][j%4].quiver(phi_vec, theta_vec, drift_phi, drift_sigma, scale = 40, headwidth = 6, pivot = 'mid')
+    axs[int(j / 4)][j%4].set_title('Max ratio, L = {}'.format(L[j]))
+    axs[int(j / 4)][j%4].set(xlabel='Longitude (deg)', ylabel='Latitude (deg)')
+    fig.colorbar(im, ax= axs[int(j / 4)][j%4])
+    #fig.suptitle('Dipole only', fontsize=16)
+plt.show()
 #%%
 
 #loadBField('Output/complete_field_phi=0_CI.npz')
