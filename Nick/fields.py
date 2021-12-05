@@ -24,11 +24,17 @@ import copy
 class Field:
     def __init__(self):
         self.B = 0
+        self.naturalUnits = False
         
         #     #basic field superclass to deal with coordinate system conversions
         #     #we assume that the field wants to be in cartesian at the base level
         return
 
+
+    
+
+    def getUnitState(self):
+        return self.naturalUnits
 
     def convertCartesianToPolar(self, rvec, theta=0, phi=0, origin=True):
         if origin:
@@ -323,6 +329,20 @@ class SHField(Field):
         self.R = np.identity(3)
         self.Rinv = np.identity(3)
 
+        self.naturalUnits = False
+
+    def setNaturalUnits(self, activate, charge, restMass, period):
+        #This switches the units to being natural units
+        if activate:
+            self.g = (charge*period/restMass)*self.g
+            self.h = (charge*period/restMass)*self.h
+            self.naturalUnits = True
+        else:
+            self.g = (restMass/(charge*period))*self.g
+            self.h = (restMass/(charge*period))*self.h
+            self.naturalUnits = False
+        return    
+
     def rotate(self, rotationKey): #Sets the rotation matrix for the whole system.
         #rotationKey is a string that tells you what system to rotate into.
         #rotationKey can take values "Field" and "Rotation", or "F" and "R"
@@ -362,6 +382,8 @@ class SHField(Field):
 
         return
  
+
+  
 
     def PnmCos(self, n, m, theta): #Returns Pnm(cos(theta)) for n up to 2
         if n == 2:
@@ -1439,6 +1461,7 @@ class SHField(Field):
 class OTDField(Field):
     def __init__(self, m):
         self.m = m
+        self.naturalUnits = False
 
     def getField(self, rvec):
         r = np.linalg.norm(rvec)
@@ -1448,7 +1471,20 @@ class OTDField(Field):
 class UniformField(Field):
     def __init__(self, fieldVec):
         self.B = fieldVec
+        self.naturalUnits = False
     
-    def getField(self):
+    def getField(self, r):
         return self.B
+    
+    def setNaturalUnits(self, activate, charge, restMass, period):
+        #This switches the units to being natural units
+        if activate:
+            self.B = (charge*period/restMass)*self.B
+  
+            self.naturalUnits = True
+        else:
+            self.B = (restMass/(charge*period))*self.B
+           
+            self.naturalUnits = False
+        return
 
