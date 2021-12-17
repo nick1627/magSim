@@ -2,6 +2,7 @@
 This file stores the code that analyses the simulation
 """
 import numpy as np
+from numpy.lib.arraysetops import isin
 from fields import *
 from particles import *
 import time 
@@ -38,7 +39,7 @@ class Simulation:
         return
 
 
-    def run(self, endOnTime = True, endTime=200, endStep=200, returnData=True, saveData=True, naturalUnits=True):
+    def run(self, endOnTime = True, endTime=200, endStep=200, naturalUnits=True):
         #End time is always in units of time steps, not seconds
 
         #first wipe the simulation data already existing.
@@ -120,17 +121,32 @@ class Simulation:
             self.time.append(currentTime)
 
             endTime *= self.particle.larmorPeriod
+ 
+            if endOnTime:
+                while currentTime < endTime: #
+                    #increment time 
+                    currentTime += self.timeStep*self.particle.larmorPeriod
+                    #update particle position
+                    self.particle.updatePositionSI(self.field, self.timeStep*self.particle.larmorPeriod)
+                    #Record data
+                    self.position.append(self.particle.getPosition())
+                    self.velocity.append(self.particle.getVelocity())
+                    self.time.append(currentTime)
 
-            while currentTime < endTime:
-                #increment time 
-                currentTime += self.timeStep*self.particle.larmorPeriod
-                #update particle position
-                self.particle.updatePositionSI(self.field, self.timeStep*self.particle.larmorPeriod)
-                #Record data
-                self.position.append(self.particle.getPosition())
-                self.velocity.append(self.particle.getVelocity())
-                self.time.append(currentTime)
-                print(currentTime)
+
+            else: #end based on step
+                steps = 0
+                while steps < endStep:
+                    #increment time 
+                    currentTime += self.timeStep*self.particle.larmorPeriod
+                    #update particle position
+                    self.particle.updatePositionN(self.field, self.timeStep*self.particle.larmorPeriod)
+                    #Record data
+                    self.position.append(self.particle.getPosition())
+                    self.velocity.append(self.particle.getVelocity())
+                    self.time.append(currentTime)
+
+                    steps += 1
             
             #Simulation has now completed
             self.position = np.array(self.position)
@@ -139,16 +155,37 @@ class Simulation:
         elapsedRealTime = time.time() - startRealTime
         print("Simulation completed.  Time elapsed: " + str(elapsedRealTime) + " seconds.")
 
-        if saveData:
-            raise(Exception("you havent added saving data yet"))
-
-        if returnData:
-            return self.position, self.velocity
-        else:
-            return
+        return
         
+    def saveData(self, filePath=""):
+        """
+        Saves all data required to recreate the simulation & plot graphs 
+        """
 
-    
+        #First save data on field
+        if isinstance(self.field, SHField):
+            fieldArray = [self.field.a, self.field.g, self.field.h]
+            fieldArray = np.array(fieldArray)
+        elif isinstance(self.field, UniformField):
+            fieldArray = np.array([self.field.B])
+        else:
+            fieldArray = np.array([])
+        #Next save data on particle 
+        initialPosition = self.position[0]
+        initialVelocityDirection = self.velocity[0]/np.linalg.norm(self.velocity[0])
+
+        gamma = 1/(np.sqrt(1 - (np.linalg.norm(self.velocity[0], axis=-1)/self.particle.c)**2))
+        restMassEnergy = self.particle.m0*self.particle.c**2
+        initialKE = (gamma - 1)*restMassEnergy #This is in joules
+
+        particleArray = np.array([self.particle.m0, self.particle.q, initialPosition, initialVelocityDirection, initialKE])
+        #Now save simulation output
+        simulationArray = np.array([self.timeStep])
+
+        # This saves the data 
+        np.savez(filePath, fieldData = fieldArray, particleData = particleArray, simulationData = simulationArray, positions = self.position, velocities = self.velocity)
+        return
+
     def plotLShellOnTime(self):
         #Need to get L from position
         return
