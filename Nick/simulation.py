@@ -4,25 +4,53 @@ This file stores the code that analyses the simulation
 import numpy as np
 from fields import *
 from particles import *
+import time 
 
 class Simulation:
-    def __init__(self, field, particle, timestep):
+    def __init__(self, field, particle, timestep, simData = []):
         #timestep always input as fraction of initial period of gyroradius
-        self.timeStep = timestep
-        self.field = field
-        self.particle = particle
 
-        #Diagnostic info
+        #If previous simulation data not provided, we start a new simulation
+        if len(simData) == 0:
+            self.timeStep = timestep
+            self.field = field
+            self.particle = particle
+
+            #Diagnostic info
+            self.position = []
+            self.velocity = []
+            self.time = []
+        else:
+            #We have prior data, so create simulation object based on that for analysis
+            self.timeStep = "empty"
+            self.field = "empty"
+            self.particle = "empty"
+            self.position = []
+            self.velocity = []
+            self.time = []
+        
+        return 
+    
+    def wipeSimData(self):
         self.position = []
         self.velocity = []
         self.time = []
+        return
 
-    def run(self, endTime, returnData=True, saveData=True, naturalUnits=True):
+
+    def run(self, endOnTime = True, endTime=200, endStep=200, returnData=True, saveData=True, naturalUnits=True):
         #End time is always in units of time steps, not seconds
+
+        #first wipe the simulation data already existing.
+        self.wipeSimData()
+
+        print("Beginning simulation...")
+        #Find start time
+        startRealTime = time.time()
         #Find values for conversion factors -- needed for calculating duration of timeStep
         initialB = self.field.getField(self.particle.getPosition())
         self.particle.computeConversionFactors(initialB)
-
+        
         if naturalUnits:
             #EndTime is in units of time steps, not seconds
             currentTime = 0
@@ -40,16 +68,31 @@ class Simulation:
             self.velocity.append(self.particle.getVelocity())
             self.time.append(currentTime)
 
-            while currentTime < endTime:
-                #increment time 
-                currentTime += self.timeStep
-                #update particle position
-                self.particle.updatePositionN(self.field, self.timeStep)
-                #Record data
-                self.position.append(self.particle.getPosition())
-                self.velocity.append(self.particle.getVelocity())
-                self.time.append(currentTime)
-                
+            if endOnTime:
+                while currentTime < endTime: #
+                    #increment time 
+                    currentTime += self.timeStep
+                    #update particle position
+                    self.particle.updatePositionN(self.field, self.timeStep)
+                    #Record data
+                    self.position.append(self.particle.getPosition())
+                    self.velocity.append(self.particle.getVelocity())
+                    self.time.append(currentTime)
+
+
+            else: #end based on step
+                steps = 0
+                while steps < endStep:
+                    #increment time 
+                    currentTime += self.timeStep
+                    #update particle position
+                    self.particle.updatePositionN(self.field, self.timeStep)
+                    #Record data
+                    self.position.append(self.particle.getPosition())
+                    self.velocity.append(self.particle.getVelocity())
+                    self.time.append(currentTime)
+
+                    steps += 1
             
             #Simulation has now completed
             if self.field.getUnitState == True:
@@ -67,6 +110,9 @@ class Simulation:
         else: #Not using natural units
              #EndTime is in units of time steps, not seconds
             currentTime = 0
+
+            if endOnTime == False:
+                raise(Exception("Ending on step count has not been implemented yet for SI units"))
 
             #Record initial values 
             self.position.append(self.particle.getPosition())
@@ -90,7 +136,8 @@ class Simulation:
             self.position = np.array(self.position)
             self.velocity = np.array(self.velocity)
 
-     
+        elapsedRealTime = time.time() - startRealTime
+        print("Simulation completed.  Time elapsed: " + str(elapsedRealTime) + " seconds.")
 
         if saveData:
             raise(Exception("you havent added saving data yet"))
@@ -103,36 +150,55 @@ class Simulation:
 
     
     def plotLShellOnTime(self):
+        #Need to get L from position
         return
 
-    def plotPositionOnTime(self):
+    def plotPositionOnTime(self, x=False, y=False, z=False):
         ax = plt.figure().add_subplot(projection = "3d")
         ax.plot(self.position[:,0], self.position[:,1], self.position[:,2])
         ax.set_title("Position of particle in 3D")
 
-        ax1 = plt.figure().add_subplot()
-        ax1.plot(self.time, self.position[:, 0])
-        ax1.set_title("x on time")
-        ax2 = plt.figure().add_subplot()
-        ax2.plot(self.time, self.position[:, 1])
-        ax2.set_title("y on time")
-        ax3 = plt.figure().add_subplot()
-        ax3.plot(self.time, self.position[:, 2])
-        ax3.set_title("z on time")
+        if x:
+            ax1 = plt.figure().add_subplot()
+            ax1.plot(self.time, self.position[:, 0])
+            ax1.set_title("x on time")
+        if y:
+            ax2 = plt.figure().add_subplot()
+            ax2.plot(self.time, self.position[:, 1])
+            ax2.set_title("y on time")
+        if z:
+            ax3 = plt.figure().add_subplot()
+            ax3.plot(self.time, self.position[:, 2])
+            ax3.set_title("z on time")
 
         ax4 = plt.figure().add_subplot()
         ax4.plot(self.position[:, 0], self.position[:, 1])
         ax4.set_aspect("equal")
         ax4.set_title("x and y positions as time evolves")
 
+        return
+
     def plotKEOnTime(self):
-        print("warning:  this function gives the non-relativistic KE on time")
-        vSquared = np.multiply(self.velocity, self.velocity)
-        vSquared = np.sum(vSquared, axis=-1)
-        KE = 0.5*self.particle.m0*vSquared
+        restMassEnergy = self.particle.m0*self.particle.c**2
+        v = np.linalg.norm(self.velocity, axis=-1)
+        gamma = 1/(np.sqrt(1 - (v/self.particle.c)**2))
+        for g in gamma:
+            if math.isnan(g) or math.isinf(g):
+                print(g)
+                raise(Exception("Warning!  Energy problems!"))
+
+        Ek = (gamma - 1)*restMassEnergy #This is in joules
+        Ek = Ek/(1000*1.6E-19)
         ax = plt.figure().add_subplot()
-        ax.plot(self.time, vSquared)
-        ax.set_title("Kinetic energy on time")
+        ax.plot(self.time, Ek, color="red")
+        gain = ((Ek[-1] - Ek[0])/Ek[0])*100
+        gain = np.round(gain, decimals=3)
+        titleString = "Kinetic Energy on Time - Percentage Gain: " + str(gain) + "%"
+        ax.set_title(titleString)
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Kinetic Energy (keV)")
+
+        return
 
     def plotDeltaV(self):
         print("warning:  this function needs improvement")
@@ -144,6 +210,25 @@ class Simulation:
         ax = plt.figure().add_subplot()
         ax.plot(deltav)
         
+        
+        return
+
+    def plotVelocityOnTime(self):
+        ax = plt.figure().add_subplot()
+        v = np.linalg.norm(self.velocity, axis =-1)
+        ax.plot(self.time, v)
+        gain = ((v[-1] - v[0])/v[0])*100
+        gain = np.round(gain, decimals=3)
+        titleString = "Speed on Time - Percentage Gain: " + str(gain) + "%"
+        ax.set_title(titleString)
+
+        return
+
+    def plotVelocityErrorOnTime(self):
+        ax = plt.figure().add_subplot()
+        v = np.linalg.norm(self.velocity, axis=-1)
+        v_error = abs(v - v[0])
+        ax.plot(self.time, v_error)
         
         return
   

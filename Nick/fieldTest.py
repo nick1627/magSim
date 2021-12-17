@@ -33,7 +33,7 @@ Ru = 25600000           #radius of Uranus in metres
 # g = np.array([[0, 0]])
 # h = np.array([[0, 1]])
 
-g = np.array([[11278, 10928, 0], [-9648, -12284, 1453]])
+g = np.array([[11278, 10928, 0], [-9648, -12284, 1453]]) #these are in nanoteslas
 h = np.array([[0, -16049, 0], [0, 6405, 4220]])
 
 UField = SHField(Ru, g, h, 0, 0)
