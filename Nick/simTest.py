@@ -34,15 +34,15 @@ BMag = np.linalg.norm(UField.getField(np.array([6*Ru, 0, 0])))
 BMag = 1
 uniformB = UniformField(np.array([0, 0, BMag]))
 
-initialPosition = np.array([6*Ru, 0, 0])
+initialPosition = np.array([0, 0, 0])
 initialVelocityDirection = np.array([1, 1, 1])
-initialKE = 100 #keV
+initialKE = 8.54E-9#100 #keV
 
 # e = Electron(initialPosition, initialVelocityDirection, initialKE)
 p = Proton(initialPosition, initialVelocityDirection, initialKE)
 
-sim = Simulation(UField, p, 0.02)
-sim.run(endOnTime=False, endTime = 1000, endStep=1000000, returnData=False, saveData=False, naturalUnits=True)
+sim = Simulation(uniformB, p, 0.02)
+sim.run(endOnTime=False, endTime = 1000, endStep=10000, naturalUnits=True)
 sim.plotPositionOnTime()
 sim.plotKEOnTime()
 # sim.plotVelocityOnTime()
