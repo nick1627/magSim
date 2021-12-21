@@ -1,5 +1,5 @@
 """
-This is the testing script
+This is the testing script for the field
 """
 import sys, os
 sys.path.insert(0, os.getcwd())
@@ -33,7 +33,7 @@ Ru = 25600000           #radius of Uranus in metres
 # g = np.array([[0, 0]])
 # h = np.array([[0, 1]])
 
-g = np.array([[11278, 10928, 0], [-9648, -12284, 1453]])
+g = np.array([[11278, 10928, 0], [-9648, -12284, 1453]]) #these are in nanoteslas
 h = np.array([[0, -16049, 0], [0, 6405, 4220]])
 
 UField = SHField(Ru, g, h, 0, 0)
@@ -98,9 +98,9 @@ UField.rotate("Field")
 # y = np.array([[0, 0, 0], [5, 5, 5], [10, 10, 10]])
 # x = np.array([0, 5, 10])
 # y = np.array([0, 5, 10])
-# x = x - 2.5
-# y = y - 2.5
-# c = np.array([[1, 2], [3, 4]])
+# # x = x - 2.5
+# # y = y - 2.5
+# c = np.array([[0,0], [1, 0]])
 
 # plt.figure(6)
 # plt.pcolormesh(x, y, c,cmap='plasma')
@@ -168,9 +168,14 @@ UField.rotate("Field")
 
 
 #================================================
-#UField.plotDriftDirectionLongitudePlane([0, 5, 10], 5, 100)
-UField.plotDriftDirectionLShell([2, 5, 7, 10])
+# UField.plotDriftDirectionLongitudePlane([0, 5, 10, 15, 20, 25, 30, 35, 40, 45], 5, 100)
+# UField.plotDriftDirectionLShell([2])
+# UField.plotDriftDirectionLongitudePlane([180], 5, 100)
+# UField.plotDriftDirectionLongitudePlane([150, 160, 170], 5, 100)
 
+#Final test
+UField.plotDriftDirectionLongitudePlane([0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340], 5, 100)
+UField.plotDriftDirectionLShell([2, 4, 5, 6, 7, 10, 15, 20])
 
 # A = np.array([[[1, 2, 3], [4, 5, 6]]])
 # B = np.array([[2], [1]])
