@@ -1073,7 +1073,7 @@ def B_mag_cart(x1, z1, a, args, n, R, phi, matrix = True):
         B_mag = B_mag.T
     return B_mag
 
-def B_spin_aligned(r, theta, phi, a, args, n, R):
+def B_spin_aligned(r, theta, phi, a, args, n, R): #should be field aligned?
     x, y, z, u, v, w = Get_B_sph_rot(r, theta, phi, a, args, n, R)
 
     R_z = np.array([[np.cos(-phi[0]), - np.sin(-phi[0]), 0],
