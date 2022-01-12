@@ -20,31 +20,31 @@ import tools
 
 #===============================================================================
 
-Ru = 25600000           #radius of Uranus in metres
+# Ru = 25600000           #radius of Uranus in metres
 
-g = np.array([[11278, 10928, 0], [-9648, -12284, 1453]]) #these are in nanoteslas
-h = np.array([[0, -16049, 0], [0, 6405, 4220]])
-g = g/1000000000
-h = h/1000000000
+# g = np.array([[11278, 10928, 0], [-9648, -12284, 1453]]) #these are in nanoteslas
+# h = np.array([[0, -16049, 0], [0, 6405, 4220]])
+# g = g/1000000000
+# h = h/1000000000
 
-UField = SHField(Ru, g, h, 0, 0)
-UField.rotate("Field")
+# UField = SHField(Ru, g, h, 0, 0)
+# UField.rotate("Field")
 
-BMag = np.linalg.norm(UField.getField(np.array([6*Ru, 0, 0])))
-BMag = 1
-uniformB = UniformField(np.array([0, 0, BMag]))
+# BMag = np.linalg.norm(UField.getField(np.array([6*Ru, 0, 0])))
+# BMag = 1
+# uniformB = UniformField(np.array([0, 0, BMag]))
 
-initialPosition = np.array([0, 0, 0])
-initialVelocityDirection = np.array([1, 1, 1])
-initialKE = 8.54E-9#100 #keV
+# initialPosition = np.array([0, 0, 0])
+# initialVelocityDirection = np.array([1, 1, 1])
+# initialKE = 8.54E-9#100 #keV
 
-# e = Electron(initialPosition, initialVelocityDirection, initialKE)
-p = Proton(initialPosition, initialVelocityDirection, initialKE)
+# # e = Electron(initialPosition, initialVelocityDirection, initialKE)
+# p = Proton(initialPosition, initialVelocityDirection, initialKE)
 
-sim = Simulation(uniformB, p, 0.02)
-sim.run(endOnTime=False, endTime = 1000, endStep=10000, naturalUnits=True)
-sim.plotPositionOnTime()
-sim.plotKEOnTime()
+# sim = Simulation(uniformB, p, 0.02)
+# sim.run(endOnTime=False, endTime = 1000, endStep=10000, naturalUnits=True)
+# sim.plotPositionOnTime()
+# sim.plotKEOnTime()
 # sim.plotVelocityOnTime()
 # sim.plotVelocityErrorOnTime()
 
@@ -103,5 +103,43 @@ sim.plotKEOnTime()
 # plt.legend()
 
 
+#==================start testing of simulation manager==========================
+
+Ru = 25600000           #radius of Uranus in metres
+
+g = np.array([[11278, 10928, 0], [-9648, -12284, 1453]]) #these are in nanoteslas
+h = np.array([[0, -16049, 0], [0, 6405, 4220]])
+g = g/1000000000
+h = h/1000000000
+
+UField = SHField(Ru, g, h, 0, 0)
+UField.rotate("Field")
+
+BMag = np.linalg.norm(UField.getField(np.array([6*Ru, 0, 0])))
+BMag = 1
+uniformB = UniformField(np.array([0, 0, BMag]))
+
+initialPosition = np.array([0, 0, 0])
+initialVelocityDirection = np.array([1, 1, 1])
+initialKE = 100000 #eV
+
+# e = Electron(initialPosition, initialVelocityDirection, initialKE)
+p1 = Proton(initialPosition, initialVelocityDirection, initialKE)
+p2 = Proton(initialPosition, initialVelocityDirection, 2*initialKE)
+p3 = Proton(initialPosition, initialVelocityDirection, 3*initialKE)
+p4 = Proton(initialPosition, initialVelocityDirection, 4*initialKE)
+p5 = Proton(initialPosition, initialVelocityDirection, 5*initialKE)
+protonList = [p1, p2, p3, p4, p5]
+
+manager = SimulationManager(uniformB, protonList, 0.02, N=5, fileKeyWord="uniform", endStepList=1000)
+manager.runAllSims()
+
+
+
+
+
+
 #===============================================================================
+
+
 plt.show()

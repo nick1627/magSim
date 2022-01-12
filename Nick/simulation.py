@@ -8,11 +8,23 @@ from particles import *
 import time 
 
 class Simulation:
-    def __init__(self, field, particle, timestep, simData = []):
+    """
+    This class manages everything to do with the simulation.  Simulations are
+    comprised of a single particle moving within a magnetic field, and so a
+    field and a particle object are taken as input.
+
+    The timestep is the amount of time between successive particle position
+    estimations.  Each simulation object has a particular timestep.
+
+    Different runs of the simulation can have different durations, measured
+    either in steps or in multiples of the characteristic timescale (the 
+    gyro-period).
+    """
+    def __init__(self, field, particle, timestep, simDataPath = ""):
         #timestep always input as fraction of initial period of gyroradius
 
         #If previous simulation data not provided, we start a new simulation
-        if len(simData) == 0:
+        if simDataPath == "":
             self.timeStep = timestep
             self.field = field
             self.particle = particle
@@ -21,14 +33,27 @@ class Simulation:
             self.position = []
             self.velocity = []
             self.time = []
+
+            self.complete = False
         else:
             #We have prior data, so create simulation object based on that for analysis
-            self.timeStep = "empty"
+
+            savedArrays = np.load(simDataPath)
+
+            fieldArray = savedArrays["fieldData"]
+            particleArray = savedArrays["particleData"]
+            simulationArray = savedArrays["simulationData"]
+            positionArray = savedArrays["positions"]
+            velocityArray = savedArrays["velocities"]
+
+
+            self.timeStep = simulationArray[0]
             self.field = "empty"
             self.particle = "empty"
-            self.position = []
-            self.velocity = []
+            self.position = positionArray
+            self.velocity = velocityArray
             self.time = []
+            self.complete = True
         
         return 
     
@@ -39,8 +64,22 @@ class Simulation:
         return
 
 
-    def run(self, endOnTime = True, endTime=200, endStep=200, naturalUnits=True):
+    def run(self, endTime=0, endStep=0, naturalUnits=True):
+        """
+        This function runs the simulation for a given duration in terms of time
+        or steps.  Can run in either natural units or SI units.
+        """
         #End time is always in units of time steps, not seconds
+        
+        if endTime == 0:
+            if endStep == 0:
+                raise(Exception("You didnt specify how the simulation should end!"))
+            else:
+                endOnTime = False
+        else:
+            endOnTime = True
+
+        self.complete = False
 
         #first wipe the simulation data already existing.
         self.wipeSimData()
@@ -154,6 +193,8 @@ class Simulation:
 
         elapsedRealTime = time.time() - startRealTime
         print("Simulation completed.  Time elapsed: " + str(elapsedRealTime) + " seconds.")
+
+        self.complete = True
 
         return
         
@@ -269,3 +310,72 @@ class Simulation:
         
         return
   
+class SimulationManager:
+    def __init__(self, fieldList, particleList, timeStepList, N = 10, mainFilePath = "Output/", fileNames = "auto", fileKeyWord = "", endTimeList = 0, endStepList = 0, naturalUnitsList = True):
+        self.N = N
+
+        if not isinstance(fieldList, list):
+            fieldList = [fieldList]*self.N
+        if not isinstance(particleList, list):
+            particleList = [particleList]*self.N
+        if not isinstance(timeStepList, list):
+            timeStepList = [timeStepList]*self.N
+        if not isinstance(endTimeList, list):
+            endTimeList = [endTimeList]*self.N
+        if not isinstance(endStepList, list):
+            endStepList = [endStepList]*self.N
+        if not isinstance(naturalUnitsList, list):
+            naturalUnitsList = [naturalUnitsList]*self.N
+
+        if len(fieldList) != self.N:
+            raise(Exception("Length mismatch!"))
+        if len(particleList) != self.N:
+            raise(Exception("Length mismatch!"))
+        if len(timeStepList) != self.N:
+            raise(Exception("Length mismatch!"))
+        if len(endTimeList) != self.N:
+            raise(Exception("Length mismatch!"))
+        if len(endStepList) != self.N:
+            raise(Exception("Length mismatch!"))
+        if len(naturalUnitsList) != self.N:
+            raise(Exception("Length mismatch!"))
+
+
+        self.fieldList = fieldList
+        self.particleList = particleList
+        self.timeStepList = timeStepList
+        self.endTimeList = endTimeList
+        self.endStepList = endStepList
+        self.naturalUnitsList = naturalUnitsList
+
+        #Now have lists of info set up for the simulations
+        self.simulations = []
+        for i in range(0, self.N):
+            self.simulations.append(Simulation(fieldList[i], particleList[i], timeStepList[i]))
+
+        #Deal with the filenames and paths
+        self.filePaths = []
+        if fileNames == "auto":
+            for i in range(0, self.N):
+                self.filePaths.append(mainFilePath + fileKeyWord + "-" + str(self.simulations[i].particle.name) + "-" + str(np.round(self.simulations[i].particle.initialEnergy)) + ".npz")
+
+        return
+
+    def runAllSims(self):
+        print("Beginning simulations...")
+        for i in range(0, self.N):
+            print("Starting simulation %d of %d..." % (i+1, self.N))
+            self.simulations[i].run(self.endTimeList[i], self.endStepList[i], self.naturalUnitsList[i])
+            self.simulations[i].saveData(filePath = self.filePaths[i])
+
+        print("All simulations complete.")
+
+    def plotAllEnergy(self):
+        print("Plotting particle energies...")
+        for i in range(0, self.N):
+            self.simulations[i].plotKEOnTime()
+
+
+
+
+

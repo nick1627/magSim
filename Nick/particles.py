@@ -8,8 +8,13 @@ import numpy as np
 import copy
 import math
 class Particle:
-    def __init__(self, mass, charge, position, velocityDirection, kineticEnergy):
-        #kinetic energy in keV
+    """
+    This class is a general class for a particle.  To create a new particle, input
+    the mass, charge, position, velocity direction vector and kinetic energy of the 
+    particle.
+    """
+    def __init__(self, mass, charge, position, velocityDirection, kineticEnergy, particleName = "None"):
+        #kinetic energy in eV
         self.m0 = mass          #Rest mass of particle in kg
         self.q = charge         #charge of particle in coulombs
         
@@ -19,8 +24,11 @@ class Particle:
         self.c = 299792458
 
         velocityDirection = velocityDirection/np.linalg.norm(velocityDirection)
-        Ek = kineticEnergy*1000*1.6E-19 #Ek is now in joules
+        Ek = kineticEnergy*1.6E-19 #Ek is now in joules
         self.v = (self.c*np.sqrt(1-((self.m0*self.c**2)/(self.m0*self.c**2 + Ek))**2))*velocityDirection
+
+        self.name = particleName
+        self.initialEnergy = kineticEnergy #Stored in eV
 
         return
 
@@ -114,6 +122,10 @@ class Particle:
     
 
 class Electron(Particle):
+    """
+    A subclass of particle, with the mass and charge already set to 
+    that of an electron.
+    """
     def __init__(self, position, velocityDirection, kineticEnergy):
         #kinetic energy in keV
         self.m0 = 9.11E-31
@@ -128,10 +140,16 @@ class Electron(Particle):
         Ek = kineticEnergy*1000*1.6E-19 #Ek is now in joules
         self.v = (self.c*np.sqrt(1-((self.m0*self.c**2)/(self.m0*self.c**2 + Ek))**2))*velocityDirection
 
+        self.name = "Electron"
+        self.initialEnergy = kineticEnergy #in eV
 
         return
 
 class Proton(Particle):
+    """
+    A subclass of particle, with the mass and charge already set to
+    that of a proton.
+    """
     def __init__(self, position, velocityDirection, kineticEnergy):
         self.m0 = 1.67E-27
         self.q = 1.60E-19
@@ -145,5 +163,7 @@ class Proton(Particle):
         Ek = kineticEnergy*1000*1.6E-19 #Ek is now in joules
         self.v = (self.c*np.sqrt(1-((self.m0*self.c**2)/(self.m0*self.c**2 + Ek))**2))*velocityDirection
 
+        self.name = "Proton"
+        self.initialEnergy = kineticEnergy #in eV
 
         return
