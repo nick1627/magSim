@@ -90,7 +90,7 @@ x, y, z, u, v, w = Get_B_cart(x1, y1, z1, a, args, 2, True)
 TwoD_plot(x, y, u, v, 'z')
             
 #%%
-x1 = np.linspace(-1.5 * a, 1.5 * a, 4)
+x1 = [0]#np.linspace(-1.5 * a, 1.5 * a, 4)
 y1 = np.linspace(-1.5 * a, 1.5 * a, 4)
 z1 = np.linspace(-1.5 * a, 1.5 * a, 4)
 
@@ -181,8 +181,8 @@ B_rall = Get_maxB_ratio(r, theta, phi, a, args, R, True)
 
 #%%
 
-r = np.linspace(1*a, 2 * a, 100)
-theta = np.linspace(0, np.pi, 100)
+r = np.linspace(1*a, 2 * a, 10)
+theta = np.linspace(0, np.pi, 10)
 phi = [0]#np.linspace(0, 2*np.pi, 50)#np.array([0, np.pi])
 
 B_mag_quad, xyz_quad, uvw_quad = B_magnitude(r, theta, phi, a, args, 2, R)
@@ -207,8 +207,8 @@ plt.show()
 #anim2.save('Harry/colormap_test.gif')
 
 #%%
-z1 = np.linspace(-5 * a, 5 * a, 100)
-x1 = np.linspace(0, 5 * a, 100)
+z1 = np.linspace(-5 * a, 5 * a, 10)
+x1 = np.linspace(0, 5 * a, 10)
 
 phi = 0#np.pi/0.5
 
@@ -295,12 +295,12 @@ anim3 = animation.FuncAnimation(fig, animate_im, frames = num_range, \
 fig.colorbar(im)
 plt.show()
 
-anim3.save('Harry/ratio_animation_with_vectors.gif')
+#anim3.save('Harry/ratio_animation_with_vectors.gif')
 
 #%%
 
-z1 = np.linspace(-5 * a, 5 * a, 100)
-x1 = np.linspace(0, 5 * a, 100)
+z1 = np.linspace(-5 * a, 5 * a, 10)
+x1 = np.linspace(0, 5 * a, 10)
 
 phi = np.linspace(0, 2 * np.pi, 10)
 
@@ -390,7 +390,7 @@ for i in tqdm(phi):
     
     B_ratio = abs(top) / abs(bottom)
         
-    B_all.append(np.amax(B_ratio))
+    B_all.append(np.nanmax(B_ratio))
     
     
     
@@ -398,6 +398,7 @@ plt.plot(phi * 180 / np.pi, B_all)
 plt.xlabel('Longitude (deg)')
 plt.ylabel('Max ratio')
 plt.show()
+
 #%%
 L = 2
 
@@ -662,10 +663,11 @@ z = np.delete(z, slice(0, 100, 2), 0)
 z = np.delete(z, slice(0, 100, 2), 1)
 z = np.delete(z, slice(0, 50, 2), 0)
 z = np.delete(z, slice(0, 50, 2), 1)
+
 #%%
+im = plt.imshow(v_dr[::-1],  extent=[0, 5, -5, 5], cmap = 'plasma', vmin = -1, vmax = 1)#, aspect='auto')
 plt.quiver(x, z[::-1], u_dr, w_dr[::-1], pivot = 'mid', width = 0.005, scale = 4, scale_units = 'x')
-plt.imshow(v_dr,  extent=[0, 5, -5, 5], cmap = 'plasma', vmin = -1, vmax = 1)#, aspect='auto')
-plt.colorbar()
+plt.colorbar(im)
 plt.xlabel('x/a', fontsize=16)
 plt.ylabel('z/a', fontsize=16)
 plt.title('Drift', fontsize=16)
@@ -721,7 +723,7 @@ for k in range(len(phi)):
     z = np.delete(z, slice(0, 50, 2), 1)
     
     axs[int(k / 5)][k%5].quiver(x, z[::-1], u_dr, w_dr[::-1], pivot = 'mid', width = 0.005, scale = 4, scale_units = 'x')
-    im = axs[int(k / 5)][k%5].imshow(v_dr,  extent=[0, 5, -5, 5], cmap = 'plasma', vmin = -1, vmax = 1)#, aspect='auto')
+    im = axs[int(k / 5)][k%5].imshow(v_dr[::-1],  extent=[0, 5, -5, 5], cmap = 'plasma', vmin = -1, vmax = 1)#, aspect='auto')
     fig.colorbar(im, ax= axs[int(k / 5)][k%5])
     axs[int(k / 5)][k%5].set(xlabel='x/a', ylabel='z/a')
     axs[int(k / 5)][k%5].set_title('Longitude = {:.0f} deg'.format(phi[k] * 180 / np.pi))
@@ -847,8 +849,7 @@ plt.xlabel('Longitude (deg)', fontsize = 16)
 plt.ylabel('Latitude (deg)', fontsize = 16)
 plt.title('L = 3', fontsize = 16)
 plt.show()
-#%%
-print(phi_deg[2], theta_deg[4])
+
 #%%
 L = np.arange(2, 10)
 fig, axs = plt.subplots(2, 4)
