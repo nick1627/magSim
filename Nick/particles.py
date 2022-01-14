@@ -41,7 +41,10 @@ class Particle:
         gamma = 1/np.sqrt(1 - (np.linalg.norm(self.v)/sp.constants.c)**2)
        
         self.larmorRadius = (gamma*self.m0*np.linalg.norm(v_perp))/(abs(self.q)*Bmag)
-        self.larmorPeriod = gamma*self.m0/(abs(self.q)*Bmag)
+        self.larmorPeriod = gamma*self.m0*2*np.pi/(abs(self.q)*Bmag)
+
+        print("Larmor period")
+        print(self.larmorPeriod)
 
         return
 
