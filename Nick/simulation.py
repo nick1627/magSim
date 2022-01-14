@@ -45,6 +45,7 @@ class Simulation:
             simulationArray = savedArrays["simulationData"]
             positionArray = savedArrays["positions"]
             velocityArray = savedArrays["velocities"]
+            timeArray = savedArrays["times"]
 
 
             self.timeStep = simulationArray[0]
@@ -52,7 +53,7 @@ class Simulation:
             self.particle = "empty"
             self.position = positionArray
             self.velocity = velocityArray
-            self.time = []
+            self.time = timeArray
             self.complete = True
         
         return 
@@ -224,7 +225,7 @@ class Simulation:
         simulationArray = np.array([self.timeStep])
 
         # This saves the data 
-        np.savez(filePath, fieldData = fieldArray, particleData = particleArray, simulationData = simulationArray, positions = self.position, velocities = self.velocity)
+        np.savez(filePath, fieldData = fieldArray, particleData = particleArray, simulationData = simulationArray, positions = self.position, velocities = self.velocity, times = self.time)
         return
 
     def plotLShellOnTime(self):
