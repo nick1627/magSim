@@ -10,6 +10,47 @@ import matplotlib.pyplot as plt
 from Harry.Functions import *
 
 #%%
+a = 25600000 # Uranus' radius
+
+#Calculate rotation matrix and its inverse!
+
+z_f = np.array([10928, -16049, 11278]) / np.sqrt((10928 * 10928) + \
+                                    (-16049 * -16049) + (11278 * 11278))
+z_r = np.array([0, 0, 1])
+  
+x_f = np.cross(z_f, z_r)
+x_f = x_f / np.sqrt(np.dot(x_f, x_f))
+
+y_f = np.cross(z_f, x_f)
+y_f = y_f / np.sqrt(np.dot(y_f, y_f))
+
+R = np.zeros((3,3))
+
+for i in range(len(x_f)):
+    R[i][0] = x_f[i]
+    R[i][1] = y_f[i]
+    R[i][2] = z_f[i]
+
+R = np.array([x_f, y_f, z_f])
+
+Rinv = np.linalg.inv(R)
+
+#Field coefficients
+
+g01 = 11278 #z
+g11 = 10928 #x
+h11 = -16049 #y
+g02 = -9648
+g12 = -12284
+h12 = 6405
+g22 = 1453
+h22 = 4220
+
+g = np.array([[g01, g11], 
+              [g02, g12, g22]], dtype = object)
+h_coeff = np.array([[0, h11], 
+              [0, h12, h22]], dtype = object)
+
 #constants
 c = float(299792458)
 m_e = float(9.10938356e-31)
@@ -32,6 +73,8 @@ params = {
 } 
 plt.rcParams.update(params)
 
+B_mag = B_rot_fun(np.array([6 * a, 0, 0]), a, g, h_coeff, 2, R) * 1e-9
+B = np.array([0, 0, np.linalg.norm(B_mag)])
 #%%
 def gamma(v):
     v_mag = np.linalg.norm(v)
@@ -39,8 +82,8 @@ def gamma(v):
     return gam
 
 def f_dvdt(t, v, r, args):
-    #args[0] = q, args[1] = B, and args[2] = m.
-    dvdt = (args[0] * np.cross(v, args[1])) / (gamma(v) * args[2])
+    #args[0] = q, and args[1] = m.
+    dvdt = (args[0] * np.cross(v, B)) / (gamma(v) * args[1])
     return dvdt
 
 def f_dvdt_n(t, v, r, args):
@@ -128,18 +171,21 @@ def RK(f, h, t0, v0, r0, n, args):
 
 #%%
 q = q
-B = np.array([0., 0., 1])
-arguments = np.array([q, B, m_p], dtype = object)
+#B = np.array([0., 0., 1])
+arguments = np.array([q, m_p], dtype = object)
 
-gyroperiod = (arguments[2] * 2 * np.pi) / (abs(q) * np.linalg.norm(B))
+gyroperiod = (arguments[1] * 2 * np.pi) / (abs(q) * np.linalg.norm(B))
 
 h = gyroperiod / 50
 t0 = 0.
-v0 = np.array([0., 0.1 * c, 0 * c])
-E = 1e7 * q
-direction = np.array([0, -1, 1])
+#v0 = np.array([0., 0.1 * c, 0 * c])
+E = 1e4 * q
+direction = np.array([1, 1, 1])
+d_norm  = direction / np.linalg.norm(direction)
 
-E_value.append(E / q)
+v_mag = E_to_v(E, m_p)
+v0 = v_mag * d_norm
+#E_value.append(E / q)
 
 #gyroradius = (arguments[2] * np.linalg.norm(v0[:2])) / (abs(q) * np.linalg.norm(B))
 r0 = np.array([0., 0., 0.])
@@ -163,7 +209,7 @@ for i in range(len(r)):
     z.append(r[i][2])
     t_all.append(t[i])
     
-    energy.append((arguments[2] * c * c) * (gamma(v[i]) - 1))
+    energy.append((arguments[1] * c * c) * (gamma(v[i]) - 1))
     
 fig = plt.figure()
 ax = plt.axes(projection='3d')
@@ -186,3 +232,13 @@ plt.plot(np.array(E_value) / 1e6, np.array(E_per) * 100, 'x', ms = 10, mew = 2)
 plt.xlabel('E (100 keV)', fontsize = 16)
 plt.ylabel('% Energy at end of simulation after 1000 steps', fontsize = 16)
 plt.show()
+
+#%%
+
+savedArrays = np.load('Output/nickComparison-Proton-10000.npz')
+pos = savedArrays["positions"]
+vel = savedArrays["velocities"]
+tim = savedArrays["times"]
+
+#%%
+print(t[1])
