@@ -897,6 +897,46 @@ def getB_fun(x, y, z, a, g, h, n, planet = None):
                 
     return x_all, y_all, z_all, u_all, v_all, w_all
 
+def B_rot_fun(pos, a, g, h, n, R):
+    
+    xyz = np.array([pos[0], pos[1], pos[2]])
+    
+    x_r, y_r, z_r = np.matmul(np.linalg.inv(R), xyz)
+    r, theta, phi = Cart_to_Sph(x_r, y_r, z_r)
+    
+    frac = a/r
+    
+    B_r = 0
+    B_theta = 0
+    B_phi = 0
+    
+    for l in range(1, n+1):
+        frac2 = frac ** (l+2)
+        
+        for m in range(l+1):
+            
+            B_r += (l+1) * frac2 * ((g[l-1][m] * np.cos(m * phi)) \
+                + (h[l-1][m] * np.sin(m * phi))) * Pnm(l, m, theta)
+            
+            B_theta -= frac2 * ((g[l-1][m] * np.cos(m * phi)) \
+                    + (h[l-1][m] * np.sin(m * phi))) * dPnm(l, m, theta)
+            
+            B_phi += (1 / np.sin(theta)) * m * frac2 * ((g[l-1][m] * np.sin(m * phi)) \
+                    - (h[l-1][m] * np.cos(m * phi))) * Pnm(l, m, theta)
+    
+    B = np.array([B_r, B_theta, B_phi])        
+        
+    u = (np.sin(theta)*np.cos(phi) * B[0]) + (np.cos(theta)*np.cos(phi) * B[1])\
+        + (-np.sin(phi) * B[2])
+    v = (np.sin(theta)*np.sin(phi) * B[0]) + (np.cos(theta)*np.sin(phi) * B[1])\
+        +  (np.cos(phi) * B[2])
+    w = (np.cos(theta) * B[0]) + (-np.sin(theta) * B[1])
+    
+    B_rot = np.array([u, v, w])
+    B_f = np.matmul(R, B_rot)
+                
+    return B_f
+
 def B_aligned_cart(x, z, a, args, n, R, phi_rot):
    
     x_all = []
