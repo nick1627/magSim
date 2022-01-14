@@ -54,7 +54,7 @@ h_coeff = np.array([[0, h11],
 #constants
 c = float(299792458)
 m_e = float(9.10938356e-31)
-m_p = float(1.6726219e-28)
+m_p = float(1.6726219e-27)
 q = float(1.602176634e-19)
 
 E_per = []
@@ -174,9 +174,6 @@ q = q
 #B = np.array([0., 0., 1])
 arguments = np.array([q, m_p], dtype = object)
 
-gyroperiod = (arguments[1] * 2 * np.pi) / (abs(q) * np.linalg.norm(B))
-
-h = gyroperiod / 50
 t0 = 0.
 #v0 = np.array([0., 0.1 * c, 0 * c])
 E = 1e4 * q
@@ -186,6 +183,10 @@ d_norm  = direction / np.linalg.norm(direction)
 v_mag = E_to_v(E, m_p)
 v0 = v_mag * d_norm
 #E_value.append(E / q)
+
+gyroperiod = (gamma(v0) * arguments[1] * 2 * np.pi) / (abs(q) * np.linalg.norm(B))
+
+h = gyroperiod / 50
 
 #gyroradius = (arguments[2] * np.linalg.norm(v0[:2])) / (abs(q) * np.linalg.norm(B))
 r0 = np.array([0., 0., 0.])
@@ -241,4 +242,7 @@ vel = savedArrays["velocities"]
 tim = savedArrays["times"]
 
 #%%
-print(t[1])
+print(v[0] - vel[0])
+
+#%%
+print(gamma(v0))
