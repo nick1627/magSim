@@ -117,6 +117,7 @@ UField.rotate("Field")
 
 BMag = np.linalg.norm(UField.getField(np.array([6*Ru, 0, 0])))
 #BMag = 1
+print(BMag)
 uniformB = UniformField(np.array([0, 0, BMag]))
 
 initialPosition = np.array([0, 0, 0])

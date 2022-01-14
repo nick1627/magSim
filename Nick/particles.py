@@ -136,7 +136,7 @@ class Electron(Particle):
         self.naturalUnits = False
 
         velocityDirection = velocityDirection/np.linalg.norm(velocityDirection)
-        Ek = kineticEnergy*1000*sp.constants.e #Ek is now in joules
+        Ek = kineticEnergy*sp.constants.e #Ek is now in joules
         self.v = (sp.constants.c*np.sqrt(1-((self.m0*sp.constants.c**2)/(self.m0*sp.constants.c**2 + Ek))**2))*velocityDirection
 
         self.name = "Electron"
@@ -158,7 +158,7 @@ class Proton(Particle):
         self.naturalUnits = False
 
         velocityDirection = velocityDirection/np.linalg.norm(velocityDirection)
-        Ek = kineticEnergy*1000*sp.constants.e #Ek is now in joules
+        Ek = kineticEnergy*sp.constants.e #Ek is now in joules
         self.v = (sp.constants.c*np.sqrt(1-((self.m0*sp.constants.c**2)/(self.m0*sp.constants.c**2 + Ek))**2))*velocityDirection
 
         self.name = "Proton"
