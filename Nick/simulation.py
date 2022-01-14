@@ -311,7 +311,7 @@ class Simulation:
                 raise(Exception("Warning!  Energy problems!"))
 
         Ek = (gamma - 1)*restMassEnergy #This is in joules
-        Ek = Ek/(1000*1.6E-19)
+        Ek = Ek/(1000*sp.constants.e)
         ax = plt.figure().add_subplot()
         ax.plot(self.time, Ek, color="red")
         gain = ((Ek[-1] - Ek[0])/Ek[0])*100
