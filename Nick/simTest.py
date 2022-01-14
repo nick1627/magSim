@@ -116,12 +116,12 @@ UField = SHField(Ru, g, h, 0, 0)
 UField.rotate("Field")
 
 BMag = np.linalg.norm(UField.getField(np.array([6*Ru, 0, 0])))
-BMag = 1
+#BMag = 1
 uniformB = UniformField(np.array([0, 0, BMag]))
 
 initialPosition = np.array([0, 0, 0])
 initialVelocityDirection = np.array([1, 1, 1])
-initialKE = 100000 #eV
+initialKE = 10000 #eV
 
 # e = Electron(initialPosition, initialVelocityDirection, initialKE)
 p1 = Proton(initialPosition, initialVelocityDirection, initialKE)
@@ -129,9 +129,9 @@ p2 = Proton(initialPosition, initialVelocityDirection, 2*initialKE)
 p3 = Proton(initialPosition, initialVelocityDirection, 3*initialKE)
 p4 = Proton(initialPosition, initialVelocityDirection, 4*initialKE)
 p5 = Proton(initialPosition, initialVelocityDirection, 5*initialKE)
-protonList = [p1, p2, p3, p4, p5]
+protonList = [p1]
 
-manager = SimulationManager(uniformB, protonList, 0.02, N=5, fileKeyWord="uniform", endStepList=1000)
+manager = SimulationManager(uniformB, protonList, 0.02, N=1, fileKeyWord="nickComparison", endStepList=1000)
 manager.runAllSims()
 
 
