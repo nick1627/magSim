@@ -6,6 +6,7 @@ from numpy.lib.arraysetops import isin
 from fields import *
 from particles import *
 import time 
+import scipy as sp
 
 class Simulation:
     """
@@ -144,7 +145,7 @@ class Simulation:
             self.time = np.array(self.time)
             
             #Return units to SI state
-            self.velocity = self.velocity*self.particle.c
+            self.velocity = self.velocity*sp.constants.c
             self.position = self.position*self.particle.larmorRadius
             self.time = self.time*self.particle.larmorPeriod
         
@@ -216,8 +217,8 @@ class Simulation:
         initialPosition = self.position[0]
         initialVelocityDirection = self.velocity[0]/np.linalg.norm(self.velocity[0])
 
-        gamma = 1/(np.sqrt(1 - (np.linalg.norm(self.velocity[0], axis=-1)/self.particle.c)**2))
-        restMassEnergy = self.particle.m0*self.particle.c**2
+        gamma = 1/(np.sqrt(1 - (np.linalg.norm(self.velocity[0], axis=-1)/sp.constants.c)**2))
+        restMassEnergy = self.particle.m0*sp.constants.c**2
         initialKE = (gamma - 1)*restMassEnergy #This is in joules
 
         particleArray = np.array([self.particle.m0, self.particle.q, initialPosition, initialVelocityDirection, initialKE])
@@ -301,9 +302,9 @@ class Simulation:
         return
 
     def plotKEOnTime(self):
-        restMassEnergy = self.particle.m0*self.particle.c**2
+        restMassEnergy = self.particle.m0*sp.constants.c**2
         v = np.linalg.norm(self.velocity, axis=-1)
-        gamma = 1/(np.sqrt(1 - (v/self.particle.c)**2))
+        gamma = 1/(np.sqrt(1 - (v/sp.constants.c)**2))
         for g in gamma:
             if math.isnan(g) or math.isinf(g):
                 print(g)

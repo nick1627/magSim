@@ -7,6 +7,7 @@ from typing import AsyncContextManager
 import numpy as np
 import copy
 import math
+import scipy as sp
 class Particle:
     """
     This class is a general class for a particle.  To create a new particle, input
@@ -21,11 +22,10 @@ class Particle:
         self.r = position       #position in metres
 
         self.naturalUnits = False
-        self.c = 299792458
 
         velocityDirection = velocityDirection/np.linalg.norm(velocityDirection)
-        Ek = kineticEnergy*1.6E-19 #Ek is now in joules
-        self.v = (self.c*np.sqrt(1-((self.m0*self.c**2)/(self.m0*self.c**2 + Ek))**2))*velocityDirection
+        Ek = kineticEnergy*sp.constants.e #Ek is now in joules
+        self.v = (sp.constants.c*np.sqrt(1-((self.m0*sp.constants.c**2)/(self.m0*sp.constants.c**2 + Ek))**2))*velocityDirection
 
         self.name = particleName
         self.initialEnergy = kineticEnergy #Stored in eV
@@ -38,7 +38,7 @@ class Particle:
         Bmag = np.linalg.norm(B)
         Bdir = B/Bmag
         v_perp = self.v - np.dot(self.v, Bdir)*Bdir
-        gamma = 1/np.sqrt(1 - (np.linalg.norm(self.v)/self.c)**2)
+        gamma = 1/np.sqrt(1 - (np.linalg.norm(self.v)/sp.constants.c)**2)
        
         self.larmorRadius = (gamma*self.m0*np.linalg.norm(v_perp))/(abs(self.q)*Bmag)
         self.larmorPeriod = gamma*self.m0/(abs(self.q)*Bmag)
@@ -48,13 +48,13 @@ class Particle:
     def convertToNatural(self):
         #Assume everything in SI, and need to convert to natural units
         self.r = self.r/self.larmorRadius
-        self.v = self.v/self.c
+        self.v = self.v/sp.constants.c
         self.naturalUnits = True
        
 
     def convertToSI(self):
         self.r = self.r*self.larmorRadius
-        self.v = self.v*self.c
+        self.v = self.v*sp.constants.c
         self.naturalUnits = False
 
     def getPosition(self):
@@ -83,7 +83,7 @@ class Particle:
         self.v = vdash + timeStep*(9*k[1, :] + 64*k[3, :] + 49*k[5, :] + 49*k[6, :] + 9*k[7, :])/180
  
         #Then need to get the next position  (positions in units of gyroradius)
-        self.r = copy.copy(self.r) + (self.larmorPeriod*self.c/self.larmorRadius)*self.v*timeStep*np.sqrt(1 - np.linalg.norm(self.v)**2)  #0.2*timeStep*((16/27)*k[1] + (6656/2565)*k[3] + (28561/11286)*k[4] - 0.9*k[5] + (2/11)*k[6])
+        self.r = copy.copy(self.r) + (self.larmorPeriod*sp.constants.c/self.larmorRadius)*self.v*timeStep*np.sqrt(1 - np.linalg.norm(self.v)**2)  #0.2*timeStep*((16/27)*k[1] + (6656/2565)*k[3] + (28561/11286)*k[4] - 0.9*k[5] + (2/11)*k[6])
        
         return
 
@@ -116,7 +116,7 @@ class Particle:
         return np.cross(vdash, Bdash)*np.sqrt(1 - np.linalg.norm(vdash)**2)
     
     def accelerationSI(self, v, B):
-        return (self.q/self.m0)*np.sqrt(1 - np.linalg.norm(v/self.c)**2)*np.cross(v, B)
+        return (self.q/self.m0)*np.sqrt(1 - np.linalg.norm(v/sp.constants.c)**2)*np.cross(v, B)
 
 
     
@@ -128,17 +128,16 @@ class Electron(Particle):
     """
     def __init__(self, position, velocityDirection, kineticEnergy):
         #kinetic energy in keV
-        self.m0 = 9.11E-31
-        self.q = -1.60E-19
+        self.m0 = sp.constants.m_e
+        self.q = -sp.constants.e
 
         self.r = position
     
         self.naturalUnits = False
-        self.c = 299792458
 
         velocityDirection = velocityDirection/np.linalg.norm(velocityDirection)
-        Ek = kineticEnergy*1000*1.6E-19 #Ek is now in joules
-        self.v = (self.c*np.sqrt(1-((self.m0*self.c**2)/(self.m0*self.c**2 + Ek))**2))*velocityDirection
+        Ek = kineticEnergy*1000*sp.constants.e #Ek is now in joules
+        self.v = (sp.constants.c*np.sqrt(1-((self.m0*sp.constants.c**2)/(self.m0*sp.constants.c**2 + Ek))**2))*velocityDirection
 
         self.name = "Electron"
         self.initialEnergy = kineticEnergy #in eV
@@ -151,17 +150,16 @@ class Proton(Particle):
     that of a proton.
     """
     def __init__(self, position, velocityDirection, kineticEnergy):
-        self.m0 = 1.67E-27
-        self.q = 1.60E-19
+        self.m0 = sp.constants.m_p
+        self.q = sp.constants.e
 
         self.r = position #in metres
         
         self.naturalUnits = False
-        self.c = 299792458
 
         velocityDirection = velocityDirection/np.linalg.norm(velocityDirection)
-        Ek = kineticEnergy*1000*1.6E-19 #Ek is now in joules
-        self.v = (self.c*np.sqrt(1-((self.m0*self.c**2)/(self.m0*self.c**2 + Ek))**2))*velocityDirection
+        Ek = kineticEnergy*1000*sp.constants.e #Ek is now in joules
+        self.v = (sp.constants.c*np.sqrt(1-((self.m0*sp.constants.c**2)/(self.m0*sp.constants.c**2 + Ek))**2))*velocityDirection
 
         self.name = "Proton"
         self.initialEnergy = kineticEnergy #in eV
