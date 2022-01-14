@@ -229,6 +229,49 @@ class Simulation:
 
     def plotLShellOnTime(self):
         #Need to get L from position
+        L = np.zeros(np.shape(self.position)[0])
+        for i in range(0, np.shape(self.position)[0]):
+            sphericalPos = self.field.convertCartesianToPolar(self.position[i])
+            L[i] = sphericalPos[0]/(np.sin(sphericalPos[1]))**2
+
+        L = L/self.field.a
+        #Now have obtained an array of L-shell
+        #Now plot L-shell on time
+
+        ax = plt.figure().add_subplot()
+        ax.plot(self.time, L, color="purple")
+        
+        titleString = "L-shell on time"
+        ax.set_title(titleString)
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("L-shell (planetary radii)")
+
+        return
+
+    def plotFirstAIOnTime(self):
+        #Plots the first adiabatic invariant on time
+        r = self.position
+        v = self.velocity
+        m = self.particle.m0
+
+        mu = np.zeros(np.shape(self.position)[0])
+
+        for i in range(0, np.shape(r)[0]):
+            B = self.field.getField(r[i])
+            BMag = np.linalg.norm(B)
+            BHat = B/BMag
+            vPerp = v[i] - np.dot(v[i], BHat)*BHat
+
+            mu[i] = (m/(2*BMag))*np.dot(vPerp, vPerp)
+        
+        ax = plt.figure().add_subplot()
+        ax.plot(self.time, mu, color="blue")
+        
+        titleString = "1st Adiabatic Invariant on Time"
+        ax.set_title(titleString)
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("First Adiabatic Invariant")
+
         return
 
     def plotPositionOnTime(self, x=False, y=False, z=False):
@@ -312,6 +355,19 @@ class Simulation:
   
 class SimulationManager:
     def __init__(self, fieldList, particleList, timeStepList, N = 10, mainFilePath = "Output/", fileNames = "auto", fileKeyWord = "", endTimeList = 0, endStepList = 0, naturalUnitsList = True):
+        """
+        fieldList:         A list of fields
+        particleList:      A list of particles
+        timeStepList:      A list of time steps to use, one for each sim
+        N:                 The number of simulations.  Must match the lengths of the lists (or they may be extended)
+        mainFilePath:      The directory you wish to save all the simulations to
+        fileNames:         #The file names to be used.  Usually set to "auto" for automatic naming.  TODO: finish implementing  
+        fileKeyWord:       A key word to appear in the file names to help you keep track of various different runs
+        endTimeList:       A list of end times for the simulations, expressed in units of the timeStep
+        endStepList:       A list of end step numbers for the sims
+        naturalUnitsList:  A list of bool to determine whether natural units are to be used in the sims TODO: check
+        """
+        
         self.N = N
 
         if not isinstance(fieldList, list):

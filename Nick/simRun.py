@@ -24,7 +24,8 @@ from particles import *
 
 #======================================================================
 """
-This will be a test of the simulation over a range of interest to check th
+This will be a test of the simulation over a range of interest to check
+our simulation is valid.
 """
 Ru = 25600000           #radius of Uranus in metres
 
@@ -37,19 +38,24 @@ h = h/1000000000
 UField = SHField(Ru, g, h, 0, 0)
 UField.rotate("Field") #want field aligned coordinates
 
-BMag = np.linalg.norm(UField.getField(np.array([2*Ru, 0, 0])))
+BMag = np.linalg.norm(UField.getField(np.array([4*Ru, 0, 0])))
 uniformB = UniformField(np.array([0, 0, BMag]))
 
 initialPosition = np.array([0, 0, 0])
 initialVelocityDirection = np.array([1, 1, 1])
-initialKE = 10000000 #eV
+initialKE = 10000 #eV
 
 # e = Electron(initialPosition, initialVelocityDirection, initialKE)
 p1 = Proton(initialPosition, initialVelocityDirection, initialKE)
+p2 = Proton(initialPosition, initialVelocityDirection, 10*initialKE)
+p3 = Proton(initialPosition, initialVelocityDirection, 100*initialKE)
+p4 = Proton(initialPosition, initialVelocityDirection, 1000*initialKE)
 
-protonList = [p1]
 
-manager = SimulationManager(uniformB, protonList, 0.000001, N=1, fileKeyWord="Major1", endStepList=1000000)
+
+protonList = [p1, p2, p3, p4]
+
+manager = SimulationManager(uniformB, protonList, 0.02, N=4, fileKeyWord="varyEnergy", endTimeList=10000)
 manager.runAllSims()
 manager.plotAllEnergy()
 
