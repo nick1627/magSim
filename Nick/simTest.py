@@ -105,6 +105,41 @@ import tools
 
 #==================start testing of simulation manager==========================
 
+# Ru = 25600000           #radius of Uranus in metres
+
+# g = np.array([[11278, 10928, 0], [-9648, -12284, 1453]]) #these are in nanoteslas
+# h = np.array([[0, -16049, 0], [0, 6405, 4220]])
+# g = g/1000000000
+# h = h/1000000000
+
+# UField = SHField(Ru, g, h, 0, 0)
+# UField.rotate("Field")
+
+# BMag = np.linalg.norm(UField.getField(np.array([6*Ru, 0, 0])))
+# #BMag = 1
+# uniformB = UniformField(np.array([0, 0, BMag]))
+
+# initialPosition = np.array([0, 0, 0])
+# initialVelocityDirection = np.array([1, 1, 1])
+# initialKE = 10000 #eV
+
+# # e = Electron(initialPosition, initialVelocityDirection, initialKE)
+# p1 = Proton(initialPosition, initialVelocityDirection, initialKE)
+# # p2 = Proton(initialPosition, initialVelocityDirection, 2*initialKE)
+# # p3 = Proton(initialPosition, initialVelocityDirection, 3*initialKE)
+# # p4 = Proton(initialPosition, initialVelocityDirection, 4*initialKE)
+# # p5 = Proton(initialPosition, initialVelocityDirection, 5*initialKE)
+# protonList = [p1]
+
+# manager = SimulationManager(uniformB, protonList, 50, N=1, fileKeyWord="newSimTest", endStepList=1000)
+# manager.runAllSims()
+
+
+
+
+
+
+#===============================================================================
 Ru = 25600000           #radius of Uranus in metres
 
 g = np.array([[11278, 10928, 0], [-9648, -12284, 1453]]) #these are in nanoteslas
@@ -119,27 +154,16 @@ BMag = np.linalg.norm(UField.getField(np.array([6*Ru, 0, 0])))
 #BMag = 1
 uniformB = UniformField(np.array([0, 0, BMag]))
 
-initialPosition = np.array([0, 0, 0])
-initialVelocityDirection = np.array([1, 1, 1])
+initialPosition = np.array([6*Ru, 0, 0])
+initialVelocityDirection = np.array([0.1, 0.1, 1])
 initialKE = 10000 #eV
 
-# e = Electron(initialPosition, initialVelocityDirection, initialKE)
 p1 = Proton(initialPosition, initialVelocityDirection, initialKE)
-p2 = Proton(initialPosition, initialVelocityDirection, 2*initialKE)
-p3 = Proton(initialPosition, initialVelocityDirection, 3*initialKE)
-p4 = Proton(initialPosition, initialVelocityDirection, 4*initialKE)
-p5 = Proton(initialPosition, initialVelocityDirection, 5*initialKE)
-protonList = [p1]
 
-manager = SimulationManager(uniformB, protonList, 0.02, N=1, fileKeyWord="nickComparison", endStepList=1000)
-manager.runAllSims()
-
-
-
-
-
-
+s1 = Simulation(UField, p1)
+s1.run(1000000)
+s1.plotKEOnTime()
+s1.plotPositionOnTime()
 #===============================================================================
-
 
 plt.show()

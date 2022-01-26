@@ -21,16 +21,18 @@ class Simulation:
     either in steps or in multiples of the characteristic timescale (the 
     gyro-period).
     """
-    def __init__(self, field, particle, timestep, simDataPath = ""):
+    def __init__(self, field=0, particle=0, stepsPerPeriod=50, simDataPath = ""):
         #timestep always input as fraction of initial period of gyroradius
 
         #If previous simulation data not provided, we start a new simulation
         if simDataPath == "":
-            self.timeStep = timestep
+            self.stepsPerPeriod: int = stepsPerPeriod
             self.field = field
             self.particle = particle
 
             #Diagnostic info
+            #Position, velocity and time may be entered into the array in natural units, but will
+            #always eventually get converted to SI units.
             self.position = []
             self.velocity = []
             self.time = []
@@ -39,7 +41,7 @@ class Simulation:
         else:
             #We have prior data, so create simulation object based on that for analysis
 
-            savedArrays = np.load(simDataPath)
+            savedArrays = np.load(simDataPath, allow_pickle=True)
 
             fieldArray = savedArrays["fieldData"]
             particleArray = savedArrays["particleData"]
@@ -50,8 +52,22 @@ class Simulation:
 
 
             self.timeStep = simulationArray[0]
-            self.field = "empty"
-            self.particle = "empty"
+            if np.shape(fieldArray)[0] == 4:
+                #then we should have spherical harmonic field
+                self.field = SHField(fieldArray[0], fieldArray[1], fieldArray[2], fieldArray[3])
+            else:
+                raise Exception("This has not been dealt with.  Something aobut uniform fields")
+                self.field = "empty"
+            
+            if particleArray[0] == sp.constants.m_p:
+                #proton
+                self.particle = Proton(particleArray[2], particleArray[3], particleArray[4])
+            elif particleArray[0] == sp.constants.m_e:
+                #electron
+                self.particle = Electron(particleArray[2], particleArray[3], particleArray[4])
+            else:
+                self.particle = Particle(particleArray[0], particleArray[1], particleArray[2], particleArray[3], particleArray[4])
+            
             self.position = positionArray
             self.velocity = velocityArray
             self.time = timeArray
@@ -65,140 +81,81 @@ class Simulation:
         self.time = []
         return
 
+    def getLarmorPeriod(self):
+        #get magnitude of B at position of particle
+        Bmag = np.linalg.norm(self.field.getField(self.particle.getPosition()))
+        #get velocity vector of particle
+        v = self.particle.getVelocity() #returns velocity in SI units
+        gamma = 1/np.sqrt(1 - (np.linalg.norm(v)/sp.constants.c)**2)
+        larmorPeriod = gamma*self.particle.m0*2*np.pi/(abs(self.particle.q)*Bmag)
+        return larmorPeriod
+    
+    def run(self, endStep=1000):
+        """
+        This is a more presumptuous way of running the simulation.  It does not include
+        options for having SI units, as natural units are used as standard.  Furthermore,
+        there is no option for setting the in-simulation end time; instead only steps are
+        used to measure when the simulation should finish.
 
-    def run(self, endTime=0, endStep=0, naturalUnits=True):
+        The timestep is adaptive.  Every stepsPerPeriod, the method updates the current
+        gyro-period and sets the timestep such that there are still stepsPerPeriod steps
+        in said period.
         """
-        This function runs the simulation for a given duration in terms of time
-        or steps.  Can run in either natural units or SI units.
-        """
-        #End time is always in units of time steps, not seconds
-        
-        if endTime == 0:
-            if endStep == 0:
-                raise(Exception("You didnt specify how the simulation should end!"))
-            else:
-                endOnTime = False
-        else:
-            endOnTime = True
 
         self.complete = False
-
-        #first wipe the simulation data already existing.
         self.wipeSimData()
 
         print("Beginning simulation...")
-        #Find start time
-        startRealTime = time.time()
-        #Find values for conversion factors -- needed for calculating duration of timeStep
-        initialB = self.field.getField(self.particle.getPosition())
-        self.particle.computeConversionFactors(initialB)
-        
-        if naturalUnits:
-            #EndTime is in units of time steps, not seconds
-            currentTime = 0
-     
-                
-            #Set up the field properly for calculations
-            if self.field.getUnitState() == False:
-                self.field.setNaturalUnits(True, self.particle.q, self.particle.m0, self.particle.larmorPeriod)
-            
-            #Convert particle to use natural units
-            self.particle.convertToNatural()
+        initialRunTime = time.time()
 
-            #Record initial values 
+        currentTime = 0
+        currentStep = 0
+
+        #Store the initial values of time, position, speed
+        self.position.append(self.particle.getPosition())
+        self.velocity.append(self.particle.getVelocity(True))
+        self.time.append(currentTime)
+
+        #currentTimeStep is the time in seconds each step is worth.
+        currentLarmorPeriod = self.getLarmorPeriod()
+        currentTimeStep = currentLarmorPeriod/self.stepsPerPeriod
+        while currentStep < endStep:
+            currentStep += 1
+            #Branch depending on whether the current step is a multiple of 50 (or stepsPerPeriod)
+            if currentStep % self.stepsPerPeriod == 0:
+                #Need to update the time step
+                currentLarmorPeriod = self.getLarmorPeriod()
+                currentTimeStep = currentLarmorPeriod/self.stepsPerPeriod
+            
+            #increment time
+            currentTime += currentTimeStep #currentTimeStep should update automatically because of python being weird
+   
+            Bdash = self.field.getField(self.particle.r)*(self.particle.q*currentLarmorPeriod/self.particle.m0)
+            #update particle position using differential equation solutions
+            self.particle.updatePositionN(Bdash, currentTimeStep, currentLarmorPeriod)
+            #Record data
             self.position.append(self.particle.getPosition())
-            self.velocity.append(self.particle.getVelocity())
+            self.velocity.append(self.particle.getVelocity(True))
             self.time.append(currentTime)
 
-            if endOnTime:
-                while currentTime < endTime: #
-                    #increment time 
-                    currentTime += self.timeStep
-                    #update particle position
-                    self.particle.updatePositionN(self.field, self.timeStep)
-                    #Record data
-                    self.position.append(self.particle.getPosition())
-                    self.velocity.append(self.particle.getVelocity())
-                    self.time.append(currentTime)
 
 
-            else: #end based on step
-                steps = 0
-                while steps < endStep:
-                    #increment time 
-                    currentTime += self.timeStep
-                    #update particle position
-                    self.particle.updatePositionN(self.field, self.timeStep)
-                    #Record data
-                    self.position.append(self.particle.getPosition())
-                    self.velocity.append(self.particle.getVelocity())
-                    self.time.append(currentTime)
-
-                    steps += 1
-            
-            #Simulation has now completed
-            if self.field.getUnitState == True:
-                self.field.naturalUnits(False, self.particle.q, self.particle.m0, self.particle.larmorPeriod)
-
-            self.position = np.array(self.position)
-            self.velocity = np.array(self.velocity)
-            self.time = np.array(self.time)
-            
-            #Return units to SI state
-            self.velocity = self.velocity*sp.constants.c
-            self.position = self.position*self.particle.larmorRadius
-            self.time = self.time*self.particle.larmorPeriod
-        
-        else: #Not using natural units
-             #EndTime is in units of time steps, not seconds
-            currentTime = 0
-
-            if endOnTime == False:
-                raise(Exception("Ending on step count has not been implemented yet for SI units"))
-
-            #Record initial values 
-            self.position.append(self.particle.getPosition())
-            self.velocity.append(self.particle.getVelocity())
-            self.time.append(currentTime)
-
-            endTime *= self.particle.larmorPeriod
- 
-            if endOnTime:
-                while currentTime < endTime: #
-                    #increment time 
-                    currentTime += self.timeStep*self.particle.larmorPeriod
-                    #update particle position
-                    self.particle.updatePositionSI(self.field, self.timeStep*self.particle.larmorPeriod)
-                    #Record data
-                    self.position.append(self.particle.getPosition())
-                    self.velocity.append(self.particle.getVelocity())
-                    self.time.append(currentTime)
-
-
-            else: #end based on step
-                steps = 0
-                while steps < endStep:
-                    #increment time 
-                    currentTime += self.timeStep*self.particle.larmorPeriod
-                    #update particle position
-                    self.particle.updatePositionN(self.field, self.timeStep*self.particle.larmorPeriod)
-                    #Record data
-                    self.position.append(self.particle.getPosition())
-                    self.velocity.append(self.particle.getVelocity())
-                    self.time.append(currentTime)
-
-                    steps += 1
-            
-            #Simulation has now completed
-            self.position = np.array(self.position)
-            self.velocity = np.array(self.velocity)
-
-        elapsedRealTime = time.time() - startRealTime
-        print("Simulation completed.  Time elapsed: " + str(elapsedRealTime) + " seconds.")
+        elapsedRunTime = time.time() - initialRunTime
+        print("Simulation completed.  Time elapsed: " + str(elapsedRunTime) + " seconds.")
 
         self.complete = True
 
+
+        #Finalise the data
+        #Convert to numpy arrays for easy maths
+        self.position = np.array(self.position)
+        self.velocity = np.array(self.velocity)
+        self.time = np.array(self.time)
+        #Now ensure stored in SI
+        self.velocity = self.velocity*sp.constants.c
+
         return
+
         
     def saveData(self, filePath=""):
         """
@@ -207,8 +164,8 @@ class Simulation:
 
         #First save data on field
         if isinstance(self.field, SHField):
-            fieldArray = [self.field.a, self.field.g, self.field.h]
-            fieldArray = np.array(fieldArray)
+            fieldArray = [self.field.a, self.field.g, self.field.h, self.field.dipoleOnly]
+            fieldArray = np.array(fieldArray, dtype=object)
         elif isinstance(self.field, UniformField):
             fieldArray = np.array([self.field.B])
         else:
@@ -220,16 +177,17 @@ class Simulation:
         gamma = 1/(np.sqrt(1 - (np.linalg.norm(self.velocity[0], axis=-1)/sp.constants.c)**2))
         restMassEnergy = self.particle.m0*sp.constants.c**2
         initialKE = (gamma - 1)*restMassEnergy #This is in joules
+        initialKE = initialKE/sp.constants.e
 
-        particleArray = np.array([self.particle.m0, self.particle.q, initialPosition, initialVelocityDirection, initialKE])
+        particleArray = np.array([self.particle.m0, self.particle.q, initialPosition, initialVelocityDirection, initialKE], dtype=object)
         #Now save simulation output
-        simulationArray = np.array([self.timeStep])
+        simulationArray = np.array([self.stepsPerPeriod])
 
         # This saves the data 
         np.savez(filePath, fieldData = fieldArray, particleData = particleArray, simulationData = simulationArray, positions = self.position, velocities = self.velocity, times = self.time)
         return
 
-    def plotLShellOnTime(self):
+    def plotLShellOnTime(self, titleAddition=""):
         #Need to get L from position
         L = np.zeros(np.shape(self.position)[0])
         for i in range(0, np.shape(self.position)[0]):
@@ -243,7 +201,7 @@ class Simulation:
         ax = plt.figure().add_subplot()
         ax.plot(self.time, L, color="purple")
         
-        titleString = "L-shell on time"
+        titleString = "L-shell on time" + " " + titleAddition
         ax.set_title(titleString)
         ax.set_xlabel("Time (s)")
         ax.set_ylabel("L-shell (planetary radii)")
@@ -279,6 +237,15 @@ class Simulation:
     def plotPositionOnTime(self, x=False, y=False, z=False):
         ax = plt.figure().add_subplot(projection = "3d")
         ax.plot(self.position[:,0], self.position[:,1], self.position[:,2])
+
+        if isinstance(self.field, SHField):
+            a = self.field.a
+            # draw sphere
+            u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
+            x1 = a*np.cos(u)*np.sin(v)
+            y1 = a*np.sin(u)*np.sin(v)
+            z1 = a*np.cos(v)
+            ax.plot_wireframe(x1, y1, z1, color="r")
         ax.set_title("Position of particle in 3D")
 
         if x:
@@ -301,7 +268,7 @@ class Simulation:
 
         return
 
-    def plotKEOnTime(self):
+    def plotKEOnTime(self, titleAddition=""):
         restMassEnergy = self.particle.m0*sp.constants.c**2
         v = np.linalg.norm(self.velocity, axis=-1)
         gamma = 1/(np.sqrt(1 - (v/sp.constants.c)**2))
@@ -316,8 +283,8 @@ class Simulation:
         ax.plot(self.time, Ek, color="red")
         gain = ((Ek[-1] - Ek[0])/Ek[0])*100
         gain = np.round(gain, decimals=3)
-        titleString = "Kinetic Energy on Time - Percentage Gain: " + str(gain) + "%"
-        ax.set_title(titleString)
+        titleString = "Kinetic Energy on Time - Percentage Gain: " + str(gain) + "%" + " " + titleAddition
+        ax.set_title(titleString, y=1.04)
         ax.set_xlabel("Time (s)")
         ax.set_ylabel("Kinetic Energy (keV)")
 
@@ -356,18 +323,16 @@ class Simulation:
         return
   
 class SimulationManager:
-    def __init__(self, fieldList, particleList, timeStepList, N = 10, mainFilePath = "Output/", fileNames = "auto", fileKeyWord = "", endTimeList = 0, endStepList = 0, naturalUnitsList = True):
+    def __init__(self, fieldList, particleList, stepsPerPeriodList, N = 10, mainFilePath = "Output/", fileNames = "auto", fileKeyWord = "", endStepList = 0):
         """
-        fieldList:         A list of fields
-        particleList:      A list of particles
-        timeStepList:      A list of time steps to use, one for each sim
-        N:                 The number of simulations.  Must match the lengths of the lists (or they may be extended)
-        mainFilePath:      The directory you wish to save all the simulations to
-        fileNames:         #The file names to be used.  Usually set to "auto" for automatic naming.  TODO: finish implementing  
-        fileKeyWord:       A key word to appear in the file names to help you keep track of various different runs
-        endTimeList:       A list of end times for the simulations, expressed in units of the timeStep
-        endStepList:       A list of end step numbers for the sims
-        naturalUnitsList:  A list of bool to determine whether natural units are to be used in the sims TODO: check
+        fieldList:          A list of fields
+        particleList:       A list of particles
+        stepsPerPeriodList: A list of the number of steps per period to use, one for each sim.
+        N:                  The number of simulations.  Must match the lengths of the lists (or they may be extended)
+        mainFilePath:       The directory you wish to save all the simulations to
+        fileNames:          #The file names to be used.  Usually set to "auto" for automatic naming.  TODO: finish implementing  
+        fileKeyWord:        A key word to appear in the file names to help you keep track of various different runs
+        endStepList:        A list of end step numbers for the sims
         """
         
         self.N = N
@@ -376,46 +341,40 @@ class SimulationManager:
             fieldList = [fieldList]*self.N
         if not isinstance(particleList, list):
             particleList = [particleList]*self.N
-        if not isinstance(timeStepList, list):
-            timeStepList = [timeStepList]*self.N
-        if not isinstance(endTimeList, list):
-            endTimeList = [endTimeList]*self.N
+        if not isinstance(stepsPerPeriodList, list):
+            stepsPerPeriodList = [stepsPerPeriodList]*self.N
         if not isinstance(endStepList, list):
             endStepList = [endStepList]*self.N
-        if not isinstance(naturalUnitsList, list):
-            naturalUnitsList = [naturalUnitsList]*self.N
+   
 
         if len(fieldList) != self.N:
             raise(Exception("Length mismatch!"))
         if len(particleList) != self.N:
             raise(Exception("Length mismatch!"))
-        if len(timeStepList) != self.N:
-            raise(Exception("Length mismatch!"))
-        if len(endTimeList) != self.N:
+        if len(stepsPerPeriodList) != self.N:
             raise(Exception("Length mismatch!"))
         if len(endStepList) != self.N:
             raise(Exception("Length mismatch!"))
-        if len(naturalUnitsList) != self.N:
-            raise(Exception("Length mismatch!"))
+
 
 
         self.fieldList = fieldList
         self.particleList = particleList
-        self.timeStepList = timeStepList
-        self.endTimeList = endTimeList
+        self.stepsPerPeriodList = stepsPerPeriodList
         self.endStepList = endStepList
-        self.naturalUnitsList = naturalUnitsList
 
         #Now have lists of info set up for the simulations
         self.simulations = []
         for i in range(0, self.N):
-            self.simulations.append(Simulation(fieldList[i], particleList[i], timeStepList[i]))
+            self.simulations.append(Simulation(fieldList[i], particleList[i], stepsPerPeriodList[i]))
 
         #Deal with the filenames and paths
         self.filePaths = []
         if fileNames == "auto":
             for i in range(0, self.N):
-                self.filePaths.append(mainFilePath + fileKeyWord + "-" + str(self.simulations[i].particle.name) + "-" + str(np.round(self.simulations[i].particle.initialEnergy)) + ".npz")
+                particleName = str(self.simulations[i].particle.name)
+                initEnergy = str(np.round(self.simulations[i].particle.initialEnergy))
+                self.filePaths.append(mainFilePath + fileKeyWord + "-" + particleName + "-" + initEnergy + ".npz")
 
         return
 
@@ -423,15 +382,17 @@ class SimulationManager:
         print("Beginning simulations...")
         for i in range(0, self.N):
             print("Starting simulation %d of %d..." % (i+1, self.N))
-            self.simulations[i].run(self.endTimeList[i], self.endStepList[i], self.naturalUnitsList[i])
+            self.simulations[i].run(self.endStepList[i])
             self.simulations[i].saveData(filePath = self.filePaths[i])
 
         print("All simulations complete.")
+        return 
 
     def plotAllEnergy(self):
         print("Plotting particle energies...")
         for i in range(0, self.N):
             self.simulations[i].plotKEOnTime()
+        return
 
 
 

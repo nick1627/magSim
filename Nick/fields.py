@@ -311,7 +311,7 @@ class Field:
 
 
 class SHField(Field):
-    def __init__(self, radius, g, h, g_error, h_error):
+    def __init__(self, radius, g, h, g_error=0, h_error=0, dipoleOnly=False):
         #This is a planetary magnetic field using the spherical harmonic method
         self.a = radius
 
@@ -323,13 +323,32 @@ class SHField(Field):
         self.g_error = g_error
         self.h_error = h_error
 
-        self.nMax = np.shape(g)[0]
+        self.dipoleOnly = dipoleOnly
+        if self.dipoleOnly:
+            self.nMax = 1
+        else:
+            self.nMax = np.shape(g)[0]
+
+        self.true_nMax = np.shape(g)[0]
 
         self.rotationFlag = "R"
         self.R = np.identity(3)
         self.Rinv = np.identity(3)
 
         self.naturalUnits = False
+
+    def setDipoleOnly(self, dipoleFlag):
+        """
+        Set the dipoleFlag to true to have a field with only dipole components
+        """
+        if dipoleFlag == True:
+            self.nMax = 1
+        else:
+            self.nMax = copy.deepcopy(self.true_nMax)
+
+        self.dipoleOnly = dipoleFlag
+
+        return
 
     def setNaturalUnits(self, activate, charge, restMass, period):
         #This switches the units to being natural units
