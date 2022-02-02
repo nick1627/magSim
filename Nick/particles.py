@@ -13,11 +13,35 @@ class Particle:
     the mass, charge, position, velocity direction vector and kinetic energy of the 
     particle.
     """
-    def __init__(self, mass, charge, position, velocityDirection, kineticEnergy, particleName = "None"):
+    def __init__(self, mass, charge, position, velocityDirection, kineticEnergy, particleName = "None", polarPosition=False, targetDirection=False):
         #kinetic energy in eV
         self.m0 = mass          #Rest mass of particle in kg
         self.q = charge         #charge of particle in coulombs
         
+        if polarPosition:
+            #The position was entered in polar form (r, theta, phi)
+            #Assume theta phi in degrees
+            r = copy.deepcopy(position[0])
+            theta = copy.deepcopy(position[1])
+            phi = copy.deepcopy(position[2])
+            theta = (np.pi/180)*theta
+            phi = (np.pi/180)*phi
+            x = r*np.sin(theta)*np.cos(phi)
+            y = r*np.sin(theta)*np.sin(phi)
+            z = r*np.cos(theta)
+            position = np.array([x, y, z])
+
+        if targetDirection:
+            #In this case velocityDirection will be a target theta to aim for
+            # This chooses the pitch angle
+            # pitch angle chooses the initial direction
+            theta = copy.deepcopy(velocityDirection)
+            latitude = 90 - theta
+            latitude = (np.pi/180)*latitude
+            #calculate the equatorial pitch angle alpha
+            alpha = np.arcsin(np.sqrt((np.cos(latitude)**6)/np.sqrt(1 + 3*(np.sin(latitude))**2)))
+            velocityDirection = np.array([np.tan(alpha), 0, 1])
+            
         self.r = position       #position in metres
 
         # self.naturalUnits = False

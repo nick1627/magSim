@@ -350,7 +350,10 @@ class SHField(Field):
 
         return
 
-    def setNaturalUnits(self, activate, charge, restMass, period):
+    def getDipoleFlag(self):
+        return self.dipoleOnly
+
+    def setNaturalUnits(self, activate, charge, restMass, period): #I believe this should be removed...
         #This switches the units to being natural units
         if activate:
             self.g = (charge*period/restMass)*self.g

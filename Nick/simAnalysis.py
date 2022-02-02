@@ -14,20 +14,22 @@ from simulation import *
 from particles import *
 #=======================================================================================
 #Analyse results of full field vs dipole only field
-dipoleSim = Simulation(simDataPath="Output/nick-Uranus-DipoleOnly-Proton-10000.npz")
-fullSim = Simulation(simDataPath="Output/nick-Uranus-FullField-Proton-10000.npz")
-
+#dipoleSim = Simulation(simDataPath="Output/nick-Uranus-DipoleOnly-Proton-10000.npz")
+# dipoleSim = Simulation(simDataPath="Output/Trash/nick-Uranus-RegionTest1-DipoleOnly--Proton-100000.npz")
+fullSim = Simulation(simDataPath="Output/Trash/nick-Uranus-RegionTest2-FullField-L7-Proton-1000000.npz")
 
 # dipoleSim.plotPositionOnTime()
-# fullSim.plotPositionOnTime()
+fullSim.plotPositionOnTime()
 
-dipoleSim.plotLShellOnTime("- Dipole Only")
+# dipoleSim.plotLShellOnTime("- Dipole Only")
 fullSim.plotLShellOnTime("- Full Field")
 
 # dipoleSim.plotKEOnTime("- Dipole Only")
 fullSim.plotKEOnTime("- Full Field")
 
-# fullSim.plotFirstAIOnTime()
-dipoleSim.plotFirstAIOnTime()
+# dipoleSim.plotFirstAIOnTime("- Dipole Only")
+fullSim.plotFirstAIOnTime("- Full Field")
 
+print("plotting now")
 plt.show()
+print("plotted")
