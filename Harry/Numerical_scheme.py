@@ -5,9 +5,12 @@ Created on Fri Dec 10 17:50:45 2021
 @author: Charalambos Ioannou
 10/12/2021
 """
+
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.constants as constants
 from Harry.Functions import *
+from tqdm import tqdm
 
 #%%
 a = 25600000 # Uranus' radius
@@ -37,14 +40,14 @@ Rinv = np.linalg.inv(R)
 
 #Field coefficients
 
-g01 = 11278 #z
-g11 = 10928 #x
-h11 = -16049 #y
-g02 = -9648
-g12 = -12284
-h12 = 6405
-g22 = 1453
-h22 = 4220
+g01 = 11278 * 1e-9 #z
+g11 = 10928 * 1e-9 #x
+h11 = -16049 * 1e-9 #y
+g02 = -9648 * 1e-9
+g12 = -12284 * 1e-9
+h12 = 6405 * 1e-9
+g22 = 1453 * 1e-9
+h22 = 4220 * 1e-9
 
 g = np.array([[g01, g11], 
               [g02, g12, g22]], dtype = object)
@@ -52,13 +55,13 @@ h_coeff = np.array([[0, h11],
               [0, h12, h22]], dtype = object)
 
 #constants
-c = float(299792458)
-m_e = float(9.10938356e-31)
-m_p = float(1.6726219e-27)
-q = float(1.602176634e-19)
+c = constants.c
+m_e = constants.m_e
+m_p = constants.m_p
+q = constants.e
 
-E_per = []
-E_value = []
+# E_per = []
+# E_value = []
 
 plt.rcParams["figure.autolayout"] = True
 params = {
@@ -73,8 +76,10 @@ params = {
 } 
 plt.rcParams.update(params)
 
-B_mag = B_rot_fun(np.array([6 * a, 0, 0]), a, g, h_coeff, 2, R) * 1e-9
-B = np.array([0, 0, np.linalg.norm(B_mag)])
+# B_mag = B_rot_fun(np.array([6 * a, 0, 0]), a, g, h_coeff, 1, R)
+# #B = np.array([0, 0, np.linalg.norm(B_mag)])
+# B = B_mag
+# #print(np.linalg.norm(B))
 #%%
 def gamma(v):
     v_mag = np.linalg.norm(v)
@@ -83,7 +88,7 @@ def gamma(v):
 
 def f_dvdt(t, v, r, args):
     #args[0] = q, and args[1] = m.
-    dvdt = (args[0] * np.cross(v, B)) / (gamma(v) * args[1])
+    dvdt = (args[0] * np.cross(v, B_rot_fun(r, a, g, h_coeff, 1, R))) / (gamma(v) * args[1])
     return dvdt
 
 def f_dvdt_n(t, v, r, args):
@@ -94,7 +99,11 @@ def E_to_v(E, m):
     v = c * np.sqrt(1 - (((m * c * c) / ((m * c * c) + E)) ** 2))
     return v
 
-def f_k1(func, t, v, r, args = None):
+def gyroperiod(v, m, q, B):
+   term = (gamma(v) * m * 2 * np.pi) / (abs(q) * np.linalg.norm(B))
+   return term
+
+def f_k1(func, t, v, r, h, args = None):
     term = h * func(t, v, r, args)
     return term
 
@@ -137,17 +146,39 @@ def f_k7(func, t, v, r, h, k1, k2, k3, k4, k5, k6, args = None):
     term = h * func(t_term, v_term, r, args)
     return term
 
-def RK(f, h, t0, v0, r0, n, args):
+def RK(f, per, t0, E, direction, r0, n, args):
     
     t = np.zeros(n+1)
     t[0] = t0
     v = np.zeros(n+1, dtype = object)
+    d_norm  = direction / np.linalg.norm(direction)
+    v_mag = E_to_v(E, args[1])
+    v0 = v_mag * d_norm
     v[0] = v0
     r = np.zeros(n+1, dtype = object)
     r[0] = r0
     
-    for i in range(n):
-        k1 = f_k1(f, t[i], v[i], r[i], args)
+    r_sph, theta, phi = Cart_to_Sph(r0[0], r0[1], r0[2])
+    L0 = r_sph / (a * np.sin(theta) * np.sin(theta))
+    L  = [L0]
+    
+    h = per / 50
+    
+    B0 = B_rot_fun(r0, a, g, h_coeff, 1, R)
+    v0_par = np.dot(B0 / np.linalg.norm(B0), v0) * (B0 / np.linalg.norm(B0))
+    #v0_par = v0_par / np.linalg.norm(v0_par)
+    v0_perp = np.linalg.norm(v0 - v0_par)
+    mew_term0 = 0.5 * args[1] * v0_perp * v0_perp / np.linalg.norm(B0)
+    mew = [mew_term0]
+    
+    for i in tqdm(range(n)):
+        
+        if i%50 == 0:
+            temp_p = gyroperiod(v[i], args[1], args[0], B_rot_fun(r[i], a, g, h_coeff, 1, R))
+            h = temp_p / 50
+            #print(h)
+        
+        k1 = f_k1(f, t[i], v[i], r[i], h, args)
         
         k2 = f_k2(f, t[i], v[i], r[i], h, k1, args)
         
@@ -162,12 +193,23 @@ def RK(f, h, t0, v0, r0, n, args):
         k7 = f_k7(f, t[i], v[i], r[i], h, k1, k2, k3, k4, k5, k6, args)
         
         t[i+1] = t[i] + h
-        
+ 
         v[i+1] = v[i] + ((1 / 180) * ((9 * k1) + (64 * k3) + (49 * k5) + (49 * k6) + (9 * k7)))
         
         r[i+1] = r[i] + (v[i+1] * h)
-    
-    return t, v, r
+        
+        r_sph, theta, phi = Cart_to_Sph(r[i+1][0], r[i+1][1], r[i+1][2])
+        L_term = r_sph / (a * np.sin(theta) * np.sin(theta))
+        L.append(L_term)
+        
+        current_B = B_rot_fun(r[i+1], a, g, h_coeff, 1, R)
+        v_par = np.dot(current_B / np.linalg.norm(current_B), v[i+1]) * (current_B / np.linalg.norm(current_B))
+        v_perp = np.linalg.norm(v[i+1] - v_par)
+        
+        mew_term = 0.5 * args[1] * v_perp * v_perp / np.linalg.norm(current_B)
+        mew.append(mew_term)
+        
+    return t, v, r, L, mew
 
 #%%
 q = q
@@ -177,26 +219,29 @@ arguments = np.array([q, m_p], dtype = object)
 t0 = 0.
 #v0 = np.array([0., 0.1 * c, 0 * c])
 E = 1e4 * q
-direction = np.array([1, 1, 1])
+direction = np.array([0.1, 0.1, 1])
 d_norm  = direction / np.linalg.norm(direction)
-
 v_mag = E_to_v(E, m_p)
 v0 = v_mag * d_norm
+
 #E_value.append(E / q)
+r0 = np.array([6 * a, 0, 0.])
+B_mag = B_rot_fun(r0, a, g, h_coeff, 1, R)
+#B = np.array([0, 0, np.linalg.norm(B_mag)])
+B = B_mag
 
-gyroperiod = (gamma(v0) * arguments[1] * 2 * np.pi) / (abs(q) * np.linalg.norm(B))
+period = gyroperiod(v0, arguments[1], arguments[0], B)
 
-h = gyroperiod / 50
+#h = period / 25
 
-#gyroradius = (arguments[2] * np.linalg.norm(v0[:2])) / (abs(q) * np.linalg.norm(B))
-r0 = np.array([0., 0., 0.])
+#gyroradius = (arguments[1] * np.linalg.norm(v0[:2])) / (abs(q) * np.linalg.norm(B))
 
-n = 1000
+n = 1000000
 
 #arguments2 = np.array([B, gyroperiod], dtype = object)
 
 #t, v ,r = RK_coupled(f_dvdt, f_drdt, h, t0, E, direction, r0, n, arguments)
-t, v ,r = RK(f_dvdt, h, t0, v0, r0, n, arguments)
+t, v, r, L, mew = RK(f_dvdt, period, t0, E, direction, r0, n, arguments)
 
 t_all = []
 x = []
@@ -210,29 +255,53 @@ for i in range(len(r)):
     z.append(r[i][2])
     t_all.append(t[i])
     
-    energy.append((arguments[1] * c * c) * (gamma(v[i]) - 1))
-    
+    energy.append((arguments[1] * c * c) * (gamma(v[i]) - 1) / (1e3 * q))
+
+x = np.array(x)
+y = np.array(y)
+z = np.array(z)
+
 fig = plt.figure()
 ax = plt.axes(projection='3d')
 
-ax.plot3D(x, y, z)
+ax.plot3D(x / a, y / a, z / a)
+ax.set_xlabel('x ($r_U$)',fontsize=16)
+ax.set_ylabel('y ($r_U$)', fontsize=16)
+ax.set_zlabel('z ($r_U$)', fontsize=16)
 plt.show()
-plt.plot(x, y)
+
+plt.plot(x / a, y / a)
+plt.xlabel('x ($r_U$)', fontsize=16)
+plt.ylabel('y ($r_U$)', fontsize=16)
 plt.show()
 
 plt.plot(t_all, energy)
-plt.xlabel('Time')
-plt.ylabel('Energy')
+plt.xlabel('Time (s)', fontsize=16)
+plt.ylabel('Energy (keV)', fontsize=16)
 plt.show()
 
-E_per.append((energy[0] - energy[-1]) / energy[0])
+plt.plot(t_all, z / a)
+plt.xlabel('Time (s)', fontsize=16)
+plt.ylabel('z ($r_U$)', fontsize=16)
+plt.show()
+
+plt.plot(t_all, L)
+plt.xlabel('Time (s)', fontsize=16)
+plt.ylabel('L', fontsize=16)
+plt.show()
+# E_per.append((energy[0] - energy[-1]) / energy[0])
+#%%
+plt.plot(t, mew)
+plt.xlabel('Time (s)', fontsize=16)
+plt.ylabel('Adiabatic invariant ($Am^2$)', fontsize=16)
+plt.show()
 
 #%%
 
-plt.plot(np.array(E_value) / 1e6, np.array(E_per) * 100, 'x', ms = 10, mew = 2)
-plt.xlabel('E (100 keV)', fontsize = 16)
-plt.ylabel('% Energy at end of simulation after 1000 steps', fontsize = 16)
-plt.show()
+# plt.plot(np.array(E_value) / 1e6, np.array(E_per) * 100, 'x', ms = 10, mew = 2)
+# plt.xlabel('E (100 keV)', fontsize = 16)
+# plt.ylabel('% Energy at end of simulation after 1000 steps', fontsize = 16)
+# plt.show()
 
 #%%
 
@@ -242,7 +311,28 @@ vel = savedArrays["velocities"]
 tim = savedArrays["times"]
 
 #%%
-print(v[0] - vel[0])
-
+for i in range(20):
+    print(r[i] - pos[i])
+#%%
+print(v[0], vel[0])
 #%%
 print(gamma(v0))
+
+#%%
+phi0 = np.arctan(r0[1] / r0[0])
+phifin = np.arctan(r[-1][1] / r[-1][0])
+
+print(phi0 * 180 / np.pi, phifin * 180 / np.pi)
+#%%
+print(np.linalg.norm(v0))
+
+#%%
+B0 = B_rot_fun(r0, a, g, h_coeff, 1, R)
+v0_par = np.dot(B0 / np.linalg.norm(B0), v0) * (B0 / np.linalg.norm(B0))
+v0_perp = np.linalg.norm(v0 - v0_par)
+print(v0_perp)
+
+v0_perp = np.linalg.norm(v0 - np.dot(B0 / np.linalg.norm(B0), v0) * (B0 / np.linalg.norm(B0)))
+print(v0_perp)
+#%%
+print(r[:3])
