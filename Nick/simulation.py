@@ -333,7 +333,10 @@ class Simulation:
         return
   
 class SimulationManager:
-    def __init__(self, fieldList, particleList, stepsPerPeriodList, N = 10, mainFilePath = "Output/", fileNames = "auto", fileKeyWord = "", endStepList = 0):
+    """
+    A simulation manager mangages multiple simulations
+    """
+    def __init__(self, fieldList, particleList, stepsPerPeriodList=50, N = 10, mainFilePath = "Output/", fileKeyWord = "", endStepList = 0):
         """
         fieldList:          A list of fields
         particleList:       A list of particles
@@ -380,13 +383,51 @@ class SimulationManager:
 
         #Deal with the filenames and paths
         self.filePaths = []
-        if fileNames == "auto":
-            for i in range(0, self.N):
-                particleName = str(self.simulations[i].particle.name)
-                initEnergy = str(np.round(self.simulations[i].particle.initialEnergy))
-                self.filePaths.append(mainFilePath + fileKeyWord + "-" + particleName + "-" + initEnergy + ".npz")
+     
+        for i in range(0, self.N):
+            particleName = str(self.simulations[i].particle.name)
+            initEnergy = str(np.round(self.simulations[i].particle.initialEnergy))
+            if isinstance(self.fieldList[i], UniformField):
+                fieldType="uniformField"
+            elif isinstance(self.fieldList[i], SHField):
+                if self.fieldList[i].dipoleOnly:
+                    fieldType="dipoleOnly"
+                else:
+                    fieldType="fullField"
+            else:
+                fieldType=""
+
+            self.filePaths.append(mainFilePath + fileKeyWord + "-" + particleName + "-" + fieldType + "-" + initEnergy + ".npz")
 
         return
+
+    # def checkVariable(self, v, isList, vType, listLength=0): FUNCTION DOES NOT WORK
+    #     #v is the variable to test
+    #     #isList indicates whether the variable should be a list
+    #     #vType indicates what type the variable should be a list of
+    #     #listLength indicates how long the list should be
+
+    #     if isList:
+    #         if not isinstance(v, list):
+    #             v = [v]*listLength
+    #         if len(v) != listLength:
+    #             raise(Exception("Length mismatch!"))
+    #         if not isinstance(v[0], vType):
+    #             if isinstance(v[0], int):
+    #                 if isinstance(vType, float):
+    #                     for item in v:
+    #                         item = float(item)
+    #             if not isinstance(v[0], vType):
+    #                 print(type(v[0]))
+    #                 print(type(vType))
+    #                 raise(Exception("Incorrect type in list!"))
+    #     else:
+    #         if isinstance(v, list):
+    #             raise(Exception("This is a list but shouldn't be!"))
+    #         if not isinstance(v, vType):
+    #             raise(Exception("Incorrect type!"))
+    #     return v
+        
 
     def runAllSims(self):
         print("Beginning simulations...")
@@ -404,7 +445,35 @@ class SimulationManager:
             self.simulations[i].plotKEOnTime()
         return
 
+class LocationCheck(SimulationManager):
+    def __init__(self, L, theta, phi, N, energyList, particleType, field, endStepList=500000):
+        """
+        L:              The initial L shell of the particles
+        theta:          Theta of target location (degrees)
+        phi:            Phi of target location (degrees)
+        N:              Number of particles sent in/simulation runs
+        energyList:     List of energies to use for each run
+        particleType:   The type of particle ("proton" or "electron")
+        field:          The field object.  The field must be an SHField.
+        """
 
+        
+        particleList = []
+        position=np.array([L*field.a, 90, phi])
+        if particleType == "proton":
+            #need to create the protons
+            for i in range(0, N):
+                particleList.append(Proton(position, theta, energyList[i], True, True))                    
+        elif particleType == "electron":
+            #Need to create list of electrons
+            for i in range(0, N):
+                particleList.append(Electron(position, theta, energyList[i], True, True))
+        else:
+            raise(Exception("Invalid particle type"))
+
+        
+
+        super(LocationCheck, self).__init__(field, particleList, stepsPerPeriodList=50, N=N, fileKeyWord="locationCheck", endStepList=endStepList)
 
 
 

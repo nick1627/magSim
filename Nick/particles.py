@@ -13,14 +13,16 @@ class Particle:
     the mass, charge, position, velocity direction vector and kinetic energy of the 
     particle.
     """
-    def __init__(self, mass, charge, position, velocityDirection, kineticEnergy, particleName = "None", polarPosition=False, targetDirection=False):
+    def __init__(self, mass, charge, position, velocityDirection=np.array([0, 0, 1]), kineticEnergy=1000000, particleName = "None", polarPosition=False, targetDirection=False):
         #kinetic energy in eV
         self.m0 = mass          #Rest mass of particle in kg
         self.q = charge         #charge of particle in coulombs
         
         if polarPosition:
             #The position was entered in polar form (r, theta, phi)
+            #theta will probably be 90
             #Assume theta phi in degrees
+            #r must be in metres!
             r = copy.deepcopy(position[0])
             theta = copy.deepcopy(position[1])
             phi = copy.deepcopy(position[2])
@@ -160,20 +162,25 @@ class Electron(Particle):
     A subclass of particle, with the mass and charge already set to 
     that of an electron.
     """
-    def __init__(self, position, velocityDirection, kineticEnergy):
-        #kinetic energy in keV
-        self.m0 = sp.constants.m_e
-        self.q = -sp.constants.e
+    def __init__(self, position, velocityDirection, kineticEnergy, polarPosition=False, targetDirection=False):
+        # #kinetic energy in keV
+        # self.m0 = sp.constants.m_e
+        # self.q = -sp.constants.e
 
-        self.r = position
+        # self.r = position
     
 
-        velocityDirection = velocityDirection/np.linalg.norm(velocityDirection)
-        Ek = kineticEnergy*sp.constants.e #Ek is now in joules
-        self.v = (np.sqrt(1-((self.m0*sp.constants.c**2)/(self.m0*sp.constants.c**2 + Ek))**2))*velocityDirection
+        # velocityDirection = velocityDirection/np.linalg.norm(velocityDirection)
+        # Ek = kineticEnergy*sp.constants.e #Ek is now in joules
+        # self.v = (np.sqrt(1-((self.m0*sp.constants.c**2)/(self.m0*sp.constants.c**2 + Ek))**2))*velocityDirection
 
-        self.name = "Electron"
-        self.initialEnergy = kineticEnergy #in eV
+        # self.name = "Electron"
+        # self.initialEnergy = kineticEnergy #in eV
+
+        super(Electron, self).__init__(sp.constants.m_e, -sp.constants.e, position, velocityDirection, kineticEnergy, particleName="Electron", polarPosition=polarPosition, targetDirection=targetDirection)
+
+
+
 
         return
 
@@ -182,18 +189,21 @@ class Proton(Particle):
     A subclass of particle, with the mass and charge already set to
     that of a proton.
     """
-    def __init__(self, position, velocityDirection, kineticEnergy):
-        self.m0 = sp.constants.m_p
-        self.q = sp.constants.e
+    def __init__(self, position, velocityDirection, kineticEnergy, polarPosition=False, targetDirection=False):
+        # self.m0 = sp.constants.m_p
+        # self.q = sp.constants.e
 
-        self.r = position #in metres
+        # self.r = position #in metres
     
 
-        velocityDirection = velocityDirection/np.linalg.norm(velocityDirection)
-        Ek = kineticEnergy*sp.constants.e #Ek is now in joules
-        self.v = (np.sqrt(1-((self.m0*sp.constants.c**2)/(self.m0*sp.constants.c**2 + Ek))**2))*velocityDirection
+        # velocityDirection = velocityDirection/np.linalg.norm(velocityDirection)
+        # Ek = kineticEnergy*sp.constants.e #Ek is now in joules
+        # self.v = (np.sqrt(1-((self.m0*sp.constants.c**2)/(self.m0*sp.constants.c**2 + Ek))**2))*velocityDirection
 
-        self.name = "Proton"
-        self.initialEnergy = kineticEnergy #in eV
+        # self.name = "Proton"
+        # self.initialEnergy = kineticEnergy #in eV
+
+        super(Proton, self).__init__(sp.constants.m_p, sp.constants.e, position, velocityDirection, kineticEnergy, particleName="Proton", polarPosition=polarPosition, targetDirection=targetDirection)
+
 
         return

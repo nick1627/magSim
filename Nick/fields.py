@@ -1510,3 +1510,21 @@ class UniformField(Field):
             self.naturalUnits = False
         return
 
+
+
+class UranusField(SHField):
+    def __init__(self, dipoleOnly):
+        Ru = 25600000           #radius of Uranus in metres
+
+        #Create field of Uranus
+        g = np.array([[11278, 10928, 0], [-9648, -12284, 1453]]) #these are in nanoteslas
+        h = np.array([[0, -16049, 0], [0, 6405, 4220]])
+        g = g/1000000000 #now in teslas
+        h = h/1000000000
+
+        super(UranusField, self).__init__(Ru, g, h, 0, 0, dipoleOnly=dipoleOnly)
+        
+        return
+
+class NeptuneField(SHField):
+    pass
