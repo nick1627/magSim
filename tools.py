@@ -92,7 +92,7 @@ def saveRegionData(filePath, name, initialKE, pitchAngle, initialRadius, finalRa
         raise(Exception("Invalid name entered!"))
 
     #construct the correct number to represent the date
-    date = dt.datetime.now().day*100 + dt.datetime.now().month
+    date = dt.datetime.now().month*100 + dt.datetime.now().day
     #date should be a 4 digit number, where the first two digits are the day and the second two the month
 
     newLine = np.array([[name, date, initialKE, pitchAngle, initialRadius, finalRadius, initialGyroradius, finalGyroradius]])
