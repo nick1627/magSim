@@ -91,41 +91,115 @@ our simulation is valid.  Not working!!!
 
 #===============================================================================================
 
-Ru = 25600000           #radius of Uranus in metres
+# Ru = 25600000           #radius of Uranus in metres
 
-#Create field of Uranus
-g = np.array([[11278, 10928, 0], [-9648, -12284, 1453]]) #these are in nanoteslas
-h = np.array([[0, -16049, 0], [0, 6405, 4220]])
-g = g/1000000000
-h = h/1000000000
+# #Create field of Uranus
+# g = np.array([[11278, 10928, 0], [-9648, -12284, 1453]]) #these are in nanoteslas
+# h = np.array([[0, -16049, 0], [0, 6405, 4220]])
+# g = g/1000000000
+# h = h/1000000000
 
-UFieldWhole = SHField(Ru, g, h, 0, 0)
-UFieldDipole = copy.deepcopy(UFieldWhole)
-UFieldWhole.rotate("Field") #want field aligned coordinates
-UFieldDipole.rotate("Field")
+# UFieldWhole = SHField(Ru, g, h, 0, 0, False)
+# UFieldDipole = SHField(Ru, g, h, 0, 0, True)
+# UFieldWhole.rotate("Field") #want field aligned coordinates
+# UFieldDipole.rotate("Field")
 
-UFieldDipole.setDipoleOnly(True)
 
-# BMag = np.linalg.norm(UFieldDipole.getField(np.array([6*Ru, 0, 0])))
-# uniformB = UniformField(np.array([0, 0, BMag]))
+# # BMag = np.linalg.norm(UFieldDipole.getField(np.array([6*Ru, 0, 0])))
+# # uniformB = UniformField(np.array([0, 0, BMag]))
 
-initialPosition = np.array([6*Ru, 0, 0])
-initialVelocityDirection1 = np.array([1, 1, 1])
-initialVelocityDirection2 = np.array([0.1, 0.1, 1])
-initialKE = 10000 #eV
+# initialPosition = np.array([6*Ru, 0, 0])
+# initialVelocityDirection1 = np.array([1, 1, 1])
+# initialVelocityDirection2 = np.array([0.1, 0.1, 1])
+# initialKE = 10000 #eV
 
-# e = Electron(initialPosition, initialVelocityDirection, initialKE)
-p1 = Proton(initialPosition, initialVelocityDirection1, initialKE)
-p2 = Proton(initialPosition, initialVelocityDirection2, initialKE)
+# # e = Electron(initialPosition, initialVelocityDirection, initialKE)
+# p1 = Proton(initialPosition, initialVelocityDirection1, initialKE)
+# p2 = Proton(initialPosition, initialVelocityDirection2, initialKE)
 
-FieldList = [UFieldDipole]
+# FieldList = [UFieldDipole]
 
-manager = SimulationManager(UFieldWhole, [p1], 50, N=1, fileKeyWord="nick-Uranus-FullField-1:1:1", endStepList=4000000)
-manager.runAllSims()
-manager.plotAllEnergy()
-manager.simulations[0].plotPositionOnTime(z=True)
+# manager = SimulationManager(UFieldDipole, [p1], 50, N=1, fileKeyWord="nick-Uranus-2ndAttempt-DipoleOnly-1:1:1", endStepList=4000000)
+# manager.runAllSims()
+# manager.plotAllEnergy()
+# manager.simulations[0].plotPositionOnTime(z=True)
+
+# #===============================================================================================
+
+# Ru = 25600000           #radius of Uranus in metres
+
+# #Create field of Uranus
+# g = np.array([[11278, 10928, 0], [-9648, -12284, 1453]]) #these are in nanoteslas
+# h = np.array([[0, -16049, 0], [0, 6405, 4220]])
+# g = g/1000000000
+# h = h/1000000000
+
+# UFieldDipole = SHField(Ru, g, h, 0, 0, True)
+# UFieldDipole.rotate("Field")
+
+# initialPosition = np.array([6*Ru, 0, 0])
+# initialVelocityDirection = np.array([0.1, 0.1, 1])
+# initialKE = 10000 #eV
+
+# p1 = Proton(initialPosition, initialVelocityDirection, initialKE)
+
+# sim1 = Simulation(UFieldDipole, p1)
+# sim1.run(10)
+# print(sim1.position)
+
+# manager = SimulationManager(UFieldDipole, [p1], 50, N=1, fileKeyWord="nick-Uranus-FullField-1:1:1", endStepList=4000000)
+# manager.runAllSims()
+# manager.plotAllEnergy()
+# manager.simulations[0].plotPositionOnTime(z=True)
 
 #===============================================================================================
 
 
-plt.show()
+# Ru = 25600000           #radius of Uranus in metres
+
+# #Create field of Uranus
+# g = np.array([[11278, 10928, 0], [-9648, -12284, 1453]]) #these are in nanoteslas
+# h = np.array([[0, -16049, 0], [0, 6405, 4220]])
+# g = g/1000000000 #now in teslas
+# h = h/1000000000
+
+# UFieldWhole = SHField(Ru, g, h, 0, 0, False)
+# UFieldDipole = SHField(Ru, g, h, 0, 0, True)
+# UFieldWhole.rotate("Field") #want field aligned coordinates
+# UFieldDipole.rotate("Field")
+
+
+# # BMag = np.linalg.norm(UFieldDipole.getField(np.array([6*Ru, 0, 0])))
+# # uniformB = UniformField(np.array([0, 0, BMag]))
+
+# # initialPosition = np.array([-1.879385242, -0.6840402867, 0])*Ru
+# initialPosition = np.array([-1.215537244, 6.893654271, 0])*Ru
+# # initialVelocityDirection1 = np.array([0.39511149, 0, 1])
+# initialVelocityDirection1 = np.array([0.09350383699, 0, 1])
+# initialKE = 1000000 #eV
+
+# # e = Electron(initialPosition, initialVelocityDirection, initialKE)
+# p1 = Proton(initialPosition, initialVelocityDirection1, initialKE)
+# # p2 = Proton(initialPosition, initialVelocityDirection2, initialKE)
+
+
+# manager = SimulationManager(UFieldWhole, [p1], 50, N=1, fileKeyWord="nick-Uranus-RegionTest2-FullField-L7", endStepList=1000000)
+# manager.runAllSims()
+
+#===============================================================================================
+
+
+
+
+UFieldWhole = UranusField(False)
+UFieldDipole = UranusField(True)
+UFieldWhole.rotate("Field") #want field aligned coordinates
+UFieldDipole.rotate("Field")
+
+
+energyList = [10**3, 10**4, 10**5, 10**6, 10**7, 10**8] #energies in eV
+
+manager1 = LocationCheck(7, 30, 200, 6, energyList, "proton", UFieldWhole)
+manager1.runAllSims()
+
+# plt.show()

@@ -149,21 +149,23 @@ h = h/1000000000
 
 UField = SHField(Ru, g, h, 0, 0)
 UField.rotate("Field")
+UField.setDipoleOnly(True)
+print(UField.getField([6*Ru, 0, 0]))
 
-BMag = np.linalg.norm(UField.getField(np.array([6*Ru, 0, 0])))
-#BMag = 1
-uniformB = UniformField(np.array([0, 0, BMag]))
+# BMag = np.linalg.norm(UField.getField(np.array([6*Ru, 0, 0])))
+# #BMag = 1
+# uniformB = UniformField(np.array([0, 0, BMag]))
 
-initialPosition = np.array([6*Ru, 0, 0])
-initialVelocityDirection = np.array([0.1, 0.1, 1])
-initialKE = 10000 #eV
+# initialPosition = np.array([6*Ru, 0, 0])
+# initialVelocityDirection = np.array([0.1, 0.1, 1])
+# initialKE = 10000 #eV
 
-p1 = Proton(initialPosition, initialVelocityDirection, initialKE)
+# p1 = Proton(initialPosition, initialVelocityDirection, initialKE)
 
-s1 = Simulation(UField, p1)
-s1.run(1000000)
-s1.plotKEOnTime()
-s1.plotPositionOnTime()
+# s1 = Simulation(UField, p1)
+# s1.run(1000000)
+# s1.plotKEOnTime()
+# s1.plotPositionOnTime()
 #===============================================================================
 
-plt.show()
+# plt.show()
