@@ -233,7 +233,7 @@ def RK(f, t0, E, direction, r0, n, args, mode, test = None):
 arguments = np.array([q, m_p], dtype = object)
 
 L_shell = 7
-phi = 200 * np.pi / 180
+phi = 0 * np.pi / 180
 theta = 30 * np.pi / 180
 lambda_lat = (np.pi / 2) - theta
 
@@ -243,15 +243,16 @@ alpha_eq = np.arcsin(np.sqrt((np.cos(lambda_lat) ** 6) / \
 dir_x = np.tan(alpha_eq)    
 direction = np.array([dir_x, 0, 1])
 t0 = 0.
-E = 1e4 * abs(q)
+E = 1e5 * abs(q)
 #direction = np.array([1, 1, 1])
 
-r0 = Sph_to_Cart(L_shell * a, np.pi / 2, phi)
+#r0 = Sph_to_Cart(L_shell * a, np.pi / 2, phi)
+r0 = np.array([6, 0, 0]) * a
 
 mode = 2
 
-n = 1000000
-test = 'Single'
+n = 50000
+check = None#'Single'
 #-------------------------#
 if mode == 1:
     shape = 'Dipole'
@@ -265,7 +266,7 @@ if arguments[1] == m_p:
 elif arguments[1] == m_e:
     species = 'Electron'
     
-if test == 'Single':
+if check == 'Single':
     d_norm  = direction / np.linalg.norm(direction)
     v_mag = E_to_v(E, arguments[1])
     v0 = v_mag * d_norm
@@ -282,7 +283,10 @@ if test == 'Single':
     gc0 = r0 + ((arguments[0] / q) * gyroradius0 * perp_dir0)
 #-------------------------#
 
-t, v, r, L, mew, gyroradius, gc = RK(f_dvdt, t0, E, direction, r0, n, arguments, mode, 'Single')
+if check == 'Single':
+    t, v, r, L, mew, gyroradius, gc = RK(f_dvdt, t0, E, direction, r0, n, arguments, mode, check)
+else:    
+    t, v, r, L, mew = RK(f_dvdt, t0, E, direction, r0, n, arguments, mode, check)
 
 t_all = []
 x = []
@@ -344,7 +348,7 @@ plt.show()
 #%%
 #SAVE DATA
 #np.savez('Harry/Simulation_data/e1000keV_1_1_1-6_0_0', t = t, v = v, r = r, L = L, mew = mew)
-saveRegionData('Output/RegionTests/regionTest_Uranus_7-30-200', 0, E / q, alpha_eq, np.linalg.norm(gc0), np.linalg.norm(gc), gyroradius0, gyroradius)
+saveRegionData('Output/RegionTests/regionTest_Uranus_7-30-200', 0, 1, 1, E / q, alpha_eq, np.linalg.norm(gc0), np.linalg.norm(gc), gyroradius0, gyroradius)
 
 #%%
 savedArrays = np.load('Harry/Simulation_data/e1000keV_0.1_0.1_1-6_0_0.npz', allow_pickle = True)
@@ -498,3 +502,5 @@ v0_perp = np.linalg.norm(v0 - np.dot(B0 / np.linalg.norm(B0), v0) * (B0 / np.lin
 print(v0_perp)
 #%%
 print(E/q)
+#%%
+print(Cart_to_Sph(r0[0], r0[1], r0[2]))

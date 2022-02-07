@@ -67,7 +67,7 @@ def reshapeNC(x, y, z, u, v, w):
 
 
 
-def saveRegionData(filePath, name, initialKE, pitchAngle, initialRadius, finalRadius, initialGyroradius, finalGyroradius):
+def saveRegionData(filePath, name, species, field, initialKE, pitchAngle, initialRadius, finalRadius, initialGyroradius, finalGyroradius):
     """
     This function opens a file for the regional test, appends the array stored there and re-saves it.
     If the file does not already exist, a new one will be created.
@@ -75,6 +75,8 @@ def saveRegionData(filePath, name, initialKE, pitchAngle, initialRadius, finalRa
     filePath:           The relative path to the file in which the data is saved
     name:               Your name, for record-keeping purposes.  It accepts your name in mulitple ways, but ultimately
                         Harry = 0, Nick = 1.
+    species:            electron = 0, proton = 1
+    field:              Dipole = 0, Full field = 1
     initialKE:          Float, eV
     pitchAngle:         Float, radians.  The initial pitch angle.
     initialRadius:      Float, m.  This is the radius of the centre of the gyromotion, which you must calculate.
@@ -95,7 +97,7 @@ def saveRegionData(filePath, name, initialKE, pitchAngle, initialRadius, finalRa
     date = dt.datetime.now().month*100 + dt.datetime.now().day
     #date should be a 4 digit number, where the first two digits are the day and the second two the month
 
-    newLine = np.array([[name, date, initialKE, pitchAngle, initialRadius, finalRadius, initialGyroradius, finalGyroradius]])
+    newLine = np.array([[name, date, species, field, initialKE, pitchAngle, initialRadius, finalRadius, initialGyroradius, finalGyroradius]])
 
     #branch depending on whether the file already exists
     if exists(filePath):
