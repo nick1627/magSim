@@ -93,6 +93,20 @@ def saveRegionData(filePath, name, species, field, initialKE, pitchAngle, initia
     else:
         raise(Exception("Invalid name entered!"))
 
+    if species == "electron" or species == "e" or species == "Electron" or species == "0":
+        species = 0
+    elif species == "proton" or species == "p" or species == "Proton" or species == "1":
+        species = 1
+    else:
+        raise(Exception("Invalid species entered"))
+    
+    if field == "dipole" or field == "dipoleOnly" or field == 0:
+        field = 0
+    elif field == "complete" or field == "full" or field == "fullField" or field == 1:
+        field = 1
+    else:
+        raise(Exception("Invalid field entered"))
+
     #construct the correct number to represent the date
     date = dt.datetime.now().month*100 + dt.datetime.now().day
     #date should be a 4 digit number, where the first two digits are the day and the second two the month
