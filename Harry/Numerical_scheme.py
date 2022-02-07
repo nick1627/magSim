@@ -232,13 +232,23 @@ def RK(f, t0, E, direction, r0, n, args, mode, test = None):
 #INITIAL CONDITIONS
 arguments = np.array([q, m_p], dtype = object)
 
+L_shell = 7
+phi = 200 * np.pi / 180
+theta = 30 * np.pi / 180
+lambda_lat = (np.pi / 2) - theta
+
+alpha_eq = np.arcsin(np.sqrt((np.cos(lambda_lat) ** 6) / \
+                np.sqrt(1 + (3 * np.sin(lambda_lat) * np.sin(lambda_lat)))))
+
+dir_x = np.tan(alpha_eq)    
+direction = np.array([dir_x, 0, 1])
 t0 = 0.
 E = 1e4 * abs(q)
-direction = np.array([1, 1, 1])
+#direction = np.array([1, 1, 1])
 
-r0 = np.array([6., 0., 0.]) * a
+r0 = Sph_to_Cart(L_shell * a, np.pi / 2, phi)
 
-mode = 1
+mode = 2
 
 n = 1000000
 test = 'Single'
@@ -295,37 +305,37 @@ z = np.array(z)
 fig = plt.figure()
 ax = plt.axes(projection='3d')
 
-ax.plot3D(x / a, y / a, z / a)
+ax.plot3D(x / a, y / a, z / a, color = 'blue')
 ax.set_xlabel('x ($r_U$)',fontsize=16)
 ax.set_ylabel('y ($r_U$)', fontsize=16)
 ax.set_zlabel('z ($r_U$)', fontsize=16)
 ax.set_title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
 plt.show()
 
-plt.plot(x / a, y / a)
-plt.xlabel('x ($r_U$)', fontsize=16)
-plt.ylabel('y ($r_U$)', fontsize=16)
-plt.show()
+# plt.plot(x / a, y / a, color = 'blue')
+# plt.xlabel('x ($r_U$)', fontsize=16)
+# plt.ylabel('y ($r_U$)', fontsize=16)
+# plt.show()
 
-plt.plot(t_all, energy)
+plt.plot(t_all, energy, color = 'blue')
 plt.xlabel('Time (s)', fontsize=16)
 plt.ylabel('Energy (keV)', fontsize=16)
 plt.title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
 plt.show()
 
-plt.plot(t_all, z / a)
+plt.plot(t_all, z / a, color = 'blue')
 plt.xlabel('Time (s)', fontsize=16)
 plt.ylabel('z ($r_U$)', fontsize=16)
 plt.title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
 plt.show()
 
-plt.plot(t_all, L)
+plt.plot(t_all, L, color = 'blue')
 plt.xlabel('Time (s)', fontsize=16)
 plt.ylabel('L', fontsize=16)
 plt.title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
 plt.show()
 
-plt.plot(t, mew)
+plt.plot(t, mew, color = 'blue')
 plt.xlabel('Time (s)', fontsize=16)
 plt.ylabel('Adiabatic invariant ($Am^2$)', fontsize=16)
 plt.title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
@@ -428,17 +438,18 @@ gc_z = np.array(gc_z)
 # plt.xlabel('Time (s)', fontsize=16)
 # plt.ylabel('Adiabatic invariant ($Am^2$)', fontsize=16)
 
-plt.plot(xt / a, yt / a, color = 'blue')
-plt.plot(gc_x / a, gc_y / a, 'x', color = 'red')
+plt.plot(xt[:100] / a, yt[:100] / a, color = 'blue')
+plt.plot(gc_x[:100] / a, gc_y[:100] / a, 'x', color = 'red')
 plt.xlabel('x ($r_U$)', fontsize=16)
 plt.ylabel('y ($r_U$)', fontsize=16)
+plt.title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
 plt.show()
 
 fig = plt.figure()
 ax = plt.axes(projection='3d')
 
-ax.plot3D(xt / a, yt / a, zt / a, color = 'blue')
-ax.plot3D(gc_x / a, gc_y / a, gc_z / a, color = 'red')
+ax.plot3D(xt[:100] / a, yt[:100] / a, zt[:100] / a, color = 'blue')
+ax.plot3D(gc_x[:100] / a, gc_y[:100] / a, gc_z[:100] / a, color = 'red')
 ax.set_xlabel('x ($r_U$)',fontsize=16)
 ax.set_ylabel('y ($r_U$)', fontsize=16)
 ax.set_zlabel('z ($r_U$)', fontsize=16)
