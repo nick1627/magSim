@@ -334,7 +334,8 @@ plt.show()
 #%%
 #SAVE DATA
 #np.savez('Harry/Simulation_data/e1000keV_1_1_1-6_0_0', t = t, v = v, r = r, L = L, mew = mew)
-saveRegionData('Output/RegionTests', 0, E / q, alpha_eq, np.linalg.norm(gc0), np.linalg.norm(gc), gyroradius0, gyroradius)
+saveRegionData('Output/RegionTests/regionTest_Uranus_7-30-200', 0, E / q, alpha_eq, np.linalg.norm(gc0), np.linalg.norm(gc), gyroradius0, gyroradius)
+
 #%%
 savedArrays = np.load('Harry/Simulation_data/e1000keV_0.1_0.1_1-6_0_0.npz', allow_pickle = True)
 
@@ -431,6 +432,17 @@ plt.plot(xt / a, yt / a, color = 'blue')
 plt.plot(gc_x / a, gc_y / a, 'x', color = 'red')
 plt.xlabel('x ($r_U$)', fontsize=16)
 plt.ylabel('y ($r_U$)', fontsize=16)
+plt.show()
+
+fig = plt.figure()
+ax = plt.axes(projection='3d')
+
+ax.plot3D(xt / a, yt / a, zt / a, color = 'blue')
+ax.plot3D(gc_x / a, gc_y / a, gc_z / a, color = 'red')
+ax.set_xlabel('x ($r_U$)',fontsize=16)
+ax.set_ylabel('y ($r_U$)', fontsize=16)
+ax.set_zlabel('z ($r_U$)', fontsize=16)
+ax.set_title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
 plt.show()
 
 #%%
