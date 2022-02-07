@@ -1,12 +1,17 @@
 """
 This file stores the code that analyses the simulation
 """
+
+import sys, os
+sys.path.insert(0, os.getcwd())
+
 import numpy as np
 from numpy.lib.arraysetops import isin
 from fields import *
 from particles import *
 import time 
 import scipy as sp
+import tools
 
 class Simulation:
     """
@@ -89,6 +94,27 @@ class Simulation:
         gamma = 1/np.sqrt(1 - (np.linalg.norm(v)/sp.constants.c)**2)
         larmorPeriod = gamma*self.particle.m0*2*np.pi/(abs(self.particle.q)*Bmag)
         return larmorPeriod
+
+    def getLarmorRadius(self, index):
+        """
+        Computes the larmor radius at a point in the simulation after the simulation has run.
+        """
+        if self.complete == False:
+            raise(Exception("Simulation must be complete for this function to run"))
+
+        position = self.position[index]
+        velocity = self.velocity[index]
+
+        if self.field.rotationFlag == "R":
+            self.field.rotate("Field")
+        B = self.field.getField(position)
+        Bmag = np.linalg.norm(B)
+        gamma = 1/np.sqrt(1-(np.linalg.norm(velocity)/sp.constants.c)**2)
+        Bdir = B/Bmag
+        v_perp = velocity - np.dot(velocity, Bdir)*Bdir
+        larmorRadius = (gamma*self.particle.m0*np.linalg.norm(v_perp))/(abs(self.particle.q)*Bmag)
+
+        return larmorRadius
     
     def run(self, endStep=1000):
         """
@@ -300,6 +326,25 @@ class Simulation:
 
         return
 
+    def getKE(self, index, unit="eV"):
+        """
+        Returns the relativistic KE at a given index.
+        """
+        if self.complete == False:
+            raise(Exception("Simulation must be complete for this function to work"))
+        restMassEnergy = self.particle.m0*sp.constants.c**2
+        v = np.linalg.norm(self.velocity[index], axis=-1)
+        gamma = 1/np.sqrt(1 - (v/sp.constants.c)**2)
+        Ek = (gamma-1)*restMassEnergy
+
+        if unit=="SI":
+            return Ek
+        elif unit=="eV":
+            return Ek/sp.constants.e
+        else:
+            raise(Exception("Unrecognised unit!"))
+
+
     def plotDeltaV(self):
         print("warning:  this function needs improvement")
         v = self.velocity
@@ -331,6 +376,76 @@ class Simulation:
         ax.plot(self.time, v_error)
         
         return
+
+    def saveBounceData(self, filePath):
+        """
+        This function can run after the simulation has completed.  It saves data from the first bounce in a given file.
+        """
+        if self.complete==False:
+            raise(Exception("Simulation has not yet finished.  Simulation must be complete before this function can run."))
+
+        if not self.position[0, 2] == 0:
+            raise(Exception("Particle does not start at magnetic equator, so cannot perform analysis."))
+
+        #first collect up all the data
+        #Index of initial event is 0
+        #Need to find final index
+
+        found = False
+        counter=0
+        length = np.shape(self.position)[0]       
+        if self.position[1, 2] > 0:
+            #particle heading North initially
+            while (found == False) and (counter < length):
+                if self.position[counter, 2]<0:
+                    #particle has crossed back into the other hemisphere
+                    found = True
+                else:
+                    counter+=1
+        else:
+            #particle heading South initially
+            while (found == False) and (counter < length):
+                if self.position[counter, 2]>0:
+                    #particle has crossed back into other hemisphere
+                    found = True
+                else:
+                    counter+=1
+        
+        if found == False:
+            raise(Exception("The particle in this simulation did not cross back into the other hemisphere.  No results can be found."))
+
+        #counter is now the index of the final point.
+                
+            
+        initialKE = self.getKE(0, unit="eV")
+        initialGyroradius = self.getLarmorRadius(0)
+
+        finalGyroradius = self.getLarmorRadius(counter)
+
+        initialRadius = np.linalg.norm(self.getGuidingCentrePosition(0, initialGyroradius))
+        finalRadius = np.linalg.norm(self.getGuidingCentrePosition(0, finalGyroradius))
+
+        #calculate pitch angle
+        v = self.velocity[0]
+        d = np.sqrt(v[0]**2 + v[1]**2)
+        pitchAngle = np.arctan((d/v[2]))
+
+        tools.saveRegionData(filePath, "N", initialKE, pitchAngle, initialRadius, finalRadius, initialGyroradius, finalGyroradius)
+        
+        return
+
+    def getGuidingCentrePosition(self, index, larmorRadius):
+        """
+        Computes the position of the guiding centre
+        """
+        if self.complete == False:
+            raise(Exception("The simulation must be complete"))
+
+        perpDirection = self.particle.q*np.cross(self.velocity[index], self.field.getField(self.position[index]))
+        perpDirection = perpDirection/np.linalg.norm(perpDirection)
+        guidingCentrePosition = self.position[index] + larmorRadius*perpDirection
+        return guidingCentrePosition
+
   
 class SimulationManager:
     """
