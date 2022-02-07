@@ -124,7 +124,7 @@ def f_k5(func, t, v, r, h, k1, k2, k3, k4, args = None, mode = 1):
     v_term = v + (((3 * ((3 * np.sqrt(21)) - 7) * k1) - (8 * (7 - np.sqrt(21)) * k2) \
                   + (48 * (7 - np.sqrt(21)) * k3) - (3 * (21 - np.sqrt(21)) * k4)) / 392)
     
-    term = h * func(t_term, v_term, r, args, mode = 1)
+    term = h * func(t_term, v_term, r, args, mode)
     return term
 
 def f_k6(func, t, v, r, h, k1, k2, k3, k4, k5, args = None, mode = 1):
@@ -233,9 +233,9 @@ def RK(f, t0, E, direction, r0, n, args, mode, test = None):
 arguments = np.array([q, m_p], dtype = object)
 
 L_shell = 7
-phi = 0 * np.pi / 180
-theta = 30 * np.pi / 180
-lambda_lat = (np.pi / 2) - theta
+phi_in = 0 * np.pi / 180
+theta_in = 30 * np.pi / 180
+lambda_lat = (np.pi / 2) - theta_in
 
 alpha_eq = np.arcsin(np.sqrt((np.cos(lambda_lat) ** 6) / \
                 np.sqrt(1 + (3 * np.sin(lambda_lat) * np.sin(lambda_lat)))))
@@ -246,13 +246,15 @@ t0 = 0.
 E = 1e5 * abs(q)
 #direction = np.array([1, 1, 1])
 
-#r0 = Sph_to_Cart(L_shell * a, np.pi / 2, phi)
-r0 = np.array([6, 0, 0]) * a
+#r0 = Sph_to_Cart(L_shell * a, np.pi / 2, phi_in)
+r0 = np.array([6., 0., 0.]) * a
 
 mode = 2
 
 n = 50000
 check = None#'Single'
+
+#%%
 #-------------------------#
 if mode == 1:
     shape = 'Dipole'
