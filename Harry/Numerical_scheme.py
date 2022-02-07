@@ -11,6 +11,9 @@ import matplotlib.pyplot as plt
 import scipy.constants as constants
 from Harry.Functions import *
 from tqdm import tqdm
+import sys, os
+sys.path.insert(0, os.getcwd())
+from tools import *
 
 #%%
 a = 25600000 # Uranus' radius
@@ -142,7 +145,7 @@ def f_k7(func, t, v, r, h, k1, k2, k3, k4, k5, k6, args = None, mode = 1):
     term = h * func(t_term, v_term, r, args, mode)
     return term
 
-def RK(f, t0, E, direction, r0, n, args, mode):
+def RK(f, t0, E, direction, r0, n, args, mode, test = None):
     
     t = np.zeros(n+1)
     t[0] = t0
@@ -200,10 +203,26 @@ def RK(f, t0, E, direction, r0, n, args, mode):
         
         current_B = B_rot_fun(r[i+1], a, g, h_coeff, mode, R)
         v_par = np.dot(current_B / np.linalg.norm(current_B), v[i+1]) * (current_B / np.linalg.norm(current_B))
-        v_perp = np.linalg.norm(v[i+1] - v_par)
+        v_perp_vec = v[i+1] - v_par
+        v_perp = np.linalg.norm(v_perp_vec)
         
         mew_term = 0.5 * args[1] * v_perp * v_perp / np.linalg.norm(current_B)
         mew.append(mew_term)
+        
+        if test == 'Single' and r[i+1][2] < 0:
+            gyroradius = (args[1] * v_perp) / (abs(args[0]) * np.linalg.norm(current_B))
+            perp_vec = np.cross(v_perp_vec, current_B)
+            perp_dir = perp_vec / np.linalg.norm(perp_vec)
+            
+            gc = r[i+1] + ((args[0] / q) * gyroradius * perp_dir)
+            
+            mew = np.array(mew)
+            
+            t = t[:i+2]
+            v = v[:i+2]
+            r = r[:i+2]
+            
+            return t, v, r, L, mew, gc
         
     mew = np.array(mew)
         
@@ -221,8 +240,8 @@ r0 = np.array([6., 0., 0.]) * a
 
 mode = 1
 
-n = 1000
-
+n = 1000000
+test = 'Single'
 #-------------------------#
 if mode == 1:
     shape = 'Dipole'
@@ -235,9 +254,25 @@ if arguments[1] == m_p:
     
 elif arguments[1] == m_e:
     species = 'Electron'
+    
+if test == 'Single':
+    d_norm  = direction / np.linalg.norm(direction)
+    v_mag = E_to_v(E, arguments[1])
+    v0 = v_mag * d_norm
+    
+    B0 = B_rot_fun(r0, a, g, h_coeff, mode, R)
+    v0_par = np.dot(B0 / np.linalg.norm(B0), v0) * (B0 / np.linalg.norm(B0))
+    v0_perp_vec = v0 - v0_par
+    v0_perp = np.linalg.norm(v0_perp_vec)
+    
+    gyroradius0 = (arguments[1] * v0_perp) / (abs(arguments[0]) * np.linalg.norm(B0))
+    perp_vec0 = np.cross(v0_perp_vec, B0)
+    perp_dir0 = perp_vec0 / np.linalg.norm(perp_vec0)
+    
+    gc0 = r0 + ((arguments[0] / q) * gyroradius0 * perp_dir0)
 #-------------------------#
 
-t, v, r, L, mew = RK(f_dvdt, t0, E, direction, r0, n, arguments, mode)
+t, v, r, L, mew, gc = RK(f_dvdt, t0, E, direction, r0, n, arguments, mode, 'Single')
 
 t_all = []
 x = []
@@ -295,7 +330,9 @@ plt.xlabel('Time (s)', fontsize=16)
 plt.ylabel('Adiabatic invariant ($Am^2$)', fontsize=16)
 plt.title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
 plt.show()
-
+#%%
+print((np.linalg.norm(gc)-np.linalg.norm(gc0)) / np.linalg.norm(gc0))
+print(r[-1])
 #%%
 np.savez('Harry/Simulation_data/e1000keV_1_1_1-6_0_0', t = t, v = v, r = r, L = L, mew = mew)
 
