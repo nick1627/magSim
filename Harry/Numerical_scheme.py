@@ -222,7 +222,7 @@ def RK(f, t0, E, direction, r0, n, args, mode, test = None):
             v = v[:i+2]
             r = r[:i+2]
             
-            return t, v, r, L, mew, gc
+            return t, v, r, L, mew, gyroradius, gc
         
     mew = np.array(mew)
         
@@ -272,7 +272,7 @@ if test == 'Single':
     gc0 = r0 + ((arguments[0] / q) * gyroradius0 * perp_dir0)
 #-------------------------#
 
-t, v, r, L, mew, gc = RK(f_dvdt, t0, E, direction, r0, n, arguments, mode, 'Single')
+t, v, r, L, mew, gyroradius, gc = RK(f_dvdt, t0, E, direction, r0, n, arguments, mode, 'Single')
 
 t_all = []
 x = []
@@ -330,12 +330,11 @@ plt.xlabel('Time (s)', fontsize=16)
 plt.ylabel('Adiabatic invariant ($Am^2$)', fontsize=16)
 plt.title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
 plt.show()
-#%%
-print((np.linalg.norm(gc)-np.linalg.norm(gc0)) / np.linalg.norm(gc0))
-print(r[-1])
-#%%
-np.savez('Harry/Simulation_data/e1000keV_1_1_1-6_0_0', t = t, v = v, r = r, L = L, mew = mew)
 
+#%%
+#SAVE DATA
+#np.savez('Harry/Simulation_data/e1000keV_1_1_1-6_0_0', t = t, v = v, r = r, L = L, mew = mew)
+saveRegionData('Output/RegionTests', 0, E / q, alpha_eq, np.linalg.norm(gc0), np.linalg.norm(gc), gyroradius0, gyroradius)
 #%%
 savedArrays = np.load('Harry/Simulation_data/e1000keV_0.1_0.1_1-6_0_0.npz', allow_pickle = True)
 
