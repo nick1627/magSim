@@ -31,7 +31,7 @@ class Simulation:
 
         #If previous simulation data not provided, we start a new simulation
         if simDataPath == "":
-            print("no prior data given")
+            
             self.stepsPerPeriod: int = stepsPerPeriod
             self.field = field
             self.particle = particle
@@ -45,7 +45,7 @@ class Simulation:
 
             self.complete = False
         else:
-            print("prior data given")
+            
             #We have prior data, so create simulation object based on that for analysis
 
             savedArrays = np.load(simDataPath, allow_pickle=True)
@@ -81,8 +81,7 @@ class Simulation:
             self.complete = True
 
 
-        print("completeness: ")
-        print(self.complete)
+       
         
         return 
     

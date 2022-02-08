@@ -4,6 +4,8 @@ Contains code that saves and loads data so we can compare results etc.
 import numpy as np
 import datetime as dt
 from os.path import exists
+import matplotlib.pyplot as plt
+import copy
 
 def saveBField(x, y, z, u, v, w, filePath):
     # This saves the data for plotting a field in the provided path
@@ -135,3 +137,42 @@ def loadRegionData(filePath):
     """
     savedData = np.load(filePath)
     return savedData["data"]
+
+
+def plotRChangeOnEnergy(regionArray, planetaryRadius, L, theta, phi):
+    """
+    This function accepts region data in the form produced by the loadRegionData function.
+    It plots the change in r on energy.
+
+    It is assumed that only the data that is to be plotted is input to this function.
+    This is why the function accepts an array rather than the file path.
+    """
+    a = planetaryRadius
+
+    #data rows are of the form:
+    #name, date, species, field, initialKE, pitchAngle, initialRadius, finalRadius, initialGyroradius, finalGyroradius
+
+    #separate data by name, in case of difference between simulations
+    harryData = []
+    nickData = []
+
+    for row in regionArray:
+        if row[0] == 0: #it's harry's data
+            harryData.append(copy.deepcopy(row))
+        else: #it's nick's data
+            nickData.append(copy.deepcopy(row))
+    
+    #get into array format 
+    harryData = np.array(harryData)
+    nickData = np.array(nickData)
+    
+    #now can plot
+
+    ax = plt.figure().add_subplot()
+    ax.plot(harryData[:, 4], (harryData[:,7] - harryData[:,6])/a, color="blue", label="Harry's data")
+    ax.plot(nickData[:, 4], (nickData[:,7] - nickData[:,6])/a, color="red", label = "Nick's data")
+    
+    titleString = "Change in equatorial r/a against initial KE"
+    ax.set_title(titleString)
+    ax.set_xlabel("Kinetic energy (eV)")
+    ax.set_ylabel("Change in r/a (positive indicates increase)")
