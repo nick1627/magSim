@@ -567,7 +567,7 @@ class SimulationManager:
         return
 
 class LocationCheck(SimulationManager):
-    def __init__(self, L, theta, phi, N, energyList, particleType, field, endStepList=500000):
+    def __init__(self, L, theta, phi, N, energyList, particleType, field, endStepList=500000, fileNameAddition=""):
         """
         L:              The initial L shell of the particles
         theta:          Theta of target location (degrees)
@@ -594,7 +594,7 @@ class LocationCheck(SimulationManager):
 
         
 
-        super(LocationCheck, self).__init__(field, particleList, stepsPerPeriodList=50, N=N, fileKeyWord="locationCheck", endStepList=endStepList)
+        super(LocationCheck, self).__init__(field, particleList, stepsPerPeriodList=50, N=N, fileKeyWord="locationCheck" + fileNameAddition, endStepList=endStepList)
 
 
 

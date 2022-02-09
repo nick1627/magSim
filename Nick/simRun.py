@@ -197,9 +197,9 @@ UFieldWhole.rotate("Field") #want field aligned coordinates
 UFieldDipole.rotate("Field")
 
 
-energyList = [2*10**6, 3*10**6, 4*10**6, 5*10**6, 6*10**6, 7*10**6, 8*10**6, 9*10**6] #energies in eV
+energyList = [2*10**7, 3*10**7, 4*10**7, 5*10**7, 6*10**7, 7*10**7, 8*10**7, 9*10**7] #energies in eV
 
-manager1 = LocationCheck(7, 30, 200, 8, energyList, "proton", UFieldWhole, endStepList=500000)
+manager1 = LocationCheck(7, 30, 200, 8, energyList, "proton", UFieldWhole, endStepList=250000, fileNameAddition="-Uranus-7-30-200-")
 manager1.runAllSims()
 
 # plt.show()

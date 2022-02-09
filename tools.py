@@ -139,6 +139,60 @@ def loadRegionData(filePath):
     return savedData["data"]
 
 
+def selectCriteria(data, name="", date="", species="", field="", KE="", pitchAngle=""):
+    """
+    Returns an array with the desired criteria given as input
+    """
+    if name == "Harry":
+        deletionList = []
+        for i in range(0, np.shape(data)[0]):
+            if data[i, 0] != 0:
+                deletionList.append(i)
+
+        data = np.delete(data, deletionList, axis=0)
+
+    elif name == "Nick":
+        deletionList = []
+        for i in range(0, np.shape(data)[0]):
+            if data[i, 0] != 1:
+                deletionList.append(i)
+
+        data = np.delete(data, deletionList, axis=0)
+
+    if species=="proton":
+        deletionList = []
+        for i in range(0, np.shape(data)[0]):
+            if data[i, 2] != 1:
+                deletionList.append(i)
+
+        data = np.delete(data, deletionList, axis=0)
+    elif species == "electron":
+        deletionList = []
+        for i in range(0, np.shape(data)[0]):
+            if data[i, 2] != 0:
+                deletionList.append(i)
+
+        data = np.delete(data, deletionList, axis=0)
+
+    if field=="dipoleOnly":
+        deletionList = []
+        for i in range(0, np.shape(data)[0]):
+            if data[i, 3] != 0:
+                deletionList.append(i)
+
+        data = np.delete(data, deletionList, axis=0)
+    elif field=="fullField":
+        deletionList = []
+        for i in range(0, np.shape(data)[0]):
+            if data[i, 3] != 1:
+                deletionList.append(i)
+
+        data = np.delete(data, deletionList, axis=0)
+
+    return data
+
+
+
 def plotRChangeOnEnergy(regionArray, planetaryRadius, L, theta, phi):
     """
     This function accepts region data in the form produced by the loadRegionData function.
@@ -169,10 +223,10 @@ def plotRChangeOnEnergy(regionArray, planetaryRadius, L, theta, phi):
     #now can plot
 
     ax = plt.figure().add_subplot()
-    ax.plot(harryData[:, 4], (harryData[:,7] - harryData[:,6])/a, color="blue", label="Harry's data")
-    ax.plot(nickData[:, 4], (nickData[:,7] - nickData[:,6])/a, color="red", label = "Nick's data")
+    ax.plot(harryData[:, 4], (harryData[:,7] - harryData[:,6])/a, color="blue", label="Harry's data", linestyle = "None", marker = "x")
+    ax.plot(nickData[:, 4], (nickData[:,7] - nickData[:,6])/a, color="red", label = "Nick's data", linestyle = "None", marker = "x")
     
-    titleString = "Change in equatorial r/a against initial KE"
+    titleString = "Change in equatorial r/a against initial KE for location L=" + str(np.round(L)) + ", " + r"$\theta$ = " + str(np.round(theta)) + ", " + r"$\phi$ = " + str(np.round(phi))
     ax.set_title(titleString)
     ax.set_xlabel("Kinetic energy (eV)")
     ax.set_ylabel("Change in r/a (positive indicates increase)")
