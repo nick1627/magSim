@@ -42,14 +42,16 @@ import tools
 #=======================================================================================
 
 
-# sim = Simulation(simDataPath = "Output/locationCheck-Uranus-7-30-200--Proton-fullField-90000000.npz")
+# sim = Simulation(simDataPath = "Output/locationCheck-Uranus-7-30-200--Proton-dipoleOnly-7000000.npz")
 # # sim.plotPositionOnTime(z=True)
 # sim.saveBounceData("Output/RegionTests/regionTest_Uranus_7-30-200.npz")
 # print(tools.loadRegionData("Output/RegionTests/regionTest_Uranus_7-30-200.npz"))
 
 Uradius = 25600000
 data = tools.loadRegionData("Output/RegionTests/regionTest_Uranus_7-30-200.npz")
-data = tools.selectCriteria(data, species="proton", field="fullField")
-tools.plotRChangeOnEnergy(data, Uradius, 7, 30, 200)
+fullData = tools.selectCriteria(data, species="proton", field="fullField")
+dipoleData = tools.selectCriteria(data, species="proton", field="dipoleOnly")
+tools.plotRChangeOnEnergy(fullData, Uradius, 7, 30, 200)
+tools.plotRChangeOnEnergy(dipoleData, Uradius, 7, 30, 200)
 
 plt.show()
