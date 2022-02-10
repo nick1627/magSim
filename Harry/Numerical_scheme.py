@@ -85,8 +85,8 @@ plt.rcParams.update(params)
 # #print(np.linalg.norm(B))
 #%%
 def gamma(v):
-    v_mag = np.linalg.norm(v)
-    gam = (1 - ((v_mag * v_mag) / (c * c))) ** (-0.5)
+    v_mag_gam = np.linalg.norm(v)
+    gam = (1 - ((v_mag_gam * v_mag_gam) / (c * c))) ** (-0.5)
     return gam
 
 def f_dvdt(t, v, r, args, mode):
@@ -231,6 +231,7 @@ def RK(f, t0, E, direction, r0, n, args, mode, test = None):
 #%%
 #INITIAL CONDITIONS
 arguments = np.array([q, m_p], dtype = object)
+mode = 1
 
 L_shell = 7
 phi_in = 200 * np.pi / 180
@@ -238,20 +239,43 @@ theta_in = 30 * np.pi / 180
 lambda_lat = (np.pi / 2) - theta_in
 
 alpha_eq = np.arcsin(np.sqrt((np.cos(lambda_lat) ** 6) / \
-                np.sqrt(1 + (3 * np.sin(lambda_lat) * np.sin(lambda_lat)))))
+                 np.sqrt(1 + (3 * np.sin(lambda_lat) * np.sin(lambda_lat)))))
 
-dir_x = np.tan(alpha_eq)    
-direction = np.array([dir_x, 0, 1])
+perp_mag = np.tan(alpha_eq)
+
+zero_phase_dir = np.array([np.cos(phi_in), np.sin(phi_in), 0])
+phase = 0 * np.pi / 180
+Rphase = np.array([[np.cos(phase), - np.sin(phase), 0], 
+                   [np.sin(phase), np.cos(phase),   0], 
+                   [0,             0,               1]])
+phase_dir = np.matmul(Rphase, zero_phase_dir)
+
+gc0_in = np.array(Sph_to_Cart(L_shell * a, np.pi / 2, phi_in))
+
 t0 = 0.
-E = 1e4 * abs(q)
-#direction = np.array([1, 1, 1])
+E = 1e5 * abs(q)
+v_mag_in = E_to_v(E, arguments[1])
 
-r0 = Sph_to_Cart(L_shell * a, np.pi / 2, phi_in)
+v0_perp = np.sin(alpha_eq) * v_mag_in
+
+B0 = B_rot_fun(gc0_in, a, g, h_coeff, mode, R)
+
+gyroradius0 = (arguments[1] * v0_perp) / (abs(arguments[0]) * np.linalg.norm(B0))
+
+r0 = gc0_in + (gyroradius0 * phase_dir)
 #r0 = np.array([6., 0., 0.]) * a
 
-mode = 1    
+if arguments[1] == m_p:
+    v_dir = np.cross(phase_dir, np.array([0, 0, 1]))
+    
+elif arguments[1] == m_e:
+    v_dir = np.cross(np.array([0, 0, 1]), phase_dir)
 
-n = 1000000
+direction = perp_mag * v_dir
+direction[2] = 1
+#direction = np.array([1, 1, 1])
+
+n = 10000000
 check = 'Single'
 
 #%%
@@ -270,8 +294,8 @@ elif arguments[1] == m_e:
     
 if check == 'Single':
     d_norm  = direction / np.linalg.norm(direction)
-    v_mag = E_to_v(E, arguments[1])
-    v0 = v_mag * d_norm
+    v_mag2 = E_to_v(E, arguments[1])
+    v0 = v_mag2 * d_norm
     
     B0 = B_rot_fun(r0, a, g, h_coeff, mode, R)
     v0_par = np.dot(B0 / np.linalg.norm(B0), v0) * (B0 / np.linalg.norm(B0))
@@ -318,10 +342,10 @@ ax.set_zlabel('z ($r_U$)', fontsize=16)
 ax.set_title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
 plt.show()
 
-# plt.plot(x / a, y / a, color = 'blue')
-# plt.xlabel('x ($r_U$)', fontsize=16)
-# plt.ylabel('y ($r_U$)', fontsize=16)
-# plt.show()
+plt.plot(x / a, y / a, color = 'blue')
+plt.xlabel('x ($r_U$)', fontsize=16)
+plt.ylabel('y ($r_U$)', fontsize=16)
+plt.show()
 
 plt.plot(t_all, energy, color = 'blue')
 plt.xlabel('Time (s)', fontsize=16)
@@ -360,40 +384,7 @@ v = savedArrays["v"]
 r = savedArrays["r"]
 L = savedArrays["L"]
 mew = savedArrays["mew"]
-#%%
-x=[]
-y=[]
-z=[]
-energy = []
-for i in range(len(r)):
-    x.append(r[i][0])
-    y.append(r[i][1])
-    z.append(r[i][2])
-    
-    energy.append((arguments[1] * c * c) * (gamma(v[i]) - 1) / (1e3 * abs(arguments[0])))
-x = np.array(x) / a
-y = np.array(y) / a
-z = np.array(z) / a
-#%%
-plt.plot(t, energy)
-plt.xlabel('Time (s)', fontsize=16)
-plt.ylabel('Energy (keV)', fontsize=16)
-plt.title('Dipole - 10keV')
-plt.show()
 
-plt.plot(t, z)
-plt.xlabel('Time (s)', fontsize=16)
-plt.ylabel('z ($r_U$)', fontsize=16)
-plt.title('Dipole - 10keV')
-plt.show()
-
-#%%
-print(t[-1] / 17)
-#%%
-print(((energy[-1] - energy[0]) / 55) * 100)
-
-#%%
-0.009198915800538998
 #%%
 test = []
 xt = []
@@ -454,8 +445,8 @@ plt.show()
 fig = plt.figure()
 ax = plt.axes(projection='3d')
 
-ax.plot3D(xt[:100] / a, yt[:100] / a, zt[:100] / a, color = 'blue')
-ax.plot3D(gc_x[:100] / a, gc_y[:100] / a, gc_z[:100] / a, color = 'red')
+ax.plot3D(xt / a, yt / a, zt / a, color = 'blue')
+ax.plot3D(gc_x / a, gc_y / a, gc_z / a, color = 'red')
 ax.set_xlabel('x ($r_U$)',fontsize=16)
 ax.set_ylabel('y ($r_U$)', fontsize=16)
 ax.set_zlabel('z ($r_U$)', fontsize=16)
@@ -506,3 +497,13 @@ print(v0_perp)
 print(E/q)
 #%%
 print(Cart_to_Sph(r0[0], r0[1], r0[2]))
+
+#%%
+
+data = loadRegionData('Output/RegionTests/regionTest_Uranus_7-30-200.npz')
+data = selectCriteria(data, species = 'proton', field = 'fullField')
+
+plotRChangeOnEnergy(data, a, L_shell, 30, 200)
+plt.show()
+
+#%%
