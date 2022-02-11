@@ -69,7 +69,7 @@ def reshapeNC(x, y, z, u, v, w):
 
 
 
-def saveRegionData(filePath, name, species, field, initialKE, pitchAngle, initialRadius, finalRadius, initialGyroradius, finalGyroradius):
+def saveRegionData(filePath, name, species, field, initialKE, pitchAngle, phase, initialRadius, finalRadius, initialGyroradius, finalGyroradius):
     """
     This function opens a file for the regional test, appends the array stored there and re-saves it.
     If the file does not already exist, a new one will be created.
@@ -81,6 +81,7 @@ def saveRegionData(filePath, name, species, field, initialKE, pitchAngle, initia
     field:              Dipole = 0, Full field = 1
     initialKE:          Float, eV
     pitchAngle:         Float, radians.  The initial pitch angle.
+    phase:              Float, radians.  0 phase means in direction radially away from centre of planet.  Goes round in same direction as phi.
     initialRadius:      Float, m.  This is the radius of the centre of the gyromotion, which you must calculate.
     finalRadius:        Float, m.  This is the radius of the centre of the gyromotion, which you must calculate.
     initialGyroradius:  Float, m
@@ -113,7 +114,7 @@ def saveRegionData(filePath, name, species, field, initialKE, pitchAngle, initia
     date = dt.datetime.now().month*100 + dt.datetime.now().day
     #date should be a 4 digit number, where the first two digits are the day and the second two the month
 
-    newLine = np.array([[name, date, species, field, initialKE, pitchAngle, initialRadius, finalRadius, initialGyroradius, finalGyroradius]])
+    newLine = np.array([[name, date, species, field, initialKE, pitchAngle, phase, initialRadius, finalRadius, initialGyroradius, finalGyroradius]])
 
     #branch depending on whether the file already exists
     if exists(filePath):
@@ -139,7 +140,7 @@ def loadRegionData(filePath):
     return savedData["data"]
 
 
-def selectCriteria(data, name="", date="", species="", field="", KE="", pitchAngle=""):
+def selectCriteria(data, name="", date="", species="", field="", KE="", pitchAngle="", phase = ""):
     """
     Returns an array with the desired criteria given as input
     """
