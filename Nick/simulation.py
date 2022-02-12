@@ -441,7 +441,7 @@ class Simulation:
         d = np.sqrt(v[0]**2 + v[1]**2)
         pitchAngle = np.arctan((d/v[2]))
 
-        tools.saveRegionData(filePath, "N", self.particle.name, not(self.field.dipoleOnly), initialKE, pitchAngle, initialPhase, initialRadius, finalRadius, initialGyroradius, finalGyroradius)
+        tools.saveRegionData(filePath, "N", self.particle.name, not(self.field.dipoleOnly), initialKE, pitchAngle, self.initialPhase, initialRadius, finalRadius, initialGyroradius, finalGyroradius)
 
         return
 
@@ -580,7 +580,6 @@ class LocationCheck(SimulationManager):
         initialB = np.linalg.norm(field.getField(guidingCentrePosition))
 
         latitude = (np.pi/180)*(90 - theta)
-        gyroPhaseDeg = copy(gyroPhase)
         gyroPhase = (np.pi/180)*gyroPhase
 
         # #calculate the equatorial pitch angle alpha
@@ -634,7 +633,7 @@ class LocationCheck(SimulationManager):
 
         
 
-        super(LocationCheck, self).__init__(field, particleList, stepsPerPeriodList=50, N=N, fileKeyWord="locationCheck" + fileNameAddition, endStepList=endStepList, initialPhaseList=gyroPhaseDeg)
+        super(LocationCheck, self).__init__(field, particleList, stepsPerPeriodList=50, N=N, fileKeyWord="locationCheck" + fileNameAddition, endStepList=endStepList, initialPhaseList=gyroPhase)
 
 
     def getLarmorRadius(self, B, v, alpha, m0, q):
