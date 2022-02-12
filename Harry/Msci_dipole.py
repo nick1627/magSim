@@ -135,7 +135,7 @@ r = np.linspace(a, 2 * a, 4)
 theta = np.linspace(0, np.pi, 10)
 phi = np.array([0, np.pi])
 
-x, y, z, u, v, w = B_spin_aligned(r, theta, phi, a, args, 2, R)
+x, y, z, u, v, w = B_spin_aligned(r, theta, phi, a, args, 1, R)
 
 fig, ax = plt.subplots(1, 1)
 qr = ax.quiver(x, z, u, w, color='black', pivot = 'mid')

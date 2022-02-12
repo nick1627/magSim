@@ -232,7 +232,7 @@ def RK(f, t0, E, direction, r0, n, args, mode, test = None):
 #%%
 #INITIAL CONDITIONS
 arguments = np.array([q, m_p], dtype = object)
-mode = 1
+mode = 2
 
 L_shell = 7
 phi_in = 200 * np.pi / 180
@@ -254,7 +254,7 @@ phase_dir = np.matmul(Rphase, zero_phase_dir)
 gc0_in = np.array(Sph_to_Cart(L_shell * a, np.pi / 2, phi_in))
 
 t0 = 0.
-E = 1e3 * abs(q)
+E = 1e7 * abs(q)
 v_mag_in = E_to_v(E, arguments[1])
 
 v0_perp = np.sin(alpha_eq) * v_mag_in
@@ -266,10 +266,10 @@ gyroradius0 = (gamma(v0_perp) * arguments[1] * v0_perp) / (abs(arguments[0]) * n
 r0 = gc0_in + (gyroradius0 * phase_dir)
 #r0 = np.array([6., 0., 0.]) * a
 
-if arguments[1] == m_p:
+if arguments[1] == m_e:
     v_dir = np.cross(phase_dir, np.array([0, 0, 1]))
     
-elif arguments[1] == m_e:
+elif arguments[1] == m_p:
     v_dir = np.cross(np.array([0, 0, 1]), phase_dir)
 
 direction = perp_mag * v_dir
@@ -307,7 +307,7 @@ if check == 'Single':
     perp_vec0 = np.cross(v0_perp_vec, B0)
     perp_dir0 = perp_vec0 / np.linalg.norm(perp_vec0)
     
-    gc0 = r0 - ((arguments[0] / q) * gyroradius0 * perp_dir0)
+    gc0 = r0 + ((arguments[0] / q) * gyroradius0 * perp_dir0)
 #-------------------------#
 
 if check == 'Single':
@@ -375,7 +375,7 @@ plt.show()
 #%%
 #SAVE DATA
 #np.savez('Harry/Simulation_data/e1000keV_1_1_1-6_0_0', t = t, v = v, r = r, L = L, mew = mew)
-saveRegionData('Output/RegionTests/regionTest_Uranus_7-30-200.npz', 0, '1', mode - 1, E / q, alpha_eq, np.linalg.norm(gc0), np.linalg.norm(gc), gyroradius0, gyroradius)
+saveRegionData('Output/RegionTests/regionTest_Uranus_7-30-200.npz', 0, '1', mode - 1, E / q, alpha_eq, phase, np.linalg.norm(gc0), np.linalg.norm(gc), gyroradius0, gyroradius)
 
 #%%
 savedArrays = np.load('Harry/Simulation_data/e1000keV_0.1_0.1_1-6_0_0.npz', allow_pickle = True)
@@ -502,9 +502,10 @@ print(Cart_to_Sph(r0[0], r0[1], r0[2]))
 #%%
 
 data = loadRegionData('Output/RegionTests/regionTest_Uranus_7-30-200.npz')
-data = selectCriteria(data, species = 'proton', field = 'fullField')
+data = selectCriteria(data, species = 'proton', field = 'dipoleOnly')
 
 plotRChangeOnEnergy(data, a, L_shell, 30, 200)
+plt.xscale('log')
 plt.show()
 
 #%%
@@ -516,3 +517,7 @@ print('phase direction =', phase_dir)
 print('B0 =', np.linalg.norm(B0), 'T')
 print('v0 perp =', v0_perp,'m/s')
 print('pitch angle =', alpha_eq, 'rad')
+#%%
+print(np.linalg.norm((gc0_in - gc0) / a))
+
+print(B_rot_fun(gc0_in, a, g, h_coeff, mode, R))
