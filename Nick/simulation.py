@@ -580,6 +580,11 @@ class LocationCheck(SimulationManager):
         phi = (np.pi/180)*phi
 
         initialB = np.linalg.norm(field.getField(guidingCentrePosition))
+        
+        fieldStatus = field.getDipoleFlag()
+        field.setDipoleOnly(True)
+        tempB = field.getField(guidingCentrePosition)
+        field.setDipoleOnly(fieldStatus)
 
         latitude = (np.pi/180)*(90 - theta)
         gyroPhase = (np.pi/180)*gyroPhase
@@ -605,7 +610,11 @@ class LocationCheck(SimulationManager):
                 # #compute larmor radius
                 larmorRadius = self.getLarmorRadius(initialB, speedSI, alpha, m0, q)
 
-                directionModifier = -np.pi/2 #because of the sign of the particle charge
+                #Now set the direction modifier depending on the field direction and the particle charge
+                if tempB[2]>0:
+                    directionModifier = -np.pi/2 #because of the sign of the particle charge
+                else:
+                    directionModifier = np.pi/2
                 
                 velocityDirection = np.array([np.sin(alpha)*np.cos(phi + gyroPhase + directionModifier), np.sin(alpha)*np.sin(phi + gyroPhase + directionModifier), np.cos(alpha)])
                 position = guidingCentrePosition + larmorRadius*np.array([np.cos(phi + gyroPhase), np.sin(phi + gyroPhase), 0])   
@@ -627,7 +636,11 @@ class LocationCheck(SimulationManager):
                 # #compute larmor radius
                 larmorRadius = self.getLarmorRadius(initialB, speedSI, alpha, m0, q)
 
-                directionModifier = np.pi/2 #because of the sign of the particle charge
+                #Now set the direction modifier depending on the field direction and the particle charge
+                if tempB[2] > 0:
+                    directionModifier = np.pi/2 #because of the sign of the particle charge
+                else:
+                    directionModifier = -np.pi/2
                 
                 velocityDirection = np.array([np.sin(alpha)*np.cos(phi + gyroPhase + directionModifier), np.sin(alpha)*np.sin(phi + gyroPhase + directionModifier), np.cos(alpha)])
                 position = guidingCentrePosition + larmorRadius*np.array([np.cos(phi + gyroPhase), np.sin(phi + gyroPhase), 0])   
