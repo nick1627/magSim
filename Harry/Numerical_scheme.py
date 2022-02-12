@@ -86,7 +86,8 @@ plt.rcParams.update(params)
 #%%
 def gamma(v):
     v_mag_gam = np.linalg.norm(v)
-    gam = (1 - ((v_mag_gam * v_mag_gam) / (c * c))) ** (-0.5)
+    vc  = v_mag_gam / c
+    gam = (1 - (vc * vc)) ** (-0.5)
     return gam
 
 def f_dvdt(t, v, r, args, mode):
@@ -99,7 +100,7 @@ def E_to_v(E, m):
     return v
 
 def gyroperiod(v, m, q, B):
-   term = (gamma(v) * m * 2 * np.pi) / (abs(q) * np.linalg.norm(B))
+   term = (m * 2 * np.pi) / (abs(q) * np.linalg.norm(B))
    return term
 
 def f_k1(func, t, v, r, h, args = None, mode = 1):
@@ -253,14 +254,14 @@ phase_dir = np.matmul(Rphase, zero_phase_dir)
 gc0_in = np.array(Sph_to_Cart(L_shell * a, np.pi / 2, phi_in))
 
 t0 = 0.
-E = 1e5 * abs(q)
+E = 1e3 * abs(q)
 v_mag_in = E_to_v(E, arguments[1])
 
 v0_perp = np.sin(alpha_eq) * v_mag_in
 
 B0 = B_rot_fun(gc0_in, a, g, h_coeff, mode, R)
 
-gyroradius0 = (arguments[1] * v0_perp) / (abs(arguments[0]) * np.linalg.norm(B0))
+gyroradius0 = (gamma(v0_perp) * arguments[1] * v0_perp) / (abs(arguments[0]) * np.linalg.norm(B0))
 
 r0 = gc0_in + (gyroradius0 * phase_dir)
 #r0 = np.array([6., 0., 0.]) * a
@@ -306,7 +307,7 @@ if check == 'Single':
     perp_vec0 = np.cross(v0_perp_vec, B0)
     perp_dir0 = perp_vec0 / np.linalg.norm(perp_vec0)
     
-    gc0 = r0 + ((arguments[0] / q) * gyroradius0 * perp_dir0)
+    gc0 = r0 - ((arguments[0] / q) * gyroradius0 * perp_dir0)
 #-------------------------#
 
 if check == 'Single':
@@ -435,8 +436,8 @@ gc_z = np.array(gc_z)
 # plt.xlabel('Time (s)', fontsize=16)
 # plt.ylabel('Adiabatic invariant ($Am^2$)', fontsize=16)
 
-plt.plot(xt[:100] / a, yt[:100] / a, color = 'blue')
-plt.plot(gc_x[:100] / a, gc_y[:100] / a, 'x', color = 'red')
+plt.plot(xt[:200] / a, yt[:200] / a, color = 'blue')
+plt.plot(gc_x[:200] / a, gc_y[:200] / a, 'x', color = 'red')
 plt.xlabel('x ($r_U$)', fontsize=16)
 plt.ylabel('y ($r_U$)', fontsize=16)
 plt.title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
@@ -454,7 +455,7 @@ ax.set_title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
 plt.show()
 
 #%%
-
+print(100 * (gc0_in - gc0) / gc0_in)
 #%%
 
 # plt.plot(np.array(E_value) / 1e6, np.array(E_per) * 100, 'x', ms = 10, mew = 2)
@@ -507,3 +508,11 @@ plotRChangeOnEnergy(data, a, L_shell, 30, 200)
 plt.show()
 
 #%%
+print('v0 =', v[0])
+print('v0 magnitude =', np.linalg.norm(v[0]), 'm/s')
+print('r0 =', r[0] / a, 'in r_u' )
+print('gyroradius =', gyroradius0, 'm')
+print('phase direction =', phase_dir)
+print('B0 =', np.linalg.norm(B0), 'T')
+print('v0 perp =', v0_perp,'m/s')
+print('pitch angle =', alpha_eq, 'rad')
