@@ -30,7 +30,8 @@ class Particle:
 
 
         Ek = kineticEnergy*sp.constants.e #Ek is now in joules
-        speed = (np.sqrt(1-((self.m0*sp.constants.c**2)/(self.m0*sp.constants.c**2 + Ek))**2))
+        speedSI = (np.sqrt(1-((self.m0*sp.constants.c**2)/(self.m0*sp.constants.c**2 + Ek))**2))*sp.constants.c
+
         
 
         if targetSetup:
@@ -67,7 +68,7 @@ class Particle:
             alpha = np.arcsin(np.sqrt((np.cos(latitude)**6)/np.sqrt(1 + 3*(np.sin(latitude))**2)))
 
             #compute larmor radius
-            larmorRadius = self.getLarmorRadius(initialB, speed, alpha)
+            larmorRadius = self.getLarmorRadius(initialB, speedSI, alpha)
 
 
             if self.q > 0:
@@ -79,6 +80,7 @@ class Particle:
             
             velocityDirection = np.array([np.sin(alpha)*np.cos(phi + gyroPhase + directionModifier), np.sin(alpha)*np.sin(phi + gyroPhase + directionModifier), np.cos(alpha)])
 
+            
             position = guidingCentrePosition + larmorRadius*np.array([np.cos(phi + gyroPhase), np.sin(phi + gyroPhase), 0])        
 
             
@@ -89,7 +91,7 @@ class Particle:
         
 
         #velocity is stored as v/c ONLY
-        self.v = speed*velocityDirection
+        self.v = (np.sqrt(1-((self.m0*sp.constants.c**2)/(self.m0*sp.constants.c**2 + Ek))**2))*velocityDirection
 
         self.name = particleName
         self.initialEnergy = kineticEnergy #Stored in eV
@@ -115,6 +117,7 @@ class Particle:
         #v scalar in m/s
         #alpha is pitch angle, in radians
 
+        print(B, v, alpha)
         
         v = abs(v)
        

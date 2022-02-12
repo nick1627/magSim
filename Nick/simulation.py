@@ -583,7 +583,14 @@ class LocationCheck(SimulationManager):
         
         particleList = []
         position=np.array([L*field.a, 90, phi])
-        initialB = field.getField(position)
+
+        #convert position to cartesian
+        rTemp = position[0]
+        thetaTemp = (np.pi/180)*position[1]
+        phiTemp = (np.pi/180)*position[2]
+
+        positionCartesian = np.array([rTemp*np.sin(thetaTemp)*np.cos(phiTemp), rTemp*np.sin(thetaTemp)*np.sin(phiTemp), rTemp*np.cos(thetaTemp)])
+        initialB = field.getField(positionCartesian)
         initialB = np.linalg.norm(initialB)
 
 
