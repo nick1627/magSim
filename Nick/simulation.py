@@ -462,7 +462,7 @@ class SimulationManager:
     """
     A simulation manager mangages multiple simulations
     """
-    def __init__(self, fieldList, particleList, stepsPerPeriodList=50, N = 10, mainFilePath = "Output/", fileKeyWord = "", endStepList = 0):
+    def __init__(self, fieldList, particleList, stepsPerPeriodList=50, N = 10, mainFilePath = "Output/", fileKeyWord = "", endStepList = 0, gyroPhaseList=-1):
         """
         fieldList:          A list of fields
         particleList:       A list of particles
@@ -484,6 +484,8 @@ class SimulationManager:
             stepsPerPeriodList = [stepsPerPeriodList]*self.N
         if not isinstance(endStepList, list):
             endStepList = [endStepList]*self.N
+        if not isinstance(gyroPhaseList, list):
+            gyroPhaseList = [gyroPhaseList]*self.N
    
 
         if len(fieldList) != self.N:
@@ -494,6 +496,8 @@ class SimulationManager:
             raise(Exception("Length mismatch!"))
         if len(endStepList) != self.N:
             raise(Exception("Length mismatch!"))
+        if len(gyroPhaseList) != self.N:
+            raise(Exception("Length mismatch!"))
 
 
 
@@ -501,11 +505,12 @@ class SimulationManager:
         self.particleList = particleList
         self.stepsPerPeriodList = stepsPerPeriodList
         self.endStepList = endStepList
+        self.gyroPhaseList = gyroPhaseList
 
         #Now have lists of info set up for the simulations
         self.simulations = []
         for i in range(0, self.N):
-            self.simulations.append(Simulation(fieldList[i], particleList[i], stepsPerPeriodList[i]))
+            self.simulations.append(Simulation(fieldList[i], particleList[i], stepsPerPeriodList[i], initialPhase=gyroPhaseList[i]))
 
         #Deal with the filenames and paths
         self.filePaths = []
@@ -527,32 +532,6 @@ class SimulationManager:
 
         return
 
-    # def checkVariable(self, v, isList, vType, listLength=0): FUNCTION DOES NOT WORK
-    #     #v is the variable to test
-    #     #isList indicates whether the variable should be a list
-    #     #vType indicates what type the variable should be a list of
-    #     #listLength indicates how long the list should be
-
-    #     if isList:
-    #         if not isinstance(v, list):
-    #             v = [v]*listLength
-    #         if len(v) != listLength:
-    #             raise(Exception("Length mismatch!"))
-    #         if not isinstance(v[0], vType):
-    #             if isinstance(v[0], int):
-    #                 if isinstance(vType, float):
-    #                     for item in v:
-    #                         item = float(item)
-    #             if not isinstance(v[0], vType):
-    #                 print(type(v[0]))
-    #                 print(type(vType))
-    #                 raise(Exception("Incorrect type in list!"))
-    #     else:
-    #         if isinstance(v, list):
-    #             raise(Exception("This is a list but shouldn't be!"))
-    #         if not isinstance(v, vType):
-    #             raise(Exception("Incorrect type!"))
-    #     return v
         
 
     def runAllSims(self):
@@ -563,7 +542,7 @@ class SimulationManager:
             self.simulations[i].saveData(filePath = self.filePaths[i])
 
         print("All simulations complete.")
-        return 
+        return
 
     def plotAllEnergy(self):
         print("Plotting particle energies...")
@@ -588,32 +567,87 @@ class LocationCheck(SimulationManager):
 
         
         particleList = []
-        position=np.array([L*field.a, 90, phi])
 
-        #convert position to cartesian
-        rTemp = position[0]
-        thetaTemp = (np.pi/180)*position[1]
-        phiTemp = (np.pi/180)*position[2]
 
-        positionCartesian = np.array([rTemp*np.sin(thetaTemp)*np.cos(phiTemp), rTemp*np.sin(thetaTemp)*np.sin(phiTemp), rTemp*np.cos(thetaTemp)])
-        initialB = field.getField(positionCartesian)
-        initialB = np.linalg.norm(initialB)
+        centre_r = L*field.a
+        centre_theta = (np.pi/180)*90
+        centre_phi = (np.pi/180)*copy.deepcopy(phi)
+        centre_x = centre_r*np.sin(centre_theta)*np.cos(centre_phi)
+        centre_y = centre_r*np.sin(centre_theta)*np.sin(centre_phi)
+        centre_z = centre_r*np.cos(centre_theta)
+        guidingCentrePosition = np.array([centre_x, centre_y, centre_z])
+
+        initialB = np.linalg.norm(field.getField(guidingCentrePosition))
+
+        latitude = (np.pi/180)*(90 - theta)
+        gyroPhaseDeg = copy(gyroPhase)
+        gyroPhase = (np.pi/180)*gyroPhase
+
+        # #calculate the equatorial pitch angle alpha
+        alpha = np.arcsin(np.sqrt((np.cos(latitude)**6)/np.sqrt(1 + 3*(np.sin(latitude))**2)))
 
 
         if particleType == "proton":
             #need to create the protons
             for i in range(0, N):
-                particleList.append(Proton(position, np.array([theta, gyroPhase, initialB]), energyList[i], True))                    
+                #Need to do different calcs for each, since they have different energies
+                m0 = sp.constants.m_p
+                q = sp.constants.e
+
+                Ek = energyList[i]*sp.constants.e #Ek is now in joules
+                speedSI = (np.sqrt(1-((self.m0*sp.constants.c**2)/(self.m0*sp.constants.c**2 + Ek))**2))*sp.constants.c
+
+
+                # #compute larmor radius
+                larmorRadius = self.getLarmorRadius(initialB, speedSI, alpha, m0, q)
+
+                directionModifier = -np.pi/2 #because of the sign of the particle charge
+                
+                velocityDirection = np.array([np.sin(alpha)*np.cos(phi + gyroPhase + directionModifier), np.sin(alpha)*np.sin(phi + gyroPhase + directionModifier), np.cos(alpha)])
+                position = guidingCentrePosition + larmorRadius*np.array([np.cos(phi + gyroPhase), np.sin(phi + gyroPhase), 0])   
+
+                particleList.append(Proton(position, velocityDirection, energyList[i])) 
+
         elif particleType == "electron":
             #Need to create list of electrons
             for i in range(0, N):
-                particleList.append(Electron(position, np.array([theta, gyroPhase, initialB]), energyList[i], True))
+
+                #Need to do different calcs for each, since they have different energies
+                m0 = sp.constants.m_e
+                q = -sp.constants.e
+
+                Ek = energyList[i]*sp.constants.e #Ek is now in joules
+                speedSI = (np.sqrt(1-((self.m0*sp.constants.c**2)/(self.m0*sp.constants.c**2 + Ek))**2))*sp.constants.c
+
+
+                # #compute larmor radius
+                larmorRadius = self.getLarmorRadius(initialB, speedSI, alpha, m0, q)
+
+                directionModifier = np.pi/2 #because of the sign of the particle charge
+                
+                velocityDirection = np.array([np.sin(alpha)*np.cos(phi + gyroPhase + directionModifier), np.sin(alpha)*np.sin(phi + gyroPhase + directionModifier), np.cos(alpha)])
+                position = guidingCentrePosition + larmorRadius*np.array([np.cos(phi + gyroPhase), np.sin(phi + gyroPhase), 0])   
+
+                particleList.append(Electron(position, velocityDirection, energyList[i]))
         else:
             raise(Exception("Invalid particle type"))
 
         
 
-        super(LocationCheck, self).__init__(field, particleList, stepsPerPeriodList=50, N=N, fileKeyWord="locationCheck" + fileNameAddition, endStepList=endStepList)
+        super(LocationCheck, self).__init__(field, particleList, stepsPerPeriodList=50, N=N, fileKeyWord="locationCheck" + fileNameAddition, endStepList=endStepList, initialPhaseList=gyroPhaseDeg)
 
 
+    def getLarmorRadius(self, B, v, alpha, m0, q):
+        #B in teslas, vector
+        #v scalar in m/s
+        #alpha is pitch angle, in radians
 
+        print(B, v, alpha)
+        
+        v = abs(v)
+       
+        v_perp = v*np.sin(alpha)
+        gamma = 1/np.sqrt(1 - (v/sp.constants.c)**2)
+        larmorRadius = (gamma*m0*v_perp)/(abs(q)*B)
+        larmorRadius = abs(larmorRadius)
+        return larmorRadius
