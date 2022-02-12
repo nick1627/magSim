@@ -437,7 +437,7 @@ class Simulation:
         d = np.sqrt(v[0]**2 + v[1]**2)
         pitchAngle = np.arctan((d/v[2]))
 
-        tools.saveRegionData(filePath, "N", self.particle.name, not(self.field.dipoleOnly), initialKE, pitchAngle, initialRadius, finalRadius, initialGyroradius, finalGyroradius)
+        tools.saveRegionData(filePath, "N", self.particle.name, not(self.field.dipoleOnly), initialKE, pitchAngle, initialPhase, initialRadius, finalRadius, initialGyroradius, finalGyroradius)
 
         return
 
