@@ -2,6 +2,7 @@
 This file stores the code that analyses the simulation
 """
 
+from doctest import IGNORE_EXCEPTION_DETAIL
 import sys, os
 sys.path.insert(0, os.getcwd())
 
@@ -567,7 +568,7 @@ class SimulationManager:
         return
 
 class LocationCheck(SimulationManager):
-    def __init__(self, L, theta, phi, N, energyList, particleType, field, endStepList=500000, fileNameAddition=""):
+    def __init__(self, L, theta, phi, N, energyList, particleType, gyroPhase, field, endStepList=500000, fileNameAddition=""):
         """
         L:              The initial L shell of the particles
         theta:          Theta of target location (degrees)
@@ -575,20 +576,25 @@ class LocationCheck(SimulationManager):
         N:              Number of particles sent in/simulation runs
         energyList:     List of energies to use for each run
         particleType:   The type of particle ("proton" or "electron")
+        gyroPhase:      The phase of the particle in radians
         field:          The field object.  The field must be an SHField.
         """
 
         
         particleList = []
         position=np.array([L*field.a, 90, phi])
+        initialB = field.getField(position)
+        initialB = np.linalg.norm(initialB)
+
+
         if particleType == "proton":
             #need to create the protons
             for i in range(0, N):
-                particleList.append(Proton(position, theta, energyList[i], True, True))                    
+                particleList.append(Proton(position, np.array([theta, gyroPhase, initialB]), energyList[i], True))                    
         elif particleType == "electron":
             #Need to create list of electrons
             for i in range(0, N):
-                particleList.append(Electron(position, theta, energyList[i], True, True))
+                particleList.append(Electron(position, np.array([theta, gyroPhase, initialB]), energyList[i], True))
         else:
             raise(Exception("Invalid particle type"))
 

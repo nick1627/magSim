@@ -13,16 +13,34 @@ class Particle:
     the mass, charge, position, velocity direction vector and kinetic energy of the 
     particle.
     """
-    def __init__(self, mass, charge, position, velocityDirection=np.array([0, 0, 1]), kineticEnergy=1000000, particleName = "None", polarPosition=False, targetDirection=False):
+    def __init__(self, mass, charge, position, velocityDirection=np.array([0, 0, 1]), kineticEnergy=1000000, particleName = "None", targetSetup = False):
+        """
+        mass:               Mass of particle in kg
+        charge:             Charge of particle in C
+        position:           Position of particle as a vector in m
+        velocityDirection:  The direction that the particle should travel in initially, expressed as a cartesian vector (usually)
+        kineticEnergy:      The initial KE of the particle in eV
+        particleName:       e.g. "proton" or "neutron"
+        targetSetup:        Boolean.  True means you're trying to aim for a particular position in the magnetosphere, in which case the
+                            position and velocityDirection variables will mean something else.
+        """
         #kinetic energy in eV
         self.m0 = mass          #Rest mass of particle in kg
         self.q = charge         #charge of particle in coulombs
+
+
+        Ek = kineticEnergy*sp.constants.e #Ek is now in joules
+        speed = (np.sqrt(1-((self.m0*sp.constants.c**2)/(self.m0*sp.constants.c**2 + Ek))**2))
         
-        if polarPosition:
-            #The position was entered in polar form (r, theta, phi)
-            #theta will probably be 90
-            #Assume theta phi in degrees
-            #r must be in metres!
+
+        if targetSetup:
+            #In this case, the input variables mean different things.
+            #position is the initial position of the guiding centre of the particle in the form r, theta, phi.
+            #theta, phi in degrees
+
+            if not position[1] == 90:
+                raise(Exception("Cannot do target setup in this case.  Particle must start in the plane"))
+
             r = copy.deepcopy(position[0])
             theta = copy.deepcopy(position[1])
             phi = copy.deepcopy(position[2])
@@ -31,28 +49,47 @@ class Particle:
             x = r*np.sin(theta)*np.cos(phi)
             y = r*np.sin(theta)*np.sin(phi)
             z = r*np.cos(theta)
-            position = np.array([x, y, z])
+            guidingCentrePosition = np.array([x, y, z])
 
-        if targetDirection:
-            #In this case velocityDirection will be a target theta to aim for
-            # This chooses the pitch angle
-            # pitch angle chooses the initial direction
-            theta = copy.deepcopy(velocityDirection)
-            latitude = 90 - theta
+            #in this case, velocityDirection will be an array of [larmorRadius, targetTheta, gyroPhase]
+            #both in degrees
+            targetTheta = velocityDirection[0]
+            latitude = 90 - targetTheta
             latitude = (np.pi/180)*latitude
+
+            gyroPhase = velocityDirection[1]
+            gyroPhase = (np.pi/180)*gyroPhase
+
+            initialB = velocityDirection[2]
+
+            #now both are in radians
             #calculate the equatorial pitch angle alpha
             alpha = np.arcsin(np.sqrt((np.cos(latitude)**6)/np.sqrt(1 + 3*(np.sin(latitude))**2)))
-            velocityDirection = np.array([np.tan(alpha), 0, 1])
+
+            #compute larmor radius
+            larmorRadius = self.getLarmorRadius(initialB, speed, alpha)
+
+
+            if self.q > 0:
+                directionModifier = -np.pi/2
+            elif self.q < 0:
+                directionModifier = np.pi/2
+            else:
+                raise(Exception("Neutral particle unsuitable for this analysis."))
+            
+            velocityDirection = np.array([np.sin(alpha)*np.cos(phi + gyroPhase + directionModifier), np.sin(alpha)*np.sin(phi + gyroPhase + directionModifier), np.cos(alpha)])
+
+            position = guidingCentrePosition + larmorRadius*np.array([np.cos(phi + gyroPhase), np.sin(phi + gyroPhase), 0])        
+
             
         self.r = position       #position in metres
 
-        # self.naturalUnits = False
-
+        #normalise velocity direction just in case
         velocityDirection = velocityDirection/np.linalg.norm(velocityDirection)
-        Ek = kineticEnergy*sp.constants.e #Ek is now in joules
+        
 
         #velocity is stored as v/c ONLY
-        self.v = (np.sqrt(1-((self.m0*sp.constants.c**2)/(self.m0*sp.constants.c**2 + Ek))**2))*velocityDirection
+        self.v = speed*velocityDirection
 
         self.name = particleName
         self.initialEnergy = kineticEnergy #Stored in eV
@@ -72,6 +109,20 @@ class Particle:
     #     self.larmorPeriod = gamma*self.m0*2*np.pi/(abs(self.q)*Bmag)
 
     #     return
+
+    def getLarmorRadius(self, B, v, alpha):
+        #B in teslas, vector
+        #v scalar in m/s
+        #alpha is pitch angle, in radians
+
+        
+        v = abs(v)
+       
+        v_perp = v*np.sin(alpha)
+        gamma = 1/np.sqrt(1 - (v/sp.constants.c)**2)
+        larmorRadius = (gamma*self.m0*v_perp)/(abs(self.q)*B)
+        larmorRadius = abs(larmorRadius)
+        return larmorRadius
 
     # def convertToNatural(self):
     #     #Assume everything in SI, and need to convert to natural units
@@ -162,7 +213,7 @@ class Electron(Particle):
     A subclass of particle, with the mass and charge already set to 
     that of an electron.
     """
-    def __init__(self, position, velocityDirection, kineticEnergy, polarPosition=False, targetDirection=False):
+    def __init__(self, position, velocityDirection, kineticEnergy, targetSetup=False):
         # #kinetic energy in keV
         # self.m0 = sp.constants.m_e
         # self.q = -sp.constants.e
@@ -177,7 +228,7 @@ class Electron(Particle):
         # self.name = "Electron"
         # self.initialEnergy = kineticEnergy #in eV
 
-        super(Electron, self).__init__(sp.constants.m_e, -sp.constants.e, position, velocityDirection, kineticEnergy, particleName="Electron", polarPosition=polarPosition, targetDirection=targetDirection)
+        super(Electron, self).__init__(sp.constants.m_e, -sp.constants.e, position, velocityDirection, kineticEnergy, particleName="Electron", targetSetup=targetSetup)
 
 
 
@@ -189,7 +240,7 @@ class Proton(Particle):
     A subclass of particle, with the mass and charge already set to
     that of a proton.
     """
-    def __init__(self, position, velocityDirection, kineticEnergy, polarPosition=False, targetDirection=False):
+    def __init__(self, position, velocityDirection, kineticEnergy, targetSetup = False):
         # self.m0 = sp.constants.m_p
         # self.q = sp.constants.e
 
@@ -203,7 +254,7 @@ class Proton(Particle):
         # self.name = "Proton"
         # self.initialEnergy = kineticEnergy #in eV
 
-        super(Proton, self).__init__(sp.constants.m_p, sp.constants.e, position, velocityDirection, kineticEnergy, particleName="Proton", polarPosition=polarPosition, targetDirection=targetDirection)
+        super(Proton, self).__init__(sp.constants.m_p, sp.constants.e, position, velocityDirection, kineticEnergy, particleName="Proton", targetSetup=targetSetup)
 
 
         return
