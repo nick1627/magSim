@@ -462,7 +462,7 @@ class SimulationManager:
     """
     A simulation manager mangages multiple simulations
     """
-    def __init__(self, fieldList, particleList, stepsPerPeriodList=50, N = 10, mainFilePath = "Output/", fileKeyWord = "", endStepList = 0, gyroPhaseList=-1):
+    def __init__(self, fieldList, particleList, stepsPerPeriodList=50, N = 10, mainFilePath = "Output/", fileKeyWord = "", endStepList = 0, initialPhaseList=-1):
         """
         fieldList:          A list of fields
         particleList:       A list of particles
@@ -484,8 +484,8 @@ class SimulationManager:
             stepsPerPeriodList = [stepsPerPeriodList]*self.N
         if not isinstance(endStepList, list):
             endStepList = [endStepList]*self.N
-        if not isinstance(gyroPhaseList, list):
-            gyroPhaseList = [gyroPhaseList]*self.N
+        if not isinstance(initialPhaseList, list):
+            initialPhaseList = [initialPhaseList]*self.N
    
 
         if len(fieldList) != self.N:
@@ -496,7 +496,7 @@ class SimulationManager:
             raise(Exception("Length mismatch!"))
         if len(endStepList) != self.N:
             raise(Exception("Length mismatch!"))
-        if len(gyroPhaseList) != self.N:
+        if len(initialPhaseList) != self.N:
             raise(Exception("Length mismatch!"))
 
 
@@ -505,12 +505,12 @@ class SimulationManager:
         self.particleList = particleList
         self.stepsPerPeriodList = stepsPerPeriodList
         self.endStepList = endStepList
-        self.gyroPhaseList = gyroPhaseList
+        self.initialPhaseList = initialPhaseList
 
         #Now have lists of info set up for the simulations
         self.simulations = []
         for i in range(0, self.N):
-            self.simulations.append(Simulation(fieldList[i], particleList[i], stepsPerPeriodList[i], initialPhase=gyroPhaseList[i]))
+            self.simulations.append(Simulation(fieldList[i], particleList[i], stepsPerPeriodList[i], initialPhase=initialPhaseList[i]))
 
         #Deal with the filenames and paths
         self.filePaths = []
@@ -571,16 +571,21 @@ class LocationCheck(SimulationManager):
 
         centre_r = L*field.a
         centre_theta = (np.pi/180)*90
-        centre_phi = (np.pi/180)*copy.deepcopy(phi)
+        centre_phi = (np.pi/180)*copy.copy(phi)
         centre_x = centre_r*np.sin(centre_theta)*np.cos(centre_phi)
         centre_y = centre_r*np.sin(centre_theta)*np.sin(centre_phi)
         centre_z = centre_r*np.cos(centre_theta)
         guidingCentrePosition = np.array([centre_x, centre_y, centre_z])
 
+        phi = (np.pi/180)*phi
+
         initialB = np.linalg.norm(field.getField(guidingCentrePosition))
 
         latitude = (np.pi/180)*(90 - theta)
         gyroPhase = (np.pi/180)*gyroPhase
+        print(gyroPhase)
+        gyroPhase = gyroPhase % (2*np.pi)
+        print(gyroPhase)
 
         # #calculate the equatorial pitch angle alpha
         alpha = np.arcsin(np.sqrt((np.cos(latitude)**6)/np.sqrt(1 + 3*(np.sin(latitude))**2)))
@@ -594,7 +599,7 @@ class LocationCheck(SimulationManager):
                 q = sp.constants.e
 
                 Ek = energyList[i]*sp.constants.e #Ek is now in joules
-                speedSI = (np.sqrt(1-((self.m0*sp.constants.c**2)/(self.m0*sp.constants.c**2 + Ek))**2))*sp.constants.c
+                speedSI = (np.sqrt(1-((m0*sp.constants.c**2)/(m0*sp.constants.c**2 + Ek))**2))*sp.constants.c
 
 
                 # #compute larmor radius
@@ -616,7 +621,7 @@ class LocationCheck(SimulationManager):
                 q = -sp.constants.e
 
                 Ek = energyList[i]*sp.constants.e #Ek is now in joules
-                speedSI = (np.sqrt(1-((self.m0*sp.constants.c**2)/(self.m0*sp.constants.c**2 + Ek))**2))*sp.constants.c
+                speedSI = (np.sqrt(1-((m0*sp.constants.c**2)/(m0*sp.constants.c**2 + Ek))**2))*sp.constants.c
 
 
                 # #compute larmor radius
