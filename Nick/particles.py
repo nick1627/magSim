@@ -7,6 +7,8 @@ import numpy as np
 import copy
 import math
 import scipy as sp
+
+#TODO:  make initial energy a property of the simulation,not the particle
 class Particle:
     """
     This class is a general class for a particle.  To create a new particle, input
@@ -179,37 +181,6 @@ class Particle:
         return np.cross(vdash, Bdash)*np.sqrt(1 - np.linalg.norm(vdash)**2)
 
 
-    # def updatePositionSI(self, field, timeStep):
-    #     #First need to get the next velocity
-    #     v = copy.copy(self.v)
-    #     B = field.getField(self.r)
-    #     #Find k values
-    #     root21 = np.sqrt(21)
-    #     k = np.zeros((8,3))
-    #     k[1, :] = self.accelerationSI(v, B) #k1
-    #     k[2, :] = self.accelerationSI(v + timeStep*k[1, :], B) #k2
-    #     k[3, :] = self.accelerationSI(v + timeStep*(0.125*(3*k[1, :] + k[2, :])), B) #k3
-    #     k[4, :] = self.accelerationSI(v + timeStep*((8*k[1, :] + 2*k[2, :] + 8*k[3, :])/27), B) #k4
-    #     k[5, :] = self.accelerationSI(v + timeStep*(((9*root21 - 21)*k[1, :] - 8*(7 - root21)*k[2, :] + 48*(7 - root21)*k[3, :] - 3*(21 - root21)*k[4, :])/392), B) #k5
-    #     k[6, :] = self.accelerationSI(v + timeStep*((-5*(231 + 51*root21)*k[1, :] - 40*(7 + root21)*k[2, :] - 320*root21*k[3, :] + 3*(21 + 121*root21)*k[4, :] + 392*(6+root21)*k[5, :])/1960), B) #k6
-    #     k[7, :] = self.accelerationSI(v + timeStep*((15*(22+7*root21)*k[1, :] + 120*k[2, :] + 40*(7*root21 - 5)*k[3, :] - 63*(3*root21 - 2)*k[4, :] - 14*(49 + 9*root21)*k[5, :] + 70*(7-root21)*k[6, :])/180), B)
-    #     #dont need k7
-        
-    #     self.v = v + 0.2*timeStep*((16/27)*k[1, :] + (6656/2565)*k[3, :] + (28561/11286)*k[4, :] - 0.9*k[5, :] + (2/11)*k[6, :])
-    #     # self.v = v + timeStep*self.accelerationSI()
-       
-    #     #Then need to get the next position
-    #     self.r = self.r + self.v*timeStep
-
-    #     return
-
- 
-    
-    # def accelerationSI(self, v, B):
-    #     return (self.q/self.m0)*np.sqrt(1 - np.linalg.norm(v/sp.constants.c)**2)*np.cross(v, B)
-
-
-    
 
 class Electron(Particle):
     """
@@ -217,19 +188,6 @@ class Electron(Particle):
     that of an electron.
     """
     def __init__(self, position, velocityDirection, kineticEnergy, targetSetup=False):
-        # #kinetic energy in keV
-        # self.m0 = sp.constants.m_e
-        # self.q = -sp.constants.e
-
-        # self.r = position
-    
-
-        # velocityDirection = velocityDirection/np.linalg.norm(velocityDirection)
-        # Ek = kineticEnergy*sp.constants.e #Ek is now in joules
-        # self.v = (np.sqrt(1-((self.m0*sp.constants.c**2)/(self.m0*sp.constants.c**2 + Ek))**2))*velocityDirection
-
-        # self.name = "Electron"
-        # self.initialEnergy = kineticEnergy #in eV
 
         super(Electron, self).__init__(sp.constants.m_e, -sp.constants.e, position, velocityDirection, kineticEnergy, particleName="Electron", targetSetup=targetSetup)
 
@@ -244,18 +202,6 @@ class Proton(Particle):
     that of a proton.
     """
     def __init__(self, position, velocityDirection, kineticEnergy, targetSetup = False):
-        # self.m0 = sp.constants.m_p
-        # self.q = sp.constants.e
-
-        # self.r = position #in metres
-    
-
-        # velocityDirection = velocityDirection/np.linalg.norm(velocityDirection)
-        # Ek = kineticEnergy*sp.constants.e #Ek is now in joules
-        # self.v = (np.sqrt(1-((self.m0*sp.constants.c**2)/(self.m0*sp.constants.c**2 + Ek))**2))*velocityDirection
-
-        # self.name = "Proton"
-        # self.initialEnergy = kineticEnergy #in eV
 
         super(Proton, self).__init__(sp.constants.m_p, sp.constants.e, position, velocityDirection, kineticEnergy, particleName="Proton", targetSetup=targetSetup)
 

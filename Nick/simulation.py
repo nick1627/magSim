@@ -14,6 +14,8 @@ import time
 import scipy as sp
 import tools
 
+#TODO:  make initial energy a property of the simulation,not the particle
+
 class Simulation:
     """
     This class manages everything to do with the simulation.  Simulations are
@@ -27,7 +29,7 @@ class Simulation:
     either in steps or in multiples of the characteristic timescale (the 
     gyro-period).
     """
-    def __init__(self, field=0, particle=0, stepsPerPeriod=50, simDataPath = ""):
+    def __init__(self, field=0, particle=0, stepsPerPeriod=50, simDataPath = "", initialPhase=-1):
         #timestep always input as fraction of initial period of gyroradius
 
         #If previous simulation data not provided, we start a new simulation
@@ -36,6 +38,7 @@ class Simulation:
             self.stepsPerPeriod: int = stepsPerPeriod
             self.field = field
             self.particle = particle
+            self.initialPhase = initialPhase #stored but never used.  Negative values imply phase was never given
 
             #Diagnostic info
             #Position, velocity and time may be entered into the array in natural units, but will
@@ -60,6 +63,7 @@ class Simulation:
 
 
             self.timeStep = simulationArray[0]
+            self.initialPhase = simulationArray[1]
             if np.shape(fieldArray)[0] == 4:
                 #then we should have spherical harmonic field
                 self.field = SHField(fieldArray[0], fieldArray[1], fieldArray[2], 0, 0, fieldArray[3])
@@ -213,7 +217,7 @@ class Simulation:
 
         particleArray = np.array([self.particle.m0, self.particle.q, initialPosition, initialVelocityDirection, initialKE], dtype=object)
         #Now save simulation output
-        simulationArray = np.array([self.stepsPerPeriod])
+        simulationArray = np.array([self.stepsPerPeriod, self.initialPhase])
 
         # This saves the data 
         np.savez(filePath, fieldData = fieldArray, particleData = particleArray, simulationData = simulationArray, positions = self.position, velocities = self.velocity, times = self.time)
@@ -570,6 +574,8 @@ class SimulationManager:
 class LocationCheck(SimulationManager):
     def __init__(self, L, theta, phi, N, energyList, particleType, gyroPhase, field, endStepList=500000, fileNameAddition=""):
         """
+        This performs a set of simulations where the particle is aimed at a particular location
+
         L:              The initial L shell of the particles
         theta:          Theta of target location (degrees)
         phi:            Phi of target location (degrees)
