@@ -245,7 +245,7 @@ alpha_eq = np.arcsin(np.sqrt((np.cos(lambda_lat) ** 6) / \
 perp_mag = np.tan(alpha_eq)
 
 zero_phase_dir = np.array([np.cos(phi_in), np.sin(phi_in), 0])
-phase = 0 * np.pi / 180
+phase = 90 * np.pi / 180
 Rphase = np.array([[np.cos(phase), - np.sin(phase), 0], 
                    [np.sin(phase), np.cos(phase),   0], 
                    [0,             0,               1]])
