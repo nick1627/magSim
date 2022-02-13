@@ -207,8 +207,8 @@ plt.show()
 #anim2.save('Harry/colormap_test.gif')
 
 #%%
-z1 = np.linspace(-5 * a, 5 * a, 10)
-x1 = np.linspace(0, 5 * a, 10)
+z1 = np.linspace(-5 * a, 5 * a, 100)
+x1 = np.linspace(0, 5 * a, 100)
 
 phi = 0#np.pi/0.5
 
@@ -232,26 +232,37 @@ u = np.delete(u, slice(0, 100, 2), 0)
 u = np.delete(u, slice(0, 100, 2), 1)
 u = np.delete(u, slice(0, 50, 2), 0)
 u = np.delete(u, slice(0, 50, 2), 1)
+u = np.delete(u, slice(0, 25, 2), 0)
+u = np.delete(u, slice(0, 25, 2), 1)
 
 w = np.delete(w, slice(0, 100, 2), 0)
 w = np.delete(w, slice(0, 100, 2), 1)
 w = np.delete(w, slice(0, 50, 2), 0)
 w = np.delete(w, slice(0, 50, 2), 1)
+w = np.delete(w, slice(0, 25, 2), 0)
+w = np.delete(w, slice(0, 25, 2), 1)
 
 x_quad = np.delete(x_quad, slice(0, 100, 2), 0)
 x_quad = np.delete(x_quad, slice(0, 100, 2), 1)
 x_quad = np.delete(x_quad, slice(0, 50, 2), 0)
 x_quad = np.delete(x_quad, slice(0, 50, 2), 1)
+x_quad = np.delete(x_quad, slice(0, 25, 2), 0)
+x_quad = np.delete(x_quad, slice(0, 25, 2), 1)
 
 z_quad = np.delete(z_quad, slice(0, 100, 2), 0)
 z_quad = np.delete(z_quad, slice(0, 100, 2), 1)
 z_quad = np.delete(z_quad, slice(0, 50, 2), 0)
 z_quad = np.delete(z_quad, slice(0, 50, 2), 1)
+z_quad = np.delete(z_quad, slice(0, 25, 2), 0)
+z_quad = np.delete(z_quad, slice(0, 25, 2), 1)
 
 im = ax.imshow(B_ratio, extent=[0,5,-5,5],  norm=colors.LogNorm(), cmap = 'plasma')
-qr = ax.quiver(x_quad, z_quad, u, w, pivot = 'mid', scale = 30)
-#fig.colorbar(im)
-#plt.show()
+qr = ax.quiver(x_quad, z_quad, u, w, pivot = 'mid', scale = 20, headwidth = 5)
+plt.xlabel('$x/r_U$')
+plt.ylabel('$z/r_U$')
+plt.title('Quadrupole vs Dipole ratio')
+fig.colorbar(im)
+plt.show()
 
 num_range = np.linspace(0, 2*np.pi, 10)
 
@@ -289,11 +300,14 @@ def animate_im(num, x1, z1, a, args, R):
     plt.ylabel('z/a')
     return im, qr
 
-anim3 = animation.FuncAnimation(fig, animate_im, frames = num_range, \
-                                fargs=(x1, z1, a, args, R),interval=500, blit=False)
+# anim3 = animation.FuncAnimation(fig, animate_im, frames = num_range, \
+#                                 fargs=(x1, z1, a, args, R),interval=500, blit=False)
 
-fig.colorbar(im)
-plt.show()
+# fig.colorbar(im)
+# plt.title('Longitude = {:.0f}'.format(num * 180 / np.pi))
+# plt.xlabel('x/a')
+# plt.ylabel('z/a')
+# plt.show()
 
 #anim3.save('Harry/ratio_animation_with_vectors.gif')
 

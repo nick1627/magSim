@@ -232,7 +232,7 @@ def RK(f, t0, E, direction, r0, n, args, mode, test = None):
 #%%
 #INITIAL CONDITIONS
 arguments = np.array([q, m_p], dtype = object)
-mode = 2
+mode = 1
 
 L_shell = 7
 phi_in = 200 * np.pi / 180
@@ -245,7 +245,7 @@ alpha_eq = np.arcsin(np.sqrt((np.cos(lambda_lat) ** 6) / \
 perp_mag = np.tan(alpha_eq)
 
 zero_phase_dir = np.array([np.cos(phi_in), np.sin(phi_in), 0])
-phase = 90 * np.pi / 180
+phase = 180 * np.pi / 180
 Rphase = np.array([[np.cos(phase), - np.sin(phase), 0], 
                    [np.sin(phase), np.cos(phase),   0], 
                    [0,             0,               1]])
@@ -372,7 +372,7 @@ plt.ylabel('Adiabatic invariant ($Am^2$)', fontsize=16)
 plt.title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
 plt.show()
 
-#%%
+    #%%
 #SAVE DATA
 #np.savez('Harry/Simulation_data/e1000keV_1_1_1-6_0_0', t = t, v = v, r = r, L = L, mew = mew)
 saveRegionData('Output/RegionTests/regionTest_Uranus_7-30-200.npz', 0, '1', mode - 1, E / q, alpha_eq, phase, np.linalg.norm(gc0), np.linalg.norm(gc), gyroradius0, gyroradius)
