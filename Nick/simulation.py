@@ -565,7 +565,8 @@ class LocationCheck(SimulationManager):
         field:          The field object.  The field must be an SHField.
         """
 
-        
+        fileNameAddition += (str(np.round(L)) + "-" + str(np.round(theta)) + "-" + str(np.round(phi)) + "-" + str(np.round(gyroPhase)) + "-")
+
         particleList = []
 
 
@@ -588,9 +589,9 @@ class LocationCheck(SimulationManager):
 
         latitude = (np.pi/180)*(90 - theta)
         gyroPhase = (np.pi/180)*gyroPhase
-        print(gyroPhase)
+        
         gyroPhase = gyroPhase % (2*np.pi)
-        print(gyroPhase)
+        
 
         # #calculate the equatorial pitch angle alpha
         alpha = np.arcsin(np.sqrt((np.cos(latitude)**6)/np.sqrt(1 + 3*(np.sin(latitude))**2)))
@@ -649,7 +650,7 @@ class LocationCheck(SimulationManager):
         else:
             raise(Exception("Invalid particle type"))
 
-        
+       
 
         super(LocationCheck, self).__init__(field, particleList, stepsPerPeriodList=50, N=N, fileKeyWord="locationCheck" + fileNameAddition, endStepList=endStepList, initialPhaseList=gyroPhase)
 
@@ -659,7 +660,7 @@ class LocationCheck(SimulationManager):
         #v scalar in m/s
         #alpha is pitch angle, in radians
 
-        print(B, v, alpha)
+        
         
         v = abs(v)
        
