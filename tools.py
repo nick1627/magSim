@@ -205,7 +205,7 @@ def selectCriteria(data, name="", date="", species="", field="", KE="", pitchAng
 
 
 
-def plotRChangeOnEnergy(regionArray, planetaryRadius, L, theta, phi):
+def plotRChangeOnEnergy(regionArray, planetaryRadius, L, theta, phi, logEnergy=True):
     """
     This function accepts region data in the form produced by the loadRegionData function.
     It plots the change in r on energy.
@@ -282,6 +282,30 @@ def plotRChangeOnEnergy(regionArray, planetaryRadius, L, theta, phi):
     ax.set_title(titleString)
     ax.set_xlabel("Kinetic energy (eV)")
     ax.set_ylabel("Final r/a - initial r/a")
+    if logEnergy:
+        ax.set_xscale('log')
     ax.legend()
+
+    return
+
+
+def plotGyroradiusOnEnergy(regionArray):
+    h = []
+    n = []
+    for row in regionArray:
+        if row[0] == 0: #it's harry's data
+            h.append(copy.deepcopy(row))
+        elif row[0] == 1: #it's nick's data
+            n.append(copy.deepcopy(row))
+        else:
+            raise(Exception("Unmatched name!  Spooky..."))
+    
+    h = np.array(h)
+    n = np.array(n)
+
+    
+    ax = plt.figure().add_subplot()
+    ax.plot(h[:, 4], h[:, 10], color="red", label="", linestyle = "None", marker = "x")
+    ax.plot(n[:, 4], n[:, 10], color="red", label="", linestyle = "None", marker = "+")
 
     return
