@@ -38,21 +38,42 @@ plt.rcParams.update(params)
 
 #%%
 #INITIAL CONDITIONS
-arguments = np.array([q, m_p], dtype = object)
-mode = 2
+
+arguments = np.array([-q, m_e], dtype = object)
+mode = 1
 
 L_shell = 7
 phi_in = 200 * np.pi / 180
 theta_in = 30 * np.pi / 180
+phase = 0 * np.pi / 180
+t0 = 0.
+E = 1e6 * abs(q)
+n = 100000
+
+#-------------------------#
+if mode == 1:
+    shape = 'Dipole'
+
+elif mode == 2:
+    shape = 'Quadrupole'
+
+if arguments[1] == m_p:
+    species = 'Proton'
+    
+elif arguments[1] == m_e:
+    species = 'Electron'
+    
+#-------------------------#
+
 lambda_lat = (np.pi / 2) - theta_in
 
 alpha_eq = np.arcsin(np.sqrt((np.cos(lambda_lat) ** 6) / \
-                 np.sqrt(1 + (3 * np.sin(lambda_lat) * np.sin(lambda_lat)))))
+                np.sqrt(1 + (3 * np.sin(lambda_lat) * np.sin(lambda_lat)))))
 
 perp_mag = np.tan(alpha_eq)
 
 zero_phase_dir = np.array([np.cos(phi_in), np.sin(phi_in), 0])
-phase = 270 * np.pi / 180
+
 Rphase = np.array([[np.cos(phase), - np.sin(phase), 0], 
                    [np.sin(phase), np.cos(phase),   0], 
                    [0,             0,               1]])
@@ -60,8 +81,6 @@ phase_dir = np.matmul(Rphase, zero_phase_dir)
 
 gc0_in = np.array(Sph_to_Cart(L_shell * a, np.pi / 2, phi_in))
 
-t0 = 0.
-E = 1e3 * abs(q)
 v_mag_in = E_to_v(E, arguments[1])
 
 v0_perp = np.sin(alpha_eq) * v_mag_in
@@ -83,26 +102,10 @@ direction = perp_mag * v_dir
 direction[2] = 1
 #direction = np.array([1, 1, 1])
 
-n = 10000000
-
-#-------------------------#
-if mode == 1:
-    shape = 'Dipole'
-
-elif mode == 2:
-    shape = 'Quadrupole'
-
-if arguments[1] == m_p:
-    species = 'Proton'
-    
-elif arguments[1] == m_e:
-    species = 'Electron'
-    
-#-------------------------#
 #%%
   
-#t, v, r, L, mew = RK(f_dvdt, t0, E, direction, r0, n, arguments, mode, 50)
-t, v, r, L, mew, gyroradius, gc = RK_single(f_dvdt, t0, E, direction, r0, n, arguments, mode, 50)
+t, v, r, L, mew = RK(f_dvdt, t0, E, direction, r0, n, arguments, mode, 50)
+#t, v, r, L, mew, gyroradius, gc = RK_single(f_dvdt, t0, E, direction, r0, n, arguments, mode, 50)
 
 t_all = []
 x = []
@@ -171,7 +174,7 @@ plt.show()
 #%%
 #SAVE DATA
 #np.savez('Harry/Simulation_data/e1000keV_1_1_1-6_0_0', t = t, v = v, r = r, L = L, mew = mew)
-saveRegionData('Output/RegionTests/regionTest_Uranus_7-30-200.npz', 0, '1', mode - 1, E / q, alpha_eq, phase, np.linalg.norm(gc0), np.linalg.norm(gc), gyroradius0, gyroradius)
+saveRegionData('Output/RegionTests/regionTest_Uranus_7-30-200.npz', 0, '1', mode - 1, E / q, alpha_eq, phase, np.linalg.norm(gc0_in), np.linalg.norm(gc), gyroradius0, gyroradius)
 
 #%%
 savedArrays = np.load('Harry/Simulation_data/e1000keV_0.1_0.1_1-6_0_0.npz', allow_pickle = True)
@@ -223,14 +226,6 @@ gc_x = np.array(gc_x)
 gc_y = np.array(gc_y)
 gc_z = np.array(gc_z)
 #%%
-# plt.plot(t, test)
-# plt.xlabel('Time (s)', fontsize=16)
-# plt.ylabel('Gyroradius (m)', fontsize=16)
-# plt.show()
-
-# plt.plot(t, mew)
-# plt.xlabel('Time (s)', fontsize=16)
-# plt.ylabel('Adiabatic invariant ($Am^2$)', fontsize=16)
 
 plt.plot(xt[:200] / a, yt[:200] / a, color = 'blue')
 plt.plot(gc_x[:200] / a, gc_y[:200] / a, 'x', color = 'red')
@@ -260,8 +255,22 @@ tim = savedArrays["times"]
 #%%
 
 data = loadRegionData('Output/RegionTests/regionTest_Uranus_7-30-200.npz')
-data = selectCriteria(data, species = 'proton', field = 'fullField')
+data = selectCriteria(data, name = 'Nick', species = 'proton', field = 'fullField')
 
+#%%
+dr = (data[:, 8] - data[:, 7]) / a
+en = data[:, 4]
+gyro_plot = data[:, 10]
+plt.plot(en, dr, 'x', color = 'blue', ms = 8)
+plt.xscale('log')
+# plt.yscale('log')
+titleString = "Change in equatorial r/a against initial KE for location L=" + str(np.round(L_shell)) + ", " + r"$\theta$ = " + str(np.round(theta_in)) + ", " + r"$\phi$ = " + str(np.round(phi_in))
+plt.title(titleString, fontsize = 16)
+plt.xlabel("Kinetic energy (eV)", fontsize = 16)
+plt.ylabel("Absilute change in r/a", fontsize = 16)
+plt.show()
+
+#%%
 plotRChangeOnEnergy(data, a, L_shell, 30, 200)
 plt.xscale('log')
 plt.show()
@@ -269,7 +278,7 @@ plt.show()
 #%%
 print('v0 =', v[0])
 print('v0 magnitude =', np.linalg.norm(v[0]), 'm/s')
-print('r0 =', r[0] / a, 'in r_u' )
+print('r0 =', r[0], 'in r_u' )
 print('gyroradius =', gyroradius0, 'm')
 print('phase direction =', phase_dir)
 print('B0 =', np.linalg.norm(B0), 'T')
