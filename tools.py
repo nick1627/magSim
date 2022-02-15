@@ -143,6 +143,8 @@ def loadRegionData(filePath):
 def selectCriteria(data, name="", date="", species="", field="", KE="", pitchAngle="", phase = ""):
     """
     Returns an array with the desired criteria given as input
+
+    phase:      Phase angle in degrees
     """
     if name == "Harry":
         deletionList = []
@@ -190,11 +192,20 @@ def selectCriteria(data, name="", date="", species="", field="", KE="", pitchAng
 
         data = np.delete(data, deletionList, axis=0)
 
+    if phase != "":
+        phase = np.pi*phase/180
+        deletionList = []
+        for i in range(0, np.shape(data)[0]):
+            if data[i, 6] != phase:
+                deletionList.append(i)
+
+        data = np.delete(data, deletionList, axis=0)
+
     return data
 
 
 
-def plotRChangeOnEnergy(regionArray, planetaryRadius, L, theta, phi):
+def plotRChangeOnEnergy(regionArray, planetaryRadius, L, theta, phi, logEnergy=True):
     """
     This function accepts region data in the form produced by the loadRegionData function.
     It plots the change in r on energy.
@@ -205,29 +216,127 @@ def plotRChangeOnEnergy(regionArray, planetaryRadius, L, theta, phi):
     a = planetaryRadius
 
     #data rows are of the form:
-    #name, date, species, field, initialKE, pitchAngle, initialRadius, finalRadius, initialGyroradius, finalGyroradius
+    #name, date, species, field, initialKE, pitchAngle, phase, initialRadius, finalRadius, initialGyroradius, finalGyroradius
 
     #separate data by name, in case of difference between simulations
-    harryData = []
-    nickData = []
+    nickData0 = []
+    nickData90 = []
+    nickData180 = []
+    nickData270 = []
+    harryData0 = []
+    harryData90 = []
+    harryData180 = []
+    harryData270 = []
 
     for row in regionArray:
         if row[0] == 0: #it's harry's data
-            harryData.append(copy.deepcopy(row))
-        else: #it's nick's data
-            nickData.append(copy.deepcopy(row))
+            if row[6] == 0:
+                harryData0.append(copy.deepcopy(row))
+            elif row[6] == 90*np.pi/180:
+                harryData90.append(copy.deepcopy(row))
+            elif row[6] == np.pi:
+                harryData180.append(copy.deepcopy(row))
+            elif row[6] == (270/180)*np.pi:
+                harryData270.append(copy.deepcopy(row))
+            else:
+                raise(Exception("A phase is unmatched"))
+        elif row[0] == 1: #it's nick's data
+            if row[6] == 0:
+                nickData0.append(copy.deepcopy(row))
+            elif row[6] == 90*np.pi/180:
+                nickData90.append(copy.deepcopy(row))
+            elif row[6] == np.pi:
+                nickData180.append(copy.deepcopy(row))
+            elif row[6] == (270/180)*np.pi:
+                nickData270.append(copy.deepcopy(row))
+            else:
+                raise(Exception("A phase is unmatched"))
+        else:
+            raise(Exception("Unmatched name!  Spooky..."))
     
     #get into array format 
-    harryData = np.array(harryData)
-    nickData = np.array(nickData)
+    harryData0 = np.array(harryData0)
+    harryData90 = np.array(harryData90)
+    harryData180 = np.array(harryData180)
+    harryData270 = np.array(harryData270)
+    nickData0 = np.array(nickData0)
+    nickData90 = np.array(nickData90)
+    nickData180 = np.array(nickData180)
+    nickData270 = np.array(nickData270)
+
+
     
     #now can plot
 
     ax = plt.figure().add_subplot()
-    ax.plot(harryData[:, 4], (harryData[:,7] - harryData[:,6])/a, color="blue", label="Harry's data", linestyle = "None", marker = "x")
-    ax.plot(nickData[:, 4], (nickData[:,7] - nickData[:,6])/a, color="red", label = "Nick's data", linestyle = "None", marker = "x")
+    ax.plot(harryData0[:, 4], (harryData0[:,8] - harryData0[:,7])/a, color="red", label="H-0", linestyle = "None", marker = "x")
+    ax.plot(harryData90[:, 4], (harryData90[:,8] - harryData90[:,7])/a, color="green", label="H-90", linestyle = "None", marker = "x")
+    ax.plot(harryData180[:, 4], (harryData180[:,8] - harryData180[:,7])/a, color="blue", label="H-180", linestyle = "None", marker = "x")
+    ax.plot(harryData270[:, 4], (harryData270[:,8] - harryData270[:,7])/a, color="black", label="H-270", linestyle = "None", marker = "x")
+    ax.plot(nickData0[:, 4], (nickData0[:,8] - nickData0[:,7])/a, color="red", label="N-0", linestyle = "None", marker = "+")
+    ax.plot(nickData90[:, 4], (nickData90[:,8] - nickData90[:,7])/a, color="green", label="N-90", linestyle = "None", marker = "+")
+    ax.plot(nickData180[:, 4], (nickData180[:,8] - nickData180[:,7])/a, color="blue", label="N-180", linestyle = "None", marker = "+")
+    ax.plot(nickData270[:, 4], (nickData270[:,8] - nickData270[:,7])/a, color="black", label="N-270", linestyle = "None", marker = "+")
     
-    titleString = "Change in equatorial r/a against initial KE for location L=" + str(np.round(L)) + ", " + r"$\theta$ = " + str(np.round(theta)) + ", " + r"$\phi$ = " + str(np.round(phi))
+    titleString = "Change in equatorial r/a against initial KE; L=" + str(np.round(L)) + ", " + r"$\theta$ = " + str(np.round(theta)) + ", " + r"$\phi$ = " + str(np.round(phi))
     ax.set_title(titleString)
     ax.set_xlabel("Kinetic energy (eV)")
-    ax.set_ylabel("Change in r/a (positive indicates increase)")
+    ax.set_ylabel("Final r/a - initial r/a")
+    if logEnergy:
+        ax.set_xscale('log')
+    ax.legend()
+
+    return
+
+
+def plotGyroradiusOnEnergy(regionArray):
+    h = []
+    n = []
+    for row in regionArray:
+        if row[0] == 0: #it's harry's data
+            h.append(copy.deepcopy(row))
+        elif row[0] == 1: #it's nick's data
+            n.append(copy.deepcopy(row))
+        else:
+            raise(Exception("Unmatched name!  Spooky..."))
+    
+    h = np.array(h)
+    n = np.array(n)
+
+    
+    ax = plt.figure().add_subplot()
+    ax.plot(h[:, 4], h[:, 10], color="red", label="", linestyle = "None", marker = "x")
+    ax.plot(n[:, 4], n[:, 10], color="red", label="", linestyle = "None", marker = "+")
+
+    return
+
+
+def deleteRegionData(path, index):
+    """
+    Deletes a row in the file.  Rows are identified by their
+    array index.
+    
+    path:       Relative path to file
+    index:      Index of line to delete
+    """
+    data = loadRegionData(path)
+    data = np.delete(path, index, axis=0)
+
+    np.savez(path, data = data)
+
+    print("Deleted row " + str(index))
+
+    return
+
+def deleteLastRegionDataRow(path):
+    """
+    Deletes the last row in the data file
+
+    path:       Relative path to file
+    """
+
+    deleteRegionData(path, -1)
+
+    return
+
+
