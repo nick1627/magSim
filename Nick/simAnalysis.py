@@ -42,8 +42,11 @@ import tools
 #=======================================================================================
 
 
-# sim = Simulation(simDataPath = "Output/locationCheck-Uranus-7-30-200-270--Proton-fullField-10000000.npz")
-# # sim.plotPositionOnTime(z=True)
+# sim = Simulation(simDataPath = "Output/Trash/locationCheck-Uranus-7-30-200-90--Proton-fullField-1000000.npz")
+# sim.plotPositionOnTime(z=True)
+# sim.plotKEOnTime()
+# sim.plotFirstAIOnTime()
+# sim.plotLShellOnTime()
 # sim.saveBounceData("Output/RegionTests/regionTest_Uranus_7-30-200.npz")
 # print(tools.loadRegionData("Output/RegionTests/regionTest_Uranus_7-30-200.npz"))
 
