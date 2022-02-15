@@ -309,3 +309,34 @@ def plotGyroradiusOnEnergy(regionArray):
     ax.plot(n[:, 4], n[:, 10], color="red", label="", linestyle = "None", marker = "+")
 
     return
+
+
+def deleteRegionData(path, index):
+    """
+    Deletes a row in the file.  Rows are identified by their
+    array index.
+    
+    path:       Relative path to file
+    index:      Index of line to delete
+    """
+    data = loadRegionData(path)
+    data = np.delete(path, index, axis=0)
+
+    np.savez(path, data = data)
+
+    print("Deleted row " + str(index))
+
+    return
+
+def deleteLastRegionDataRow(path):
+    """
+    Deletes the last row in the data file
+
+    path:       Relative path to file
+    """
+
+    deleteRegionData(path, -1)
+
+    return
+
+
