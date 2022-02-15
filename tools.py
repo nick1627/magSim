@@ -224,8 +224,8 @@ def plotRChangeOnEnergy(regionArray, planetaryRadius, L, theta, phi):
     #now can plot
 
     ax = plt.figure().add_subplot()
-    ax.plot(harryData[:, 4], (harryData[:,7] - harryData[:,6])/a, color="blue", label="Harry's data", linestyle = "None", marker = "x")
-    ax.plot(nickData[:, 4], (nickData[:,7] - nickData[:,6])/a, color="red", label = "Nick's data", linestyle = "None", marker = "x")
+    ax.plot(harryData[:, 4], (harryData[:,8] - harryData[:,7])/a, color="blue", label="Harry's data", linestyle = "None", marker = "x")
+    ax.plot(nickData[:, 4], (nickData[:,8] - nickData[:,7])/a, color="red", label = "Nick's data", linestyle = "None", marker = "x")
     
     titleString = "Change in equatorial r/a against initial KE for location L=" + str(np.round(L)) + ", " + r"$\theta$ = " + str(np.round(theta)) + ", " + r"$\phi$ = " + str(np.round(phi))
     ax.set_title(titleString)
