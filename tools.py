@@ -315,7 +315,7 @@ def deleteRegionData(path, index):
     """
     Deletes a row in the file.  Rows are identified by their
     array index.
-    
+
     path:       Relative path to file
     index:      Index of line to delete
     """
@@ -340,3 +340,34 @@ def deleteLastRegionDataRow(path):
     return
 
 
+def deleteOlderThan(date, name, path):
+    """
+    Deletes data older than the given date for a given name
+
+    date:       4 digit number.  5th September would be 0905 or just 905
+    name:       String, the name of the person
+    path:       The path to the data
+    """
+
+    data = loadRegionData(path)
+
+    if name == "harry" or name == "Harry" or name == "H" or name == 0:
+        name = 0
+    elif name == "nick" or name == "Nick" or name == "N" or name == 1:
+        name = 1
+    else:
+        raise(Exception("Name not recognised"))
+
+    deletionList = []
+    for i in range(0, np.shape(data)[0]):
+        if data[i,0] == name:
+            if data[i, 1] < date:
+                deletionList.append(i)
+
+    data = np.delete(data, deletionList, axis=0)
+
+    np.savez(path, data = data)
+
+    print("Data deleted.")
+
+    return
