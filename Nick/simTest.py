@@ -142,30 +142,29 @@ import tools
 #===============================================================================
 Ru = 25600000           #radius of Uranus in metres
 
-g = np.array([[11278, 10928, 0], [-9648, -12284, 1453]]) #these are in nanoteslas
-h = np.array([[0, -16049, 0], [0, 6405, 4220]])
-g = g/1000000000
-h = h/1000000000
 
-UField = SHField(Ru, g, h, 0, 0)
+
+UField = UranusField(False)
 UField.rotate("Field")
-UField.setDipoleOnly(True)
-print(UField.getField([6*Ru, 0, 0]))
 
-# BMag = np.linalg.norm(UField.getField(np.array([6*Ru, 0, 0])))
+# print(UField.getField([6*Ru, 0, 0]))
+
+BMag = np.linalg.norm(UField.getField(np.array([6*Ru, 0, 0])))
 # #BMag = 1
-# uniformB = UniformField(np.array([0, 0, BMag]))
+uniformB = UniformField(np.array([0, 0, BMag]))
 
-# initialPosition = np.array([6*Ru, 0, 0])
-# initialVelocityDirection = np.array([0.1, 0.1, 1])
-# initialKE = 10000 #eV
+initialPosition = np.array([0, 0, 0])
+initialVelocityDirection = np.array([1, 0, 0])
+initialKE = 10**9 #eV
 
-# p1 = Proton(initialPosition, initialVelocityDirection, initialKE)
+p1 = Proton(initialPosition, initialVelocityDirection, initialKE)
 
-# s1 = Simulation(UField, p1)
-# s1.run(1000000)
-# s1.plotKEOnTime()
+s1 = Simulation(uniformB, p1)
+s1.run(50000)
+
 # s1.plotPositionOnTime()
+larmorchange = s1.getLarmorRadius(-1) - s1.getLarmorRadius(0)
+print(larmorchange)
 #===============================================================================
 
 # plt.show()

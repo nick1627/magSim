@@ -93,7 +93,7 @@ class Particle:
         self.v = self.v + timeStep*(9*k[1, :] + 64*k[3, :] + 49*k[5, :] + 49*k[6, :] + 9*k[7, :])/180
  
         #Then update position.  This r is r in metres.  
-        self.r = copy.copy(self.r) + (larmorPeriod*sp.constants.c)*self.v*timeStep*np.sqrt(1 - np.linalg.norm(self.v)**2)
+        self.r = copy.copy(self.r) + (larmorPeriod*sp.constants.c)*self.v*timeStep#*np.sqrt(1 - np.linalg.norm(self.v)**2)
         
         return
 

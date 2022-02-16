@@ -191,39 +191,39 @@ our simulation is valid.  Not working!!!
 
 
 
-UFieldWhole = UranusField(False)
-UFieldDipole = UranusField(True)
-UFieldWhole.rotate("Field") #want field aligned coordinates
-UFieldDipole.rotate("Field")
+# UFieldWhole = UranusField(False)
+# UFieldDipole = UranusField(True)
+# UFieldWhole.rotate("Field") #want field aligned coordinates
+# UFieldDipole.rotate("Field")
 
 
-energyList = [10**6, 2*10**6, 3*10**6, 4*10**6, 5*10**6, 6*10**6, 7*10**6, 8*10**6, 9*10**6, 10**7] #energies in eV
+# energyList = [10**6, 2*10**6, 3*10**6, 4*10**6, 5*10**6, 6*10**6, 7*10**6, 8*10**6, 9*10**6, 10**7] #energies in eV
 
-# energyList = [10**5]
+# # energyList = [10**5]
 
-manager1 = LocationCheck(7, 30, 200, 10, energyList, "proton", 0, UFieldDipole, endStepList=500000, fileNameAddition="-Uranus-")
-manager1.runAllSims()
+# manager1 = LocationCheck(7, 30, 200, 10, energyList, "proton", 0, UFieldDipole, endStepList=500000, fileNameAddition="-Uranus-")
+# manager1.runAllSims()
 
-manager2 = LocationCheck(7, 30, 200, 10, energyList, "proton", 90, UFieldDipole, endStepList=500000, fileNameAddition="-Uranus-")
-manager2.runAllSims()
+# manager2 = LocationCheck(7, 30, 200, 10, energyList, "proton", 90, UFieldDipole, endStepList=500000, fileNameAddition="-Uranus-")
+# manager2.runAllSims()
 
-manager3 = LocationCheck(7, 30, 200, 10, energyList, "proton", 180, UFieldDipole, endStepList=500000, fileNameAddition="-Uranus-")
-manager3.runAllSims()
+# manager3 = LocationCheck(7, 30, 200, 10, energyList, "proton", 180, UFieldDipole, endStepList=500000, fileNameAddition="-Uranus-")
+# manager3.runAllSims()
 
-manager4 = LocationCheck(7, 30, 200, 10, energyList, "proton", 270, UFieldDipole, endStepList=500000, fileNameAddition="-Uranus-")
-manager4.runAllSims()
+# manager4 = LocationCheck(7, 30, 200, 10, energyList, "proton", 270, UFieldDipole, endStepList=500000, fileNameAddition="-Uranus-")
+# manager4.runAllSims()
 
-manager5 = LocationCheck(7, 30, 200, 10, energyList, "proton", 0, UFieldWhole, endStepList=500000, fileNameAddition="-Uranus-")
-manager5.runAllSims()
+# manager5 = LocationCheck(7, 30, 200, 10, energyList, "proton", 0, UFieldWhole, endStepList=500000, fileNameAddition="-Uranus-")
+# manager5.runAllSims()
 
-manager6 = LocationCheck(7, 30, 200, 10, energyList, "proton", 90, UFieldWhole, endStepList=500000, fileNameAddition="-Uranus-")
-manager6.runAllSims()
+# manager6 = LocationCheck(7, 30, 200, 10, energyList, "proton", 90, UFieldWhole, endStepList=500000, fileNameAddition="-Uranus-")
+# manager6.runAllSims()
 
-manager7 = LocationCheck(7, 30, 200, 10, energyList, "proton", 180, UFieldWhole, endStepList=500000, fileNameAddition="-Uranus-")
-manager7.runAllSims()
+# manager7 = LocationCheck(7, 30, 200, 10, energyList, "proton", 180, UFieldWhole, endStepList=500000, fileNameAddition="-Uranus-")
+# manager7.runAllSims()
 
-manager8 = LocationCheck(7, 30, 200, 10, energyList, "proton", 270, UFieldWhole, endStepList=500000, fileNameAddition="-Uranus-")
-manager8.runAllSims()
+# manager8 = LocationCheck(7, 30, 200, 10, energyList, "proton", 270, UFieldWhole, endStepList=500000, fileNameAddition="-Uranus-")
+# manager8.runAllSims()
 
 
 # print(manager1.simulations[0].position[0])
