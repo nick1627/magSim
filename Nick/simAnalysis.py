@@ -42,12 +42,12 @@ import tools
 #=======================================================================================
 
 
-# sim = Simulation(simDataPath = "Output/locationCheck-Uranus-gammaRemoved-7-30-200-270--Proton-dipoleOnly-10000000.npz")
-# # sim.plotPositionOnTime(x=True, y=True, z=True)
-# # sim.plotKEOnTime()
-# # sim.plotFirstAIOnTime()
-# # sim.plotLShellOnTime()
-# sim.saveBounceData("Output/RegionTests/regionTest_Uranus_7-30-200.npz")
+# sim = Simulation(simDataPath = "Output/Trash/locationCheck-Uranus-gammaRemoved-7-30-200-0--Proton-fullField-10000000.npz")
+# # # sim.plotPositionOnTime(x=True, y=True, z=True)
+# # # sim.plotKEOnTime()
+# # # sim.plotFirstAIOnTime()
+# # # sim.plotLShellOnTime()
+# sim.saveBounceData("Output/RegionTests/deleteMe.npz")
 # print(tools.loadRegionData("Output/RegionTests/regionTest_Uranus_7-30-200.npz"))
 
 Uradius = 25600000

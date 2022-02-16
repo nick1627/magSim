@@ -140,6 +140,33 @@ import tools
 
 
 #===============================================================================
+# Ru = 25600000           #radius of Uranus in metres
+
+
+
+# UField = UranusField(False)
+# UField.rotate("Field")
+
+# # print(UField.getField([6*Ru, 0, 0]))
+
+# BMag = np.linalg.norm(UField.getField(np.array([6*Ru, 0, 0])))
+# # #BMag = 1
+# uniformB = UniformField(np.array([0, 0, BMag]))
+
+# initialPosition = np.array([0, 0, 0])
+# initialVelocityDirection = np.array([1, 0, 0])
+# initialKE = 10**9 #eV
+
+# p1 = Proton(initialPosition, initialVelocityDirection, initialKE)
+
+# s1 = Simulation(uniformB, p1)
+# s1.run(50000)
+
+# # s1.plotPositionOnTime()
+# larmorchange = s1.getLarmorRadius(-1) - s1.getLarmorRadius(0)
+# print(larmorchange)
+#===============================================================================
+#===============================================================================
 Ru = 25600000           #radius of Uranus in metres
 
 
@@ -149,22 +176,46 @@ UField.rotate("Field")
 
 # print(UField.getField([6*Ru, 0, 0]))
 
-BMag = np.linalg.norm(UField.getField(np.array([6*Ru, 0, 0])))
+# BMag = np.linalg.norm(UField.getField(np.array([6*Ru, 0, 0])))
 # #BMag = 1
-uniformB = UniformField(np.array([0, 0, BMag]))
+# uniformB = UniformField(np.array([0, 0, BMag]))
 
-initialPosition = np.array([0, 0, 0])
-initialVelocityDirection = np.array([1, 0, 0])
-initialKE = 10**9 #eV
+# initialPosition = np.array([-168458653.14769566, -61313935.450335704, 1.0972835320360285e-08])
+# initialVelocityDirection = np.array([1382649.4412019397, -3798798.1187238824, 43234552.18773658])
+initialPosition = np.array([-169052073.9254811, -61529922.94984471, 1.0972835320360285e-08])
+
+initialVelocityDirection = np.array([1382649.4412019397, -3798798.1187238824, 43234552.18773658])
+
+initialKE = 10**7 #eV
 
 p1 = Proton(initialPosition, initialVelocityDirection, initialKE)
 
-s1 = Simulation(uniformB, p1)
-s1.run(50000)
+s1 = Simulation(UField, p1)
+s1.run(endStep=7200)
+print("sim complete")
+lastPosition = s1.position[7200]
 
-# s1.plotPositionOnTime()
-larmorchange = s1.getLarmorRadius(-1) - s1.getLarmorRadius(0)
-print(larmorchange)
-#===============================================================================
+positions = s1.position
+for i in range(0, np.shape(positions)[0]):
+    if positions[i, 2] < 0 and i > 7000:
+        flipindex = i
+        break
 
-# plt.show()
+print(flipindex)
+thingy = positions[flipindex]
+print(positions[flipindex])
+
+print(lastPosition)
+print("hi")
+
+rL = s1.getLarmorRadius(flipindex)
+
+difference = np.array([-1207972.22539455, -590354.15896964, 418455.22015373])
+mag = np.linalg.norm(difference)
+print(mag/rL)
+print("larmor radius")
+print(rL)
+
+plt.show()
+
+

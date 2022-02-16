@@ -406,6 +406,7 @@ class Simulation:
         counter=0
         length = np.shape(self.position)[0]       
         if self.position[1, 2] > 0:
+            print("Particle heading north")
             #particle heading North initially
             while (found == False) and (counter < length):
                 if self.position[counter, 2]<0:
@@ -414,6 +415,7 @@ class Simulation:
                 else:
                     counter+=1
         else:
+            print("Particle heading south")
             #particle heading South initially
             while (found == False) and (counter < length):
                 if self.position[counter, 2]>0:
@@ -421,9 +423,14 @@ class Simulation:
                     found = True
                 else:
                     counter+=1
+
         
         if found == False:
             raise(Exception("The particle in this simulation did not cross back into the other hemisphere.  No results can be found."))
+
+        print("The index is " + str(counter))
+        if counter < 100:
+            print("this is a bit small right?")
 
         #counter is now the index of the final point.
                 
@@ -434,8 +441,15 @@ class Simulation:
         finalGyroradius = self.getLarmorRadius(counter)
 
         initialRadius = np.linalg.norm(self.getGuidingCentrePosition(0, initialGyroradius))
-        finalRadius = np.linalg.norm(self.getGuidingCentrePosition(0, finalGyroradius))
+        finalPos = self.getGuidingCentrePosition(0, finalGyroradius)
+        print(finalPos)
+        finalRadius = np.linalg.norm(finalPos)
+        print(finalRadius)
 
+
+        print("Initial stuff")
+        print(self.position[0])
+        print(self.velocity[0])
         #calculate pitch angle
         v = self.velocity[0]
         d = np.sqrt(v[0]**2 + v[1]**2)
