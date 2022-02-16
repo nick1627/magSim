@@ -77,7 +77,7 @@ def E_to_v(E, m):
     return v
 
 def gyroperiod(v, m, q, B):
-   term = (m * 2 * np.pi) / (abs(q) * np.linalg.norm(B))
+   term = (gamma(v) * m * 2 * np.pi) / (abs(q) * np.linalg.norm(B))
    return term
 
 def f_k1(func, t, v, r, h, args = None, mode = 1):
@@ -142,7 +142,7 @@ def RK(f, t0, E, direction, r0, n, args, mode, step_size):
     B0 = B_rot_fun(r0, a, g, h_coeff, mode, R)
     v0_par = np.dot(B0 / np.linalg.norm(B0), v0) * (B0 / np.linalg.norm(B0))
     v0_perp = np.linalg.norm(v0 - v0_par)
-    mew_term0 = 0.5 * args[1] * v0_perp * v0_perp / np.linalg.norm(B0)
+    mew_term0 = 0.5 * gamma(v_mag) * args[1] * v0_perp * v0_perp / np.linalg.norm(B0)
     mew = [mew_term0]
     
     period = gyroperiod(v0, args[1], args[0], B0)
@@ -184,7 +184,7 @@ def RK(f, t0, E, direction, r0, n, args, mode, step_size):
         v_perp_vec = v[i+1] - v_par
         v_perp = np.linalg.norm(v_perp_vec)
         
-        mew_term = 0.5 * args[1] * v_perp * v_perp / np.linalg.norm(current_B)
+        mew_term = 0.5 * gamma(v[i+1]) * v_perp * v_perp / np.linalg.norm(current_B)
         mew.append(mew_term)
         
         if np.linalg.norm(r[i+1]) < a :
@@ -220,7 +220,7 @@ def RK_single(f, t0, E, direction, r0, n, args, mode, step_size):
     B0 = B_rot_fun(r0, a, g, h_coeff, mode, R)
     v0_par = np.dot(B0 / np.linalg.norm(B0), v0) * (B0 / np.linalg.norm(B0))
     v0_perp = np.linalg.norm(v0 - v0_par)
-    mew_term0 = 0.5 * args[1] * v0_perp * v0_perp / np.linalg.norm(B0)
+    mew_term0 = 0.5 * gamma(v_mag) * args[1] * v0_perp * v0_perp / np.linalg.norm(B0)
     mew = [mew_term0]
     
     period = gyroperiod(v0, args[1], args[0], B0)
@@ -262,11 +262,11 @@ def RK_single(f, t0, E, direction, r0, n, args, mode, step_size):
         v_perp_vec = v[i+1] - v_par
         v_perp = np.linalg.norm(v_perp_vec)
         
-        mew_term = 0.5 * args[1] * v_perp * v_perp / np.linalg.norm(current_B)
+        mew_term = 0.5 * gamma(v[i+1]) * args[1] * v_perp * v_perp / np.linalg.norm(current_B)
         mew.append(mew_term)
         
         if r[i+1][2] < 0:
-            gyroradius = (args[1] * v_perp) / (abs(args[0]) * np.linalg.norm(current_B))
+            gyroradius = (gamma(v[i+1]) * args[1] * v_perp) / (abs(args[0]) * np.linalg.norm(current_B))
             perp_vec = np.cross(v_perp_vec, current_B)
             perp_dir = perp_vec / np.linalg.norm(perp_vec)
             
@@ -296,4 +296,5 @@ def RK_single(f, t0, E, direction, r0, n, args, mode, step_size):
     gyroradius2 = None
     gc2 = None
     
-    return t, v, r, L, mew, gyroradius2, gc2  
+    return t, v, r, L, mew, gyroradius2, gc2
+

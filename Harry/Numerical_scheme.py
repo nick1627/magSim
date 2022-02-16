@@ -39,16 +39,16 @@ plt.rcParams.update(params)
 #%%
 #INITIAL CONDITIONS
 
-arguments = np.array([-q, m_e], dtype = object)
-mode = 1
+arguments = np.array([q, m_p], dtype = object)
+mode = 2 #1 for dipole, 2 for full field
 
 L_shell = 7
 phi_in = 200 * np.pi / 180
 theta_in = 30 * np.pi / 180
 phase = 0 * np.pi / 180
 t0 = 0.
-E = 1e6 * abs(q)
-n = 100000
+E = 1e7 * abs(q)
+n = 7200 #number of steps
 
 #-------------------------#
 if mode == 1:
@@ -67,31 +67,37 @@ elif arguments[1] == m_e:
 
 lambda_lat = (np.pi / 2) - theta_in
 
+#Pitch angle
 alpha_eq = np.arcsin(np.sqrt((np.cos(lambda_lat) ** 6) / \
                 np.sqrt(1 + (3 * np.sin(lambda_lat) * np.sin(lambda_lat)))))
 
+#Magnitude of v perpendicular
 perp_mag = np.tan(alpha_eq)
 
+#direction of zero phase
 zero_phase_dir = np.array([np.cos(phi_in), np.sin(phi_in), 0])
 
+#Rotation to determine the direction at the indicated phase
 Rphase = np.array([[np.cos(phase), - np.sin(phase), 0], 
                    [np.sin(phase), np.cos(phase),   0], 
                    [0,             0,               1]])
+#phase direction
 phase_dir = np.matmul(Rphase, zero_phase_dir)
-
+#initial guiding centre location
 gc0_in = np.array(Sph_to_Cart(L_shell * a, np.pi / 2, phi_in))
-
+#velocity magnitude
 v_mag_in = E_to_v(E, arguments[1])
-
+#perpendicular velocity magnitude
 v0_perp = np.sin(alpha_eq) * v_mag_in
 
 B0 = B_rot_fun(gc0_in, a, g, h_coeff, mode, R)
 
-gyroradius0 = (gamma(v0_perp) * arguments[1] * v0_perp) / (abs(arguments[0]) * np.linalg.norm(B0))
-
+gyroradius0 = (gamma(v_mag_in) * arguments[1] * v0_perp) / (abs(arguments[0]) * np.linalg.norm(B0))
+#Determine position of particle based on gyroradius and phase direction
 r0 = gc0_in + (gyroradius0 * phase_dir)
 #r0 = np.array([6., 0., 0.]) * a
 
+#direction of velocity based on particle species
 if arguments[1] == m_e:
     v_dir = np.cross(phase_dir, np.array([0, 0, 1]))
     
@@ -103,7 +109,7 @@ direction[2] = 1
 #direction = np.array([1, 1, 1])
 
 #%%
-  
+r0 = np.array([-169052073.9254811, -61529922.94984471, 1.0972835320360285e-08])
 t, v, r, L, mew = RK(f_dvdt, t0, E, direction, r0, n, arguments, mode, 50)
 #t, v, r, L, mew, gyroradius, gc = RK_single(f_dvdt, t0, E, direction, r0, n, arguments, mode, 50)
 
@@ -190,25 +196,25 @@ test = []
 xt = []
 yt = []
 zt = []
-gc = []
+gc_test = []
 for i in tqdm(range(len(r))):
     current_B = B_rot_fun(r[i], a, g, h_coeff, mode, R)
     v_par = np.dot(current_B / np.linalg.norm(current_B), v[i]) * (current_B / np.linalg.norm(current_B))
     v_perp = v[i] - v_par
     v_perp_mag = np.linalg.norm(v_perp)
-    gyror = (arguments[1] * v_perp_mag) / (abs(q) * np.linalg.norm(current_B))
+    gyror = (gamma(v_perp_mag) * arguments[1] * v_perp_mag) / (abs(q) * np.linalg.norm(current_B))
     perp_vec = np.cross(v_perp, current_B)
     perp_dir = perp_vec / np.linalg.norm(perp_vec)
     gc_term = r[i] + ((arguments[0] / q) * gyror * perp_dir)
     
-    gc.append(gc_term)
+    gc_test.append(gc_term)
     xt.append(r[i][0])
     yt.append(r[i][1])
     zt.append(r[i][2])
     
     test.append(gyror)
 
-gc = np.array(gc)
+gc_test = np.array(gc_test)
 xt = np.array(xt)
 yt = np.array(yt)
 zt = np.array(zt)
@@ -217,32 +223,34 @@ gc_x=[]
 gc_y=[]
 gc_z=[]
 
-for i in range(len(gc)):
-    gc_x.append(gc[i][0])
-    gc_y.append(gc[i][1])
-    gc_z.append(gc[i][2])
+for i in range(len(gc_test)):
+    gc_x.append(gc_test[i][0])
+    gc_y.append(gc_test[i][1])
+    gc_z.append(gc_test[i][2])
     
 gc_x = np.array(gc_x) 
 gc_y = np.array(gc_y)
 gc_z = np.array(gc_z)
 #%%
 
-plt.plot(xt[:200] / a, yt[:200] / a, color = 'blue')
-plt.plot(gc_x[:200] / a, gc_y[:200] / a, 'x', color = 'red')
+plt.plot(xt[:200] / a, yt[:200] / a, color = 'blue', label = 'Particle')
+plt.plot(gc_x[:200] / a, gc_y[:200] / a, 'x', color = 'red', label = 'Guiding Centre')
 plt.xlabel('x ($r_U$)', fontsize=16)
 plt.ylabel('y ($r_U$)', fontsize=16)
 plt.title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
+plt.legend(fontsize = 20)
 plt.show()
 
 fig = plt.figure()
 ax = plt.axes(projection='3d')
 
-ax.plot3D(xt / a, yt / a, zt / a, color = 'blue')
-ax.plot3D(gc_x / a, gc_y / a, gc_z / a, color = 'red')
+ax.plot3D(xt[3000:3200] / a, yt[3000:3200] / a, zt[3000:3200] / a, color = 'blue', label = 'Particle')
+ax.plot3D(gc_x[3000:3200] / a, gc_y[3000:3200] / a, gc_z[3000:3200] / a, color = 'red', label = 'Guiding Centre')
 ax.set_xlabel('x ($r_U$)',fontsize=16)
 ax.set_ylabel('y ($r_U$)', fontsize=16)
 ax.set_zlabel('z ($r_U$)', fontsize=16)
 ax.set_title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
+plt.legend(fontsize = 20)
 plt.show()
 
 #%%
@@ -255,24 +263,39 @@ tim = savedArrays["times"]
 #%%
 
 data = loadRegionData('Output/RegionTests/regionTest_Uranus_7-30-200.npz')
-data = selectCriteria(data, name = 'Nick', species = 'proton', field = 'fullField')
+data = selectCriteria(data, name = 'Harry', species = 'proton')
 
 #%%
-dr = (data[:, 8] - data[:, 7]) / a
-en = data[:, 4]
-gyro_plot = data[:, 10]
-plt.plot(en, dr, 'x', color = 'blue', ms = 8)
+dr_dip = []
+en_dip = []
+dr_quad = []
+en_quad = []
+for i in range(len(data)):
+    if data[i][3] == 0:
+        dr_dip.append((data[i][8] - data[i][7]) / a)
+        en_dip.append(data[i][4])
+        
+    if data[i][3] == 1:
+        dr_quad.append((data[i][8] - data[i][7]) / a)
+        en_quad.append(data[i][4])
+        
+# dr = (data[:, 8] - data[:, 7]) / a
+# en = data[:, 4]
+# gyro_plot = data[:, 10]
+#plt.plot(en, dr, 'x', color = 'blue', ms = 8)
+plt.plot(np.array(en_dip) / 1e3, dr_dip, 'x', color = 'red', ms = 8, label = 'Dipole')
+plt.plot(np.array(en_quad) / 1e3, dr_quad, 'x', color = 'blue', ms = 8, label = 'Quadrupole')
 plt.xscale('log')
 # plt.yscale('log')
 titleString = "Change in equatorial r/a against initial KE for location L=" + str(np.round(L_shell)) + ", " + r"$\theta$ = " + str(np.round(theta_in)) + ", " + r"$\phi$ = " + str(np.round(phi_in))
 plt.title(titleString, fontsize = 16)
-plt.xlabel("Kinetic energy (eV)", fontsize = 16)
-plt.ylabel("Absilute change in r/a", fontsize = 16)
+plt.xlabel("Kinetic energy (keV)", fontsize = 16)
+plt.ylabel("Change in r/a", fontsize = 16)
+plt.legend(fontsize = 16)
 plt.show()
 
 #%%
-plotRChangeOnEnergy(data, a, L_shell, 30, 200)
-plt.xscale('log')
+plotRChangeOnEnergy(data, a, L_shell, 30, 200, logEnergy = True)
 plt.show()
 
 #%%
@@ -284,3 +307,23 @@ print('phase direction =', phase_dir)
 print('B0 =', np.linalg.norm(B0), 'T')
 print('v0 perp =', v0_perp,'m/s')
 print('pitch angle =', alpha_eq, 'rad')
+
+#%%
+
+print(r[-1] - np.array([-107270755.39616576, -63324023.61693426, -68776417.01780729]))
+# print(gc)
+# print(np.linalg.norm(gc))
+# print(r[0])
+print(v[0])
+
+#%%
+for_save = np.array([t, v, r, L, mew, gc0_in, gc], dtype = object)
+np.savez('100keV_proton', for_save)
+#%%
+print((np.linalg.norm(gc) - np.linalg.norm(gc0_in)) / a)
+print(v[0])
+#vz = v[0][2]
+#%%
+print(r[7092])
+print(r[7092] - np.array([-158483714.91640323, -78473300.48133226, -605202.4099586932]))
+print(np.linalg.norm(r[7092] - np.array([-158483714.91640323, -78473300.48133226, -605202.4099586932])))
