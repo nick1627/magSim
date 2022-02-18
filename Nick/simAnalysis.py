@@ -42,21 +42,22 @@ import tools
 #=======================================================================================
 
 
-# sim = Simulation(simDataPath = "Output/Trash/locationCheck-Uranus-gammaRemoved-7-30-200-270--Proton-dipoleOnly-10000000.npz")
+sim = Simulation(simDataPath = "Output/locationCheck-Uranus-gammaRemoved-7-30-200-270--Proton-fullField-1000000.npz")
 # # # sim.plotAltitudeOnTime()
 # # # sim.plotPositionOnTime(z=True)
 # # # # # sim.plotKEOnTime()
 # # # # # sim.plotFirstAIOnTime()
 # # # # # sim.plotLShellOnTime()
-# sim.saveBounceData("Output/RegionTests/regionTest_Uranus_7-30-200.npz")
+sim.saveBounceData("Output/RegionTests/regionTest_Uranus_7-30-200.npz")
 # print(tools.loadRegionData("Output/RegionTests/regionTest_Uranus_7-30-200.npz"))
 
-Uradius = 25600000
-data = tools.loadRegionData("Output/RegionTests/regionTest_Uranus_7-30-200.npz")
-fullData = tools.selectCriteria(data, species="proton", field="fullField")
-dipoleData = tools.selectCriteria(data, species="proton", field="dipoleOnly")
-tools.plotRChangeOnEnergy(dipoleData, Uradius, 7, 30, 200)
-tools.plotRChangeOnEnergy(fullData, Uradius, 7, 30, 200)
+# Uradius = 25600000
+# data = tools.loadRegionData("Output/RegionTests/regionTest_Uranus_7-30-200.npz")
+# fullData = tools.selectCriteria(data, species="proton", field="fullField")
+# dipoleData = tools.selectCriteria(data, species="proton", field="dipoleOnly")
+# tools.plotRChangeOnEnergy(dipoleData, Uradius, 7, 30, 200)
+# tools.plotRChangeOnEnergy(fullData, Uradius, 7, 30, 200)
+# plt.show()
 
 # tools.deleteOlderThan(218, "Nick", "Output/RegionTests/regionTest_Uranus_7-30-200.npz")
 
@@ -69,4 +70,3 @@ tools.plotRChangeOnEnergy(fullData, Uradius, 7, 30, 200)
 # tools.plotGyroradiusOnEnergy(fullData)
 
 
-plt.show()
