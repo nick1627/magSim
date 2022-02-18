@@ -60,14 +60,14 @@ h = np.array([[0, h11],
 args = np.array([g01, g11, h11, g02, g12, h12, g22, h22])
 plt.rcParams["figure.autolayout"] = True
 params = {
-'axes.labelsize': 12,
-'font.size': 12,
+'axes.labelsize': 20,
+'font.size': 20,
 #'font.family': 'sans-serif', # Optionally change the font family to sans-serif
 #'font.serif': 'Arial', # Optionally change the font to Arial
 'legend.fontsize': 11,
-'xtick.labelsize': 12,
-'ytick.labelsize': 12, 
-'figure.figsize': [8, 8]
+'xtick.labelsize': 16,
+'ytick.labelsize': 16, 
+'figure.figsize': [15, 15]
 } 
 plt.rcParams.update(params)
 #%%
@@ -865,8 +865,8 @@ plt.title('L = 3', fontsize = 16)
 plt.show()
 
 #%%
-L = np.arange(2, 10)
-fig, axs = plt.subplots(2, 4)
+L = np.array([2, 7])
+fig, axs = plt.subplots(1, 2)
 
 for j in range(len(L)):
 
@@ -918,12 +918,12 @@ for j in range(len(L)):
     theta_vec = theta_deg[::2]
     theta_vec = theta_vec[::2]
 
-    im = axs[int(j / 4)][j%4].imshow(drift_n,  extent=[phi_deg[0],phi_deg[-1],\
+    im = axs[int(j / 1)].imshow(drift_n,  extent=[phi_deg[0],phi_deg[-1],\
             theta_deg[-1],theta_deg[0]], cmap = 'plasma', aspect='auto')
-    axs[int(j / 4)][j%4].quiver(phi_vec, theta_vec, drift_phi, drift_sigma, scale = 40, headwidth = 6, pivot = 'mid')
-    axs[int(j / 4)][j%4].set_title('Max ratio, L = {}'.format(L[j]))
-    axs[int(j / 4)][j%4].set(xlabel='Longitude (deg)', ylabel='Latitude (deg)')
-    fig.colorbar(im, ax= axs[int(j / 4)][j%4])
+    axs[int(j)].quiver(phi_vec, theta_vec, drift_phi, drift_sigma, scale = 40, headwidth = 6, pivot = 'mid')
+    axs[int(j / 1)].set_title('Max ratio, L = {}'.format(L[j]), fontsize = 20)
+    axs[int(j / 1)].set(xlabel='Longitude (deg)', ylabel='Latitude (deg)')
+    fig.colorbar(im, ax= axs[int(j / 1)])
     #fig.suptitle('Dipole only', fontsize=16)
 plt.show()
 #%%

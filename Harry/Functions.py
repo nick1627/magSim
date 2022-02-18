@@ -36,6 +36,9 @@ def Cart_to_Sph(x, y, z):
     theta = np.arctan2(np.sqrt((x * x) + (y * y)), z)
     phi = np.arctan2(y, x)
     
+    if phi < 0:
+        phi = phi + (2 * np.pi)
+    
     return r, theta, phi
 
 def Sph_to_Cart(r, theta, phi):

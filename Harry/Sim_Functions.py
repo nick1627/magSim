@@ -151,10 +151,6 @@ def RK(f, t0, E, direction, r0, n, args, mode, step_size):
     
     for i in tqdm(range(n)):
         
-        if i%step_size == 0:
-            temp_p = gyroperiod(v[i], args[1], args[0], B_rot_fun(r[i], a, g, h_coeff, mode, R))
-            h = temp_p / step_size
-        
         k1 = f_k1(f, t[i], v[i], r[i], h, args, mode)
         
         k2 = f_k2(f, t[i], v[i], r[i], h, k1, args, mode)
@@ -186,6 +182,10 @@ def RK(f, t0, E, direction, r0, n, args, mode, step_size):
         
         mew_term = 0.5 * gamma(v[i+1]) * v_perp * v_perp / np.linalg.norm(current_B)
         mew.append(mew_term)
+        
+        if i%step_size == 0 and i > 0:
+            temp_p = gyroperiod(v[i], args[1], args[0], B_rot_fun(r[i], a, g, h_coeff, mode, R))
+            h = temp_p / step_size
         
         if np.linalg.norm(r[i+1]) < a :
             print('Particle has hit the planet!')
@@ -229,10 +229,6 @@ def RK_single(f, t0, E, direction, r0, n, args, mode, step_size):
     
     for i in tqdm(range(n)):
         
-        if i%step_size == 0:
-            temp_p = gyroperiod(v[i], args[1], args[0], B_rot_fun(r[i], a, g, h_coeff, mode, R))
-            h = temp_p / step_size
-        
         k1 = f_k1(f, t[i], v[i], r[i], h, args, mode)
         
         k2 = f_k2(f, t[i], v[i], r[i], h, k1, args, mode)
@@ -265,6 +261,10 @@ def RK_single(f, t0, E, direction, r0, n, args, mode, step_size):
         mew_term = 0.5 * gamma(v[i+1]) * args[1] * v_perp * v_perp / np.linalg.norm(current_B)
         mew.append(mew_term)
         
+        if i%step_size == 0 and i > 0:
+            temp_p = gyroperiod(v[i], args[1], args[0], B_rot_fun(r[i], a, g, h_coeff, mode, R))
+            h = temp_p / step_size
+        
         if r[i+1][2] < 0:
             gyroradius = (gamma(v[i+1]) * args[1] * v_perp) / (abs(args[0]) * np.linalg.norm(current_B))
             perp_vec = np.cross(v_perp_vec, current_B)
@@ -280,16 +280,16 @@ def RK_single(f, t0, E, direction, r0, n, args, mode, step_size):
             
             return t, v, r, L, mew, gyroradius, gc
         
-        if np.linalg.norm(r[i+1]) < a :
-            print('Particle has hit the planet!')
-            mew = np.array(mew)
-            gyroradius2 = None
-            gc2 = None
-            t = t[:i+2]
-            v = v[:i+2]
-            r = r[:i+2]
+        # if np.linalg.norm(r[i+1]) < a :
+        #     print('Particle has hit the planet!')
+        #     mew = np.array(mew)
+        #     gyroradius2 = None
+        #     gc2 = None
+        #     t = t[:i+2]
+        #     v = v[:i+2]
+        #     r = r[:i+2]
             
-            return t, v, r, L, mew, gyroradius2, gc2
+        #     return t, v, r, L, mew, gyroradius2, gc2
     
     print('Particle did not reach the equator')
     mew = np.array(mew)
