@@ -226,9 +226,17 @@ energyList = [10**6, 2*10**6, 3*10**6, 4*10**6, 5*10**6, 6*10**6, 7*10**6, 8*10*
 # manager1 = LocationCheck(7, 30, 200, 10, energyList, "proton", 180, UFieldWhole, endStepList=500000, fileNameAddition="-Uranus-gammaRemoved-")
 # manager1.runAllSims()
 
-print("just a bit longer")
+print("run the ones below!")
 
-manager1 = LocationCheck(7, 30, 200, 10, energyList, "proton", 270, UFieldWhole, endStepList=500000, fileNameAddition="-Uranus-gammaRemoved-")
+# manager1 = LocationCheck(7, 30, 200, 10, energyList, "proton", 270, UFieldWhole, endStepList=500000, fileNameAddition="-Uranus-gammaRemoved-")
+# manager1.runAllSims()
+print("run the ones above")
+
+#===============================================================================================================================================
+#Debugging
+
+
+manager1 = LocationCheck(7, 30, 200, 1, [10**6], "proton", 0, UFieldDipole, endStepList=120000, fileNameAddition="debugrun")
 manager1.runAllSims()
 
 

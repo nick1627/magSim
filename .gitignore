@@ -4,3 +4,4 @@ venv/
 *.pyc
 Output/Trash/**
 Nick/pythonTest.py
+Output/OldTrash
