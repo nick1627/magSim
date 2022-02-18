@@ -471,6 +471,18 @@ class Simulation:
         guidingCentrePosition = self.position[index] + larmorRadius*perpDirection
         return guidingCentrePosition
 
+    def plotAltitudeOnTime(self):
+
+        
+        alts = np.linalg.norm(self.position, axis=1)
+
+        
+        ax1 = plt.figure().add_subplot()
+        ax1.plot(self.time, alts)
+        ax1.set_title("altitude (m) on time")
+       
+        return       
+
   
 class SimulationManager:
     """
