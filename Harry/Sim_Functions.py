@@ -180,7 +180,7 @@ def RK(f, t0, E, direction, r0, n, args, mode, step_size):
         v_perp_vec = v[i+1] - v_par
         v_perp = np.linalg.norm(v_perp_vec)
         
-        mew_term = 0.5 * gamma(v[i+1]) * v_perp * v_perp / np.linalg.norm(current_B)
+        mew_term = 0.5 * gamma(v[i+1]) * args[1] * v_perp * v_perp / np.linalg.norm(current_B)
         mew.append(mew_term)
         
         if i%step_size == 0 and i > 0:
