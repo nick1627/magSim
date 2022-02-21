@@ -38,17 +38,17 @@ plt.rcParams.update(params)
 
 #%%
 #INITIAL CONDITIONS
-
+species = 'Proton' #Proton or Electron
 arguments = np.array([q, m_p], dtype = object)
 mode0 = 1 #1 for dipole, 2 for full field
 
 L_shell = 7
 phi_in = 200 * np.pi / 180
-theta_in = 30 * np.pi / 180
-phase = 0 * np.pi / 180
+theta_in = 40 * np.pi / 180
+phase = 90 * np.pi / 180
 t0 = 0.
-E = 6e6 * abs(q)
-n = 1000000 #number of steps
+E = 1e6 * abs(q)
+n = 5000000 #number of steps
 
 #-------------------------#
 if mode0 == 1:
@@ -57,11 +57,11 @@ if mode0 == 1:
 elif mode0 == 2:
     shape = 'Quadrupole'
 
-if arguments[1] == m_p:
-    species = 'Proton'
+if species == 'Proton':
+    arguments = np.array([q, m_p], dtype = object)
     
-elif arguments[1] == m_e:
-    species = 'Electron'
+elif species == 'Electron':
+    arguments = np.array([-q, m_e], dtype = object)
     
 #-------------------------#
 
@@ -109,10 +109,8 @@ direction0[2] = 1
 #direction = np.array([1, 1, 1])
 
 #%%
-#r0 = np.array([-169052073.9254811, -61529922.94984471, 1.0972835320360285e-08])
-#r0 = np.array([0, 7 * a, 0])
-#t, v, r, L, mew = RK(f_dvdt, t0, E, direction0, r0, n, arguments, mode0, 50)
-t, v, r, L, mew, gyroradius, gc = RK_single(f_dvdt, t0, E, direction0, r0, n, arguments, mode0, 50)
+t, v, r, L, mew = RK(f_dvdt, t0, E, direction0, r0, n, arguments, mode0, 100)
+#t, v, r, L, mew, gyroradius, gc = RK_single(f_dvdt, t0, E, direction0, r0, n, arguments, mode0, 50)
 
 t_all = []
 x = []
@@ -181,7 +179,7 @@ plt.show()
 #%%
 #SAVE DATA
 #np.savez('Harry/Simulation_data/e1000keV_1_1_1-6_0_0', t = t, v = v, r = r, L = L, mew = mew)
-saveRegionData('Output/RegionTests/regionTest_Uranus_7-30-200.npz', 0, '1', mode0 - 1, E / q, alpha_eq, phase, np.linalg.norm(gc0_in), np.linalg.norm(gc), gyroradius0, gyroradius)
+saveRegionData('Output/RegionTests/regionTest_Uranus_7-30-200.npz', 0, '0', mode0 - 1, E / q, alpha_eq, phase, np.linalg.norm(gc0_in), np.linalg.norm(gc), gyroradius0, gyroradius)
 
 #%%
 savedArrays = np.load('Harry/Simulation_data/e1000keV_0.1_0.1_1-6_0_0.npz', allow_pickle = True)
@@ -264,7 +262,7 @@ tim = savedArrays["times"]
 #%%
 
 data = loadRegionData('Output/RegionTests/regionTest_Uranus_7-30-200.npz')
-data = selectCriteria(data, name = 'Harry', species = 'proton')
+data = selectCriteria(data, name = 'Harry', species = 'electron')
 
 #%%
 dr_dip = []
@@ -285,7 +283,7 @@ for i in range(len(data)):
 # gyro_plot = data[:, 10]
 #plt.plot(en, dr, 'x', color = 'blue', ms = 8)
 plt.plot(np.array(en_dip) / 1e3, dr_dip, 'x', color = 'red', ms = 8, label = 'Dipole')
-plt.plot(np.array(en_quad) / 1e3, dr_quad, 'x', color = 'blue', ms = 8, label = 'Quadrupole')
+#plt.plot(np.array(en_quad) / 1e3, dr_quad, 'x', color = 'blue', ms = 8, label = 'Quadrupole')
 plt.xscale('log')
 # plt.yscale('log')
 titleString = "Change in equatorial r/a against initial KE for location L=" + str(np.round(L_shell)) + ", " + r"$\theta$ = " + str(np.round(theta_in * 180 / np.pi)) + ", " + r"$\phi$ = " + str(np.round(phi_in * 180 / np.pi))
@@ -324,7 +322,7 @@ print(v[0])
 
 #%%
 for_save = np.array([t, v, r, L, mew, gc0_in, gc], dtype = object)
-np.savez('100keV_proton', for_save)
+np.savez('Poster_data', for_save)
 #%%
 print((np.linalg.norm(gc) - np.linalg.norm(gc0_in)) / a)
 #print(v[0])
@@ -364,3 +362,7 @@ for i in r:
 plt.plot(t, abs_r)
 plt.xlabel("time (s)", fontsize = 16)
 plt.ylabel("Absolute r", fontsize = 16)
+
+#%%
+print(mew[:10])
+print(0.5 * gamma(v[1]) * v[1] * v[1] / np.linalg.norm(B_rot_fun(r[1], a, g, h_coeff, 1, R)))
