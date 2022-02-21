@@ -191,13 +191,13 @@ our simulation is valid.  Not working!!!
 
 
 
-UFieldWhole = UranusField(False)
-UFieldDipole = UranusField(True)
-UFieldWhole.rotate("Field") #want field aligned coordinates
-UFieldDipole.rotate("Field")
+# UFieldWhole = UranusField(False)
+# UFieldDipole = UranusField(True)
+# UFieldWhole.rotate("Field") #want field aligned coordinates
+# UFieldDipole.rotate("Field")
 
 
-energyList = [10**6, 2*10**6, 3*10**6, 4*10**6, 5*10**6, 6*10**6, 7*10**6, 8*10**6, 9*10**6, 10**7] #energies in eV
+# energyList = [10**6, 2*10**6, 3*10**6, 4*10**6, 5*10**6, 6*10**6, 7*10**6, 8*10**6, 9*10**6, 10**7] #energies in eV
 
 # energyList = [10**5]
 
@@ -226,11 +226,11 @@ energyList = [10**6, 2*10**6, 3*10**6, 4*10**6, 5*10**6, 6*10**6, 7*10**6, 8*10*
 # manager1 = LocationCheck(7, 30, 200, 10, energyList, "proton", 180, UFieldWhole, endStepList=500000, fileNameAddition="-Uranus-gammaRemoved-")
 # manager1.runAllSims()
 
-print("run the ones below!")
+# print("run the ones below!")
 
-manager1 = LocationCheck(7, 30, 200, 10, energyList, "proton", 270, UFieldWhole, endStepList=500000, fileNameAddition="-Uranus-gammaRemoved-")
-manager1.runAllSims()
-print("run the ones above")
+# manager1 = LocationCheck(7, 30, 200, 10, energyList, "proton", 270, UFieldWhole, endStepList=500000, fileNameAddition="-Uranus-gammaRemoved-")
+# manager1.runAllSims()
+# print("run the ones above")
 
 #===============================================================================================================================================
 #Debugging
@@ -242,5 +242,63 @@ print("run the ones above")
 
 # print(manager1.simulations[0].position[0])
 # print(manager1.simulations[0].velocity[0])
+
+# plt.show()
+
+
+#=====================Electron runs======================================================
+
+
+UFieldWhole = UranusField(False)
+UFieldDipole = UranusField(True)
+UFieldWhole.rotate("Field") #want field aligned coordinates
+UFieldDipole.rotate("Field")
+
+
+# energyList = [10**6, 2*10**6, 3*10**6, 4*10**6, 5*10**6, 6*10**6, 7*10**6, 8*10**6, 9*10**6, 10**7] #energies in eV
+
+energyList = [10**6]#, 10**7]
+
+# manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 0, UFieldDipole, endStepList=15000000, fileNameAddition="-Uranus-")
+# manager1.runAllSims()
+
+# print("1 done")
+
+manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 90, UFieldDipole, endStepList=15000000, fileNameAddition="-Uranus-")
+manager1.runAllSims()
+
+print("2 done")
+
+manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 180, UFieldDipole, endStepList=15000000, fileNameAddition="-Uranus-")
+manager1.runAllSims()
+
+print("3 done")
+
+manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 270, UFieldDipole, endStepList=15000000, fileNameAddition="-Uranus-")
+manager1.runAllSims()
+
+print("4 done")
+
+manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 0, UFieldWhole, endStepList=15000000, fileNameAddition="-Uranus-")
+manager1.runAllSims()
+
+print("5 done")
+
+manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 90, UFieldWhole, endStepList=15000000, fileNameAddition="-Uranus-")
+manager1.runAllSims()
+
+print("6 done")
+
+manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 180, UFieldWhole, endStepList=15000000, fileNameAddition="-Uranus-")
+manager1.runAllSims()
+
+print("7 done")
+
+manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 270, UFieldWhole, endStepList=15000000, fileNameAddition="-Uranus-")
+manager1.runAllSims()
+
+print("8 done")
+
+
 
 # plt.show()

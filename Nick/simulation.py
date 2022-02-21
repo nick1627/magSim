@@ -679,7 +679,7 @@ class LocationCheck(SimulationManager):
 
        
 
-        super(LocationCheck, self).__init__(field, particleList, stepsPerPeriodList=50, N=N, fileKeyWord="locationCheck" + fileNameAddition, endStepList=endStepList, initialPhaseList=gyroPhase)
+        super(LocationCheck, self).__init__(field, particleList, stepsPerPeriodList=400, N=N, fileKeyWord="locationCheck" + fileNameAddition, endStepList=endStepList, initialPhaseList=gyroPhase)
 
 
     def getLarmorRadius(self, B, v, alpha, m0, q):
