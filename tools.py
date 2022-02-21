@@ -144,6 +144,9 @@ def selectCriteria(data, name="", date="", species="", field="", KE="", pitchAng
     """
     Returns an array with the desired criteria given as input
 
+    name:       "Harry" or "Nick"
+    species:    "proton" or "electron"
+    field:      "fullField" or "dipoleOnly"
     phase:      Phase angle in degrees
     """
     if name == "Harry":
@@ -287,6 +290,49 @@ def plotRChangeOnEnergy(regionArray, planetaryRadius, L, theta, phi, logEnergy=T
     ax.legend()
 
     return
+
+def plotRChangeOnEnergy2(regionArray, planetaryRadius, L, theta, phi, logEnergy=True):
+    """
+    This function accepts region data in the form produced by the loadRegionData function.
+    It plots the change in r on energy.
+
+    It is assumed that only the data that is to be plotted is input to this function.
+    This is why the function accepts an array rather than the file path.
+    """
+    a = planetaryRadius
+
+    #data rows are of the form:
+    #name, date, species, field, initialKE, pitchAngle, phase, initialRadius, finalRadius, initialGyroradius, finalGyroradius
+
+    #separate data by name, in case of difference between simulations
+    electronDipole = selectCriteria(regionArray, species="electron", field="dipoleOnly")
+    electronFull = selectCriteria(regionArray, species="electron", field="fullField")
+    protonDipole = selectCriteria(regionArray, species="proton", field="dipoleOnly")
+    protonFull = selectCriteria(regionArray, species="proton", field="fullField")
+
+
+
+
+    
+    #now can plot
+
+    ax = plt.figure().add_subplot()
+    ax.plot(protonDipole[:, 4], (protonDipole[:,8] - protonDipole[:,7])/a, label="Dipole, proton", color="red", marker = "+", linestyle="none")
+    ax.plot(protonFull[:, 4], (protonFull[:,8] - protonFull[:,7])/a, label="Full field, proton", color="purple", marker = "+", linestyle="none")
+    ax.plot(electronDipole[:, 4], (electronDipole[:,8] - electronDipole[:,7])/a, label = "Dipole, electron", color="blue", marker = "x", linestyle="none")
+    ax.plot(electronFull[:, 4], (electronFull[:,8] - electronFull[:,7])/a, label="Full field, electron", color = "green", marker = "x", linestyle="none")
+
+    
+    titleString = "Change in equatorial r/a against initial KE; L=" + str(np.round(L)) + ", " + r"$\theta$ = " + str(np.round(theta)) + ", " + r"$\phi$ = " + str(np.round(phi))
+    ax.set_title(titleString)
+    ax.set_xlabel("Kinetic energy (eV)")
+    ax.set_ylabel("Final r/a - initial r/a")
+    if logEnergy:
+        ax.set_xscale('log')
+    ax.legend()
+
+    return
+
 
 
 def plotGyroradiusOnEnergy(regionArray):

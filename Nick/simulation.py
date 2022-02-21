@@ -678,8 +678,8 @@ class LocationCheck(SimulationManager):
             raise(Exception("Invalid particle type"))
 
        
-
-        super(LocationCheck, self).__init__(field, particleList, stepsPerPeriodList=400, N=N, fileKeyWord="locationCheck" + fileNameAddition, endStepList=endStepList, initialPhaseList=gyroPhase)
+        #400 steps definitely works for e- at 1MeV
+        super(LocationCheck, self).__init__(field, particleList, stepsPerPeriodList=200, N=N, fileKeyWord="locationCheck" + fileNameAddition, endStepList=endStepList, initialPhaseList=gyroPhase)
 
 
     def getLarmorRadius(self, B, v, alpha, m0, q):
