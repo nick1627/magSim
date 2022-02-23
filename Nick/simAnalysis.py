@@ -42,15 +42,15 @@ import tools
 #=======================================================================================
 
 
-sim = Simulation(simDataPath = "Output/locationCheck-Uranus-7-30-200-0--Electron-dipoleOnly-100000.npz")
+sim = Simulation(simDataPath = "Output/locationCheck-Uranus-7-30-200-270--Electron-fullField-1000000.npz")
 # sim.plotAltitudeOnTime()
-sim.plotPositionOnTime(z=True)
-sim.plotKEOnTime()
+# sim.plotPositionOnTime(z=True)
+# sim.plotKEOnTime()
 # sim.plotFirstAIOnTime()
 # # # # # # sim.plotLShellOnTime()
-# sim.saveBounceData("Output/RegionTests/regionTest_Uranus_7-30-200.npz")
+sim.saveBounceData("Output/RegionTests/regionTest_Uranus_7-30-200.npz")
 # print(tools.loadRegionData("Output/RegionTests/regionTest_Uranus_7-30-200.npz"))
-plt.show()
+# plt.show()
 
 
 # Uradius = 25600000
