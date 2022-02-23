@@ -42,15 +42,15 @@ import tools
 #=======================================================================================
 
 
-# sim = Simulation(simDataPath = "Output/locationCheck-Uranus-7-30-200-270--Electron-dipoleOnly-1000000.npz")
-# # sim.plotAltitudeOnTime()
-# # sim.plotPositionOnTime(z=True)
-# sim.plotKEOnTime()
-# # sim.plotFirstAIOnTime()
-# # # # # # # sim.plotLShellOnTime()
-# # sim.saveBounceData("Output/RegionTests/regionTest_Uranus_7-30-200.npz")
-# # print(tools.loadRegionData("Output/RegionTests/regionTest_Uranus_7-30-200.npz"))
-# plt.show()
+sim = Simulation(simDataPath = "Output/locationCheck-Uranus-7-30-200-0--Electron-dipoleOnly-100000.npz")
+# sim.plotAltitudeOnTime()
+sim.plotPositionOnTime(z=True)
+sim.plotKEOnTime()
+# sim.plotFirstAIOnTime()
+# # # # # # sim.plotLShellOnTime()
+# sim.saveBounceData("Output/RegionTests/regionTest_Uranus_7-30-200.npz")
+# print(tools.loadRegionData("Output/RegionTests/regionTest_Uranus_7-30-200.npz"))
+plt.show()
 
 
 # Uradius = 25600000
@@ -72,8 +72,8 @@ import tools
 # tools.plotGyroradiusOnEnergy(fullData)
 
 
-Uradius = 25600000
-data = tools.loadRegionData("Output/RegionTests/regionTest_Uranus_7-30-200.npz")
-tools.plotRChangeOnEnergy2(data, Uradius, 7, 30, 200)
-plt.show()
+# Uradius = 25600000
+# data = tools.loadRegionData("Output/RegionTests/regionTest_Uranus_7-30-200.npz")
+# tools.plotRChangeOnEnergy2(data, Uradius, 7, 30, 200)
+# plt.show()
 
