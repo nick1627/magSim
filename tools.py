@@ -335,6 +335,7 @@ def plotRChangeOnEnergy2(regionArray, planetaryRadius, L, theta, phi, logEnergy=
 
 
 
+
 def plotGyroradiusOnEnergy(regionArray):
     h = []
     n = []

@@ -85,8 +85,6 @@ class Simulation:
             self.time = timeArray
             self.complete = True
 
-
-       
         
         return 
     
@@ -105,26 +103,59 @@ class Simulation:
         larmorPeriod = gamma*self.particle.m0*2*np.pi/(abs(self.particle.q)*Bmag)
         return larmorPeriod
 
-    def getLarmorRadius(self, index):
+    def getLarmorRadius(self, index, alternativeEnergy=""):
         """
         Computes the larmor radius at a point in the simulation after the simulation has run.
+
+        index:  integer
+        alternativeEnergy:  eV
         """
         if self.complete == False:
             raise(Exception("Simulation must be complete for this function to run"))
 
-        position = self.position[index]
-        velocity = self.velocity[index]
-
         if self.field.rotationFlag == "R":
             self.field.rotate("Field")
-        B = self.field.getField(position)
-        Bmag = np.linalg.norm(B)
-        gamma = 1/np.sqrt(1-(np.linalg.norm(velocity)/sp.constants.c)**2)
-        Bdir = B/Bmag
-        v_perp = velocity - np.dot(velocity, Bdir)*Bdir
-        larmorRadius = (gamma*self.particle.m0*np.linalg.norm(v_perp))/(abs(self.particle.q)*Bmag)
+
+        if alternativeEnergy=="":
+            position = self.position[index]
+            velocity = self.velocity[index]
+
+         
+            B = self.field.getField(position)
+            Bmag = np.linalg.norm(B)
+            gamma = 1/np.sqrt(1-(np.linalg.norm(velocity)/sp.constants.c)**2)
+            Bdir = B/Bmag
+            v_perp = velocity - np.dot(velocity, Bdir)*Bdir
+            larmorRadius = (gamma*self.particle.m0*np.linalg.norm(v_perp))/(abs(self.particle.q)*Bmag)
+        
+        else:
+            #we're given an alternative energy
+            position=self.position[index]
+            velocityDirection = self.velocity[index]/np.linalg.norm(self.velocity[index])
+
+            m0 = self.particle.m0
+            
+            newE = alternativeEnergy*sp.constants.e #newE is now in joules
+            newVelocity = (np.sqrt(1-((self.particle.m0*sp.constants.c**2)/(self.particle.m0*sp.constants.c**2 + newE))**2))*sp.constants.c*velocityDirection
+
+            B = self.field.getField(position)
+            Bmag = np.linalg.norm(B)
+            gamma = 1/np.sqrt(1-(np.linalg.norm(newVelocity)/sp.constants.c)**2)
+            Bdir = B/Bmag
+            v_perp = newVelocity - np.dot(newVelocity, Bdir)*Bdir
+            larmorRadius = (gamma*self.particle.m0*np.linalg.norm(v_perp))/(abs(self.particle.q)*Bmag)
 
         return larmorRadius
+
+
+    def getChangeInLarmorRadius(self, index, alternativeEnergy):
+        """
+        require alternative energy in eV
+        """
+        actualLarmorRadius = self.getLarmorRadius(index)
+        newLarmorRadius = self.getLarmorRadius(index, alternativeEnergy=alternativeEnergy)
+
+        return newLarmorRadius - actualLarmorRadius
     
     def run(self, endStep=1000):
         """
@@ -228,24 +259,55 @@ class Simulation:
         
         return
 
-    def plotLShellOnTime(self, titleAddition=""):
-        #Need to get L from position
-        L = np.zeros(np.shape(self.position)[0])
-        for i in range(0, np.shape(self.position)[0]):
-            sphericalPos = self.field.convertCartesianToPolar(self.position[i])
-            L[i] = sphericalPos[0]/(np.sin(sphericalPos[1]))**2
+    def plotLShellOnTime(self, titleAddition="", otherSims = [], legendList=[]):
 
-        L = L/self.field.a
-        #Now have obtained an array of L-shell
-        #Now plot L-shell on time
+        if otherSims == []:
+            #Need to get L from position
+            L = np.zeros(np.shape(self.position)[0])
+            for i in range(0, np.shape(self.position)[0]):
+                sphericalPos = self.field.convertCartesianToPolar(self.position[i])
+                L[i] = sphericalPos[0]/(np.sin(sphericalPos[1]))**2
 
-        ax = plt.figure().add_subplot()
-        ax.plot(self.time, L, color="purple")
-        
-        titleString = "L-shell on time" + " " + titleAddition
-        ax.set_title(titleString)
-        ax.set_xlabel("Time (s)")
-        ax.set_ylabel("L-shell (planetary radii)")
+            L = L/self.field.a
+            #Now have obtained an array of L-shell
+            #Now plot L-shell on time
+
+            ax = plt.figure().add_subplot()
+            ax.plot(self.time, L, color="purple")
+            
+            titleString = "L-shell on time" + " " + titleAddition
+            ax.set_title(titleString)
+            ax.set_xlabel("Time (s)")
+            ax.set_ylabel("L-shell (planetary radii)")
+
+        else: #we have multiple simulations
+            sims = [self] + otherSims
+            L = np.zeros((len(sims), np.shape(self.position)[0]))
+
+            minTime = sims[0].time[-1]
+            for i in range(1, len(sims)):
+                if sims[i].time[-1] < minTime:
+                    minTime = sims[i].time[-1]
+
+            for i in range(0, len(sims)):
+                for j in range(0, np.shape(self.position)[0]):
+                    sphericalPos = self.field.convertCartesianToPolar(sims[i].position[j])
+                    L[i, j] = sphericalPos[0]/(np.sin(sphericalPos[1]))**2
+
+            L = L/self.field.a
+
+            ax = plt.figure().add_subplot()
+            colourList = ["blue", "purple", "red", "green"]
+            for i in range(0, len(sims)):
+                ax.plot(sims[i].time, L[i, :], color=colourList[i], label = legendList[i])
+            
+            titleString = "L-shell on time" + " " + titleAddition
+
+            plt.xlim((0, minTime))
+            ax.set_title(titleString)
+            ax.set_xlabel("Time (s)")
+            ax.set_ylabel("L-shell (planetary radii)")
+            ax.legend()
 
         return
 
@@ -314,7 +376,7 @@ class Simulation:
 
         return
 
-    def plotKEOnTime(self, titleAddition=""):
+    def plotKEOnTime(self, titleAddition="", plot=True, returnData=False):
         restMassEnergy = self.particle.m0*sp.constants.c**2
         v = np.linalg.norm(self.velocity, axis=-1)
         gamma = 1/(np.sqrt(1 - (v/sp.constants.c)**2))
@@ -326,15 +388,20 @@ class Simulation:
         Ek = (gamma - 1)*restMassEnergy #This is in joules
         Ek = Ek/(1000*sp.constants.e)
         ax = plt.figure().add_subplot()
-        ax.plot(self.time, Ek, color="red")
-        gain = ((Ek[-1] - Ek[0])/Ek[0])*100
-        gain = np.round(gain, decimals=3)
-        titleString = "Kinetic Energy on Time - Percentage Gain: " + str(gain) + "%" + " " + titleAddition
-        ax.set_title(titleString, y=1.04)
-        ax.set_xlabel("Time (s)")
-        ax.set_ylabel("Kinetic Energy (keV)")
 
-        return
+        if plot:
+            ax.plot(self.time, Ek, color="red")
+            gain = ((Ek[-1] - Ek[0])/Ek[0])*100
+            gain = np.round(gain, decimals=3)
+            titleString = "Kinetic Energy on Time - Percentage Gain: " + str(gain) + "%" + " " + titleAddition
+            ax.set_title(titleString, y=1.04)
+            ax.set_xlabel("Time (s)")
+            ax.set_ylabel("Kinetic Energy (keV)")
+
+        if returnData:
+            return Ek*1000 #return KE in eV
+        else:
+            return
 
     def getKE(self, index, unit="eV"):
         """
@@ -386,6 +453,56 @@ class Simulation:
         ax.plot(self.time, v_error)
         
         return
+
+    def getFirstEquatorialIndex(self):
+        """
+        Returns the first index after the particle has crossed the magnetic equator
+        """
+        if self.complete==False:
+            raise(Exception("Simulation has not yet finished.  Simulation must be complete before this function can run."))
+
+        if abs(self.position[0, 2]) > 10**(-5):
+            # print(self.position[0])
+            raise(Exception("Particle does not start at magnetic equator, so cannot perform analysis."))
+
+        #first collect up all the data
+        #Index of initial event is 0
+        #Need to find final index
+
+        found = False
+        counter=0
+        length = np.shape(self.position)[0]       
+        if self.position[1, 2] > 0:
+            # print("Particle heading north")
+            #particle heading North initially
+            while (found == False) and (counter < length):
+                if self.position[counter, 2]<0:
+                    #particle has crossed back into the other hemisphere
+                    found = True
+                else:
+                    counter+=1
+        else:
+            # print("Particle heading south")
+            #particle heading South initially
+            while (found == False) and (counter < length):
+                if self.position[counter, 2]>0:
+                    #particle has crossed back into other hemisphere
+                    found = True
+                else:
+                    counter+=1
+
+        
+        if found == False:
+            raise(Exception("The particle in this simulation did not cross back into the other hemisphere.  No results can be found."))
+
+        # print("The index is " + str(counter))
+        if counter < 100:
+            print("this is a bit small right?")
+
+        #counter is now the index of the final point.
+
+        return counter
+
 
     def saveBounceData(self, filePath):
         """
@@ -483,6 +600,165 @@ class Simulation:
        
         return       
 
+    # def getEquatorialGuidingCentreError(self):
+    #     """
+    #     This function finds the error in the position of the guiding centre when the particle first crosses the equator
+    #     """
+
+    #     equatorialIndex = self.getFirstEquatorialIndex()
+    #     firstIndex = equatorialIndex - 50
+    #     secondIndex = equatorialIndex + 50
+
+    #     try:
+    #         temp = self.position[secondIndex]
+    #     except:
+    #         raise(Exception("Not enough points to do the analysis.  Modify it"))
+
+    #     closePositions = self.position[firstIndex:secondIndex, :]
+    #     guidingCentres = np.zeros(np.shape(closePositions))
+    #     for i in range(0, np.shape(guidingCentres)[0]):
+    #         rL = self.getLarmorRadius(firstIndex + i)
+    #         guidingCentres[i, :] = self.getGuidingCentrePosition(firstIndex + i, larmorRadius=rL)
+
+
+    #     # plt.figure()
+    #     # plt.plot(closePositions[:, 0], closePositions[:, 1], color="blue")
+    #     # plt.plot(guidingCentres[:, 0], guidingCentres[:, 1], color="red")
+    #     # plt.show()    
+    #     ax = plt.figure().add_subplot(projection = "3d")
+    #     ax.plot(closePositions[:,0], closePositions[:,1], closePositions[:,2])
+    #     ax.plot(guidingCentres[:, 0], guidingCentres[:, 1], guidingCentres[:, 2])
+    #     plt.show()
+    #     #Now we need to find the variation in phi for these positions in the spherical coord system
+    #     for i in range(0, np.shape(guidingCentres)[0]):
+    #         guidingCentres[i,:] = self.convertCartesianToPolar(guidingCentres[i, :])
+        
+    #     #now the positions are of the form r, theta, phi
+    #     #check phi values go from 0 to 2pi
+    #     guidingCentres[:,2] = guidingCentres[:,2] % 2*np.pi
+    #     #We're looking for the max and min phi values 
+    #     maxPhi = np.max(guidingCentres[:, 2])
+    #     minPhi = np.min(guidingCentres[:, 2])
+    #     deltaPhi = abs(maxPhi - minPhi)
+    #     if deltaPhi > np.pi:
+    #         deltaPhi = 2*np.pi - deltaPhi
+    #     deltaPhi = abs(deltaPhi) #just in case
+    #     # print(deltaPhi)
+    #     #now we turn this delta phi into a length
+    #     rL = self.getLarmorRadius(equatorialIndex)
+    #     gcPosition = self.getGuidingCentrePosition(equatorialIndex, rL)
+    #     gcRadius = np.linalg.norm(gcPosition)
+    #     print(gcRadius/25600000)
+    #     gcError = gcRadius*np.tan(deltaPhi/2)
+    #     gcError = 2*gcError
+
+    #     return gcError
+
+    def getPositionAndVelocityError(self, N):
+        """
+        Returns the position and velocity error at the given index.
+
+        Must be done after the simulation has run.
+
+        N:      The index we are calculating the error for
+        """
+        #first check the simulation has run
+        if self.complete == False:
+            raise(Exception("The simulation must be complete"))
+
+     
+
+        #find timestep to use
+        timeSteps = np.zeros(N)
+        for i in range(0, N):
+            timeSteps[i] = self.time[i+1] - self.time[i]
+
+        h = np.max(timeSteps)    
+
+        #Need to find when the maximum acceleration was happening, which hopefully will be at the pole
+       
+            
+        # averageAcceleration = accelerationSum/N
+        # accelerations = np.zeros(N)
+        # for i in range(0, N):
+        #     accelerations[i] = np.linalg.norm((self.velocity[i+1] - self.velocity[i])/(self.time[i+1] - self.time[i]))
+           
+        # averageAcceleration = np.mean(accelerations)
+
+        #now maxTimeStep is the maximum time step that occurred.
+        #Define various computational errors
+        mu_x0 = 10**(-7)
+        mu_v0 = 10**(-18)
+        mu_x = 10**(-7)
+        mu_v = 10**(-18)
+
+        #Define the truncation errors
+        a_v = h**7
+        # a_x = 0.5*averageAcceleration*h**2
+
+        velocityError = (mu_v0 + (N-1)*(a_v + mu_v))*sp.constants.c
+
+
+        # positionError = mu_x0 + (N-1)*(a_x + mu_x) + h*sp.constants.c*(mu_x0 + a_v*(N-1)*(N-2)/2 - a_v*N + mu_v*(N-1)*(N-2)/2 - mu_v*N)
+        accelerationTerm = 0
+        for i in range(0, N):
+            current_h = self.time[i+1] - self.time[i]
+            current_a = (self.velocity[i+1] - self.velocity[i])/(self.time[i+1] - self.time[i])
+            accelerationTerm += 0.5*current_a*current_h**2
+
+        accelerationTerm = np.array(accelerationTerm[0], accelerationTerm[1])
+        accelerationTerm = np.linalg.norm(accelerationTerm)
+
+        print("terms")
+        print(mu_x0)
+        print((N-1)*mu_x)
+        print(accelerationTerm)
+        print(h*sp.constants.c*mu_x0)
+        print(h*sp.constants.c*(a_v*(N-1)*(N-2)/2 - a_v*N + mu_v*(N-1)*(N-2)/2 - mu_v*N))
+        print("terms end")
+
+
+        # print(accelerationTerm/((N-1)*a_x))
+
+        positionError = mu_x0 + accelerationTerm + (N-1)*(mu_x) + h*sp.constants.c*(mu_x0 + a_v*(N-1)*(N-2)/2 - a_v*N + mu_v*(N-1)*(N-2)/2 - mu_v*N)
+
+
+        return positionError, velocityError
+
+
+    def convertCartesianToPolar(self, rvec, theta=0, phi=0, origin=True):
+        if origin:
+        
+            r = np.sqrt(np.power(rvec[0], 2) + np.power(rvec[1], 2) + np.power(rvec[2], 2))
+            theta = np.arctan2(np.sqrt(np.power(rvec[0], 2) + np.power(rvec[1], 2)), rvec[2])
+            phi = np.arctan2(rvec[1], rvec[0])
+
+            result = np.array([r, theta, phi])
+        
+        else:
+            Sp = np.sin(phi)
+            St = np.sin(theta)
+            Cp = np.cos(phi)
+            Ct = np.cos(theta)
+
+            T = np.array([[St*Cp, St*Sp, Ct], 
+                            [Ct*Cp, Ct*Sp, -St],
+                            [-Sp, Cp, 0]])
+
+            result = np.matmul(T, rvec)
+        
+        return result
+
+
+    def convertPolarToCartesian(self, rvec, theta, phi):
+        #rvec is the components of the vector to be converted in order (a, b, c) for a*rhat + b*theta hat + c*phihat
+        #For vectors from the origin, rvec should read (r, 0, 0), but theta and phi must be given too
+
+        T = np.array([[np.sin(theta)*np.cos(phi),   np.cos(theta)*np.cos(phi),  -np.sin(phi)], 
+                        [np.sin(theta)*np.sin(phi), np.cos(theta)*np.sin(phi),  np.cos(phi)],
+                        [np.cos(theta),             -np.sin(theta),             0]])
+
+        return np.matmul(T, rvec)
   
 class SimulationManager:
     """
@@ -679,7 +955,7 @@ class LocationCheck(SimulationManager):
 
        
         #400 steps definitely works for e- at 1MeV
-        super(LocationCheck, self).__init__(field, particleList, stepsPerPeriodList=50, N=N, fileKeyWord="locationCheck" + fileNameAddition, endStepList=endStepList, initialPhaseList=gyroPhase)
+        super(LocationCheck, self).__init__(field, particleList, stepsPerPeriodList=200, N=N, fileKeyWord="locationCheck" + fileNameAddition, endStepList=endStepList, initialPhaseList=gyroPhase)
 
 
     def getLarmorRadius(self, B, v, alpha, m0, q):

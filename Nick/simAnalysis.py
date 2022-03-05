@@ -16,6 +16,7 @@ from fields import *
 from simulation import *
 from particles import *
 import tools
+import dataAnalysis
 #=======================================================================================
 #Analyse results of full field vs dipole only field
 #dipoleSim = Simulation(simDataPath="Output/nick-Uranus-DipoleOnly-Proton-10000.npz")
@@ -41,15 +42,21 @@ import tools
 
 #=======================================================================================
 
+# Uradius = 25600000
 
-sim = Simulation(simDataPath = "Output/locationCheck-Uranus-7-30-200-270--Electron-fullField-1000000.npz")
-# sim.plotAltitudeOnTime()
-# sim.plotPositionOnTime(z=True)
+# sim = Simulation(simDataPath = "Output/Trash/locationCheck-Uranus-gammaRemoved-7-30-200-0--Proton-fullField-10000000.npz")
+# i = sim.getFirstEquatorialIndex()
+# v = sim.velocity[i]
+# deltaT = sim.time[i] - sim.time[i-1]
+# print(np.linalg.norm(v*deltaT/Uradius))
+# # sim.plotAltitudeOnTime()
+# # sim.plotPositionOnTime(z=True)
 # sim.plotKEOnTime()
-# sim.plotFirstAIOnTime()
-# # # # # # sim.plotLShellOnTime()
-sim.saveBounceData("Output/RegionTests/regionTest_Uranus_7-30-200.npz")
-# print(tools.loadRegionData("Output/RegionTests/regionTest_Uranus_7-30-200.npz"))
+# dataAnalysis.findFirstEnergyStepHeight(sim)
+# # sim.plotFirstAIOnTime()
+# # sim1.plotLShellOnTime()
+# # sim.saveBounceData("Output/RegionTests/regionTest_Uranus_7-30-200.npz")
+# # print(tools.loadRegionData("Output/RegionTests/regionTest_Uranus_7-30-200.npz"))
 # plt.show()
 
 
@@ -77,3 +84,51 @@ sim.saveBounceData("Output/RegionTests/regionTest_Uranus_7-30-200.npz")
 # tools.plotRChangeOnEnergy2(data, Uradius, 7, 30, 200)
 # plt.show()
 
+
+# long run plot ========================================================================
+# sim1 = Simulation(simDataPath = "Output/Trash/locationCheck-Uranus-LongRunPlot-7-30-200-0--Proton-dipoleOnly-100000.npz")
+# sim2 = Simulation(simDataPath = "Output/Trash/locationCheck-Uranus-LongRunPlot-7-30-200-0--Proton-fullField-100000.npz")
+
+# sim1.plotLShellOnTime(otherSims = [sim2], legendList = ["Dipole only", "Complete field"], titleAddition=" - Targeting L=7, " + r"$\theta$" + "=30, " + r"$\phi$" + "=200, 0 phase")
+# plt.savefig("Output/Figures/longRunLShell.eps", type="eps")
+# plt.show()
+
+# larmor error ========================================================================
+
+#dipole only, 0 phase runs
+
+sim = Simulation(simDataPath = "Output/locationCheck-Uranus-50Step-7-30-200-0--Proton-fullField-10000.npz")
+sim.plotPositionOnTime(z=True)
+# equatorialIndex = sim.getFirstEquatorialIndex()
+# print(equatorialIndex)
+# # deltaLarmorRadius = sim.getChangeInLarmorRadius(equatorialIndex, sim.particle.initialEnergy)
+# # print("change in larmor radius/a")
+# # print(deltaLarmorRadius/Uradius)
+# # print("final larmor radius")
+# # print(sim.getLarmorRadius(equatorialIndex)/Uradius)
+# # print("Error in calculating guiding centre position")
+# # print(sim.getEquatorialGuidingCentreError()/Uradius)
+# # sim.plotAltitudeOnTime()
+# # sim.plotPositionOnTime(z=True)
+# # sim.plotKEOnTime()
+# # sim.plotFirstAIOnTime()
+# # sim1.plotLShellOnTime()
+# # sim.saveBounceData("Output/RegionTests/regionTest_Uranus_7-30-200.npz")
+# # print(tools.loadRegionData("Output/RegionTests/regionTest_Uranus_7-30-200.npz"))
+# error = sim.getPositionAndVelocityError(equatorialIndex)
+# # print(error)
+# print(error[0]/Uradius)
+# plt.show()
+
+
+
+#======================analysing data for 800 steps=================================================
+
+
+# sim = Simulation(simDataPath = "Output/locationCheck-Uranus-800Step-7-30-200-0--Proton-fullField-10000000.npz")
+# sim.saveBounceData("Output/RegionTests/regionTest_Uranus_MoreSteps_7-30-200.npz")
+
+# Uradius = 25600000
+# data = tools.loadRegionData("Output/RegionTests/regionTest_Uranus_MoreSteps_7-30-200.npz")
+# tools.plotRChangeOnEnergy2(data, Uradius, 7, 30, 200)
+plt.show()

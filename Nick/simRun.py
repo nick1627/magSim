@@ -257,7 +257,7 @@ UFieldDipole.rotate("Field")
 
 # energyList = [10**6, 2*10**6, 3*10**6, 4*10**6, 5*10**6, 6*10**6, 7*10**6, 8*10**6, 9*10**6, 10**7] #energies in eV
 
-energyList = [10**5]#, 10**7]
+# energyList = [10**5]#, 10**7]
 
 # manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 0, UFieldDipole, endStepList=4200000, fileNameAddition="-Uranus-")
 # manager1.runAllSims()
@@ -279,33 +279,155 @@ energyList = [10**5]#, 10**7]
 
 # print("4 done")
 
-manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 0, UFieldWhole, endStepList=4200000, fileNameAddition="-Uranus-")
+# manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 0, UFieldWhole, endStepList=4200000, fileNameAddition="-Uranus-")
+# manager1.runAllSims()
+
+# print("5 done")
+
+# manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 90, UFieldWhole, endStepList=4200000, fileNameAddition="-Uranus-")
+# manager1.runAllSims()
+
+# print("6 done")
+
+# manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 180, UFieldWhole, endStepList=4200000, fileNameAddition="-Uranus-")
+# manager1.runAllSims()
+
+# print("7 done")
+
+# manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 270, UFieldWhole, endStepList=4200000, fileNameAddition="-Uranus-")
+# manager1.runAllSims()
+
+# print("8 done")
+
+# #Poster plot
+# manager1 = LocationCheck(7, 30, 200, 1, [10**5], "proton", 0, UFieldDipole, fileNameAddition="-Uranus-LongRunPlot-")
+# manager1.runAllSims()
+# print("poster 1 done")
+# manager1 = LocationCheck(7, 30, 200, 1, [10**5], "proton", 0, UFieldWhole, fileNameAddition="-Uranus-LongRunPlot-")
+# manager1.runAllSims()
+
+#==========================================================================================================
+#error testing
+
+# manager1 = LocationCheck(7, 30, 200, 1, [10**7], "proton", 0, UFieldWhole, endStepList=50000, fileNameAddition="-ErrorTest-Uranus-")
+# manager1.runAllSims()
+
+# manager1 = LocationCheck(7, 30, 200, 1, [10**7], "proton", 90, UFieldWhole, endStepList=150000, fileNameAddition="-ErrorTest-Uranus-")
+# manager1.runAllSims()
+
+# manager1 = LocationCheck(7, 30, 200, 1, [10**7], "proton", 180, UFieldWhole, endStepList=150000, fileNameAddition="-ErrorTest-Uranus-")
+# manager1.runAllSims()
+
+# manager1 = LocationCheck(7, 30, 200, 1, [10**7], "proton", 270, UFieldWhole, endStepList=150000, fileNameAddition="-ErrorTest-Uranus-")
+# manager1.runAllSims()
+
+# manager1 = LocationCheck(7, 30, 200, 1, [10**7], "proton", 0, UFieldDipole, endStepList=150000, fileNameAddition="-ErrorTest-Uranus-")
+# manager1.runAllSims()
+
+# manager1 = LocationCheck(7, 30, 200, 1, [10**7], "proton", 90, UFieldDipole, endStepList=150000, fileNameAddition="-ErrorTest-Uranus-")
+# manager1.runAllSims()
+
+# manager1 = LocationCheck(7, 30, 200, 1, [10**7], "proton", 180, UFieldDipole, endStepList=150000, fileNameAddition="-ErrorTest-Uranus-")
+# manager1.runAllSims()
+
+# manager1 = LocationCheck(7, 30, 200, 1, [10**7], "proton", 270, UFieldDipole, endStepList=150000, fileNameAddition="-ErrorTest-Uranus-")
+# manager1.runAllSims()
+
+# plt.show()
+
+
+
+#======================================================Re running but with 200 steps per period======================================================================
+
+
+
+# energyList = [10**6, 2*10**6, 3*10**6, 4*10**6, 5*10**6, 6*10**6, 7*10**6, 8*10**6, 9*10**6, 10**7] #energies in eV
+
+
+# manager1 = LocationCheck(7, 30, 200, 10, energyList, "proton", 0, UFieldWhole, endStepList=220000, fileNameAddition="-Uranus-800Step-")
+# manager1.runAllSims()
+
+# print("1 done")
+
+# manager1 = LocationCheck(7, 30, 200, 10, energyList, "proton", 90, UFieldWhole, endStepList=220000, fileNameAddition="-Uranus-800Step-")
+# manager1.runAllSims()
+
+# print("1 done")
+
+# manager1 = LocationCheck(7, 30, 200, 10, energyList, "proton", 180, UFieldWhole, endStepList=220000, fileNameAddition="-Uranus-800Step-")
+# manager1.runAllSims()
+
+# print("1 done")
+
+# manager1 = LocationCheck(7, 30, 200, 10, energyList, "proton", 270, UFieldWhole, endStepList=220000, fileNameAddition="-Uranus-800Step-")
+# manager1.runAllSims()
+
+# print("1 done")
+
+# manager1 = LocationCheck(7, 30, 200, 10, energyList, "proton", 0, UFieldDipole, endStepList=220000, fileNameAddition="-Uranus-800Step-")
+# manager1.runAllSims()
+
+# print("1 done")
+
+# manager1 = LocationCheck(7, 30, 200, 10, energyList, "proton", 90, UFieldDipole, endStepList=220000, fileNameAddition="-Uranus-800Step-")
+# manager1.runAllSims()
+
+# print("1 done")
+
+# manager1 = LocationCheck(7, 30, 200, 10, energyList, "proton", 180, UFieldDipole, endStepList=220000, fileNameAddition="-Uranus-800Step-")
+# manager1.runAllSims()
+
+# print("1 done")
+
+# manager1 = LocationCheck(7, 30, 200, 10, energyList, "proton", 270, UFieldDipole, endStepList=220000, fileNameAddition="-Uranus-800Step-")
+# manager1.runAllSims()
+
+# print("1 done")
+
+#===========================================more runs, 50 steps, filling in the gaps=================================================
+
+
+energyList = [10**5, 10**6, 10**7] #energies in eV
+
+
+manager1 = LocationCheck(7, 30, 200, 3, energyList, "electron", 0, UFieldWhole, endStepList=400000, fileNameAddition="-Uranus-200Step-")
+manager1.runAllSims()
+
+# energyList = [10**5, 10**6, 10**7] #energies in eV
+
+print("1 done")
+
+manager1 = LocationCheck(7, 30, 200, 3, energyList, "electron", 90, UFieldWhole, endStepList=400000, fileNameAddition="-Uranus-200Step-")
+manager1.runAllSims()
+
+print("2 done")
+
+manager1 = LocationCheck(7, 30, 200, 3, energyList, "electron", 180, UFieldWhole, endStepList=400000, fileNameAddition="-Uranus-200Step-")
+manager1.runAllSims()
+
+print("3 done")
+
+manager1 = LocationCheck(7, 30, 200, 3, energyList, "electron", 270, UFieldWhole, endStepList=400000, fileNameAddition="-Uranus-200Step-")
+manager1.runAllSims()
+
+print("4 done")
+
+manager1 = LocationCheck(7, 30, 200, 3, energyList, "electron", 0, UFieldDipole, endStepList=400000, fileNameAddition="-Uranus-200Step-")
 manager1.runAllSims()
 
 print("5 done")
 
-manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 90, UFieldWhole, endStepList=4200000, fileNameAddition="-Uranus-")
+manager1 = LocationCheck(7, 30, 200, 3, energyList, "electron", 90, UFieldDipole, endStepList=400000, fileNameAddition="-Uranus-200Step-")
 manager1.runAllSims()
 
 print("6 done")
 
-manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 180, UFieldWhole, endStepList=4200000, fileNameAddition="-Uranus-")
+manager1 = LocationCheck(7, 30, 200, 3, energyList, "electron", 180, UFieldDipole, endStepList=400000, fileNameAddition="-Uranus-200Step-")
 manager1.runAllSims()
 
 print("7 done")
 
-manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 270, UFieldWhole, endStepList=4200000, fileNameAddition="-Uranus-")
+manager1 = LocationCheck(7, 30, 200, 3, energyList, "electron", 270, UFieldDipole, endStepList=400000, fileNameAddition="-Uranus-200Step-")
 manager1.runAllSims()
 
 print("8 done")
-
-#Poster plot
-manager1 = LocationCheck(7, 30, 200, 1, [10**5], "proton", 0, UFieldDipole, fileNameAddition="-Uranus-LongRunPlot-")
-manager1.runAllSims()
-print("poster 1 done")
-manager1 = LocationCheck(7, 30, 200, 1, [10**5], "proton", 0, UFieldWhole, fileNameAddition="-Uranus-LongRunPlot-")
-manager1.runAllSims()
-
-
-
-# plt.show()
