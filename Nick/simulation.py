@@ -561,18 +561,17 @@ class Simulation:
         finalPos = self.getGuidingCentrePosition(counter, finalGyroradius)
         # print(finalPos)
         finalRadius = np.linalg.norm(finalPos)
-        # print(finalRadius)
 
+        positionError, velocityError = self.getPositionAndVelocityError(counter)
 
-        # print("Initial stuff")
-        # print(self.position[0])
-        # print(self.velocity[0])
+        finalKE = self.getKE(counter, unit="eV")
+     
         #calculate pitch angle
         v = self.velocity[0]
         d = np.sqrt(v[0]**2 + v[1]**2)
         pitchAngle = np.arctan((d/v[2]))
 
-        tools.saveRegionData(filePath, "N", self.particle.name, not(self.field.dipoleOnly), initialKE, pitchAngle, self.initialPhase, initialRadius, finalRadius, initialGyroradius, finalGyroradius)
+        tools.saveRegionData2(filePath, "N", self.particle.name, not(self.field.dipoleOnly), initialKE, finalKE, pitchAngle, self.initialPhase, initialRadius, finalRadius, initialGyroradius, finalGyroradius, positionError)
 
         return
 
@@ -669,8 +668,8 @@ class Simulation:
      
 
         #find timestep to use
-        timeSteps = np.zeros(N)
-        for i in range(0, N):
+        timeSteps = np.zeros(N-1)
+        for i in range(0, N-1):
             timeSteps[i] = self.time[i+1] - self.time[i]
 
         h = np.max(timeSteps)    
@@ -709,19 +708,23 @@ class Simulation:
         accelerationTerm = np.array(accelerationTerm[0], accelerationTerm[1])
         accelerationTerm = np.linalg.norm(accelerationTerm)
 
-        print("terms")
-        print(mu_x0)
-        print((N-1)*mu_x)
-        print(accelerationTerm)
-        print(h*sp.constants.c*mu_x0)
-        print(h*sp.constants.c*(a_v*(N-1)*(N-2)/2 - a_v*N + mu_v*(N-1)*(N-2)/2 - mu_v*N))
-        print("terms end")
+        # print("terms")
+        # print(mu_x0)
+        # print((N-1)*mu_x)
+        # print(accelerationTerm)
+        # print(h*sp.constants.c*mu_x0)
+        # print(h*sp.constants.c*(a_v*(N-1)*(N-2)/2 - a_v*N))
+        # print(h*sp.constants.c*(mu_v*(N-1)*(N-2)/2 - mu_v*N))
+        # print("terms end")
 
+        # print("Comparing dumb truncation errors: x, then v:")
+        # print((N-1)*a_x)
+        # print(h*sp.constants.c*(a_v*(N-1)*(N-2)/2 - a_v*N))
+        # print("comparison over")
 
-        # print(accelerationTerm/((N-1)*a_x))
-
-        positionError = mu_x0 + accelerationTerm + (N-1)*(mu_x) + h*sp.constants.c*(mu_x0 + a_v*(N-1)*(N-2)/2 - a_v*N + mu_v*(N-1)*(N-2)/2 - mu_v*N)
-
+        # positionError = mu_x0 + accelerationTerm + (N-1)*(mu_x) + h*sp.constants.c*(mu_x0 + a_v*(N-1)*(N-2)/2 - a_v*N + mu_v*(N-1)*(N-2)/2 - mu_v*N)
+        # positionError = mu_x0 + accelerationTerm + (N-1)*(mu_x) + h*sp.constants.c*(mu_x0 + mu_v*(N-1)*(N-2)/2 - mu_v*N)
+        positionError = accelerationTerm
 
         return positionError, velocityError
 
@@ -955,7 +958,7 @@ class LocationCheck(SimulationManager):
 
        
         #400 steps definitely works for e- at 1MeV
-        super(LocationCheck, self).__init__(field, particleList, stepsPerPeriodList=200, N=N, fileKeyWord="locationCheck" + fileNameAddition, endStepList=endStepList, initialPhaseList=gyroPhase)
+        super(LocationCheck, self).__init__(field, particleList, stepsPerPeriodList=50, N=N, fileKeyWord="locationCheck" + fileNameAddition, endStepList=endStepList, initialPhaseList=gyroPhase)
 
 
     def getLarmorRadius(self, B, v, alpha, m0, q):

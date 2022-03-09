@@ -291,7 +291,7 @@ def plotRChangeOnEnergy(regionArray, planetaryRadius, L, theta, phi, logEnergy=T
 
     return
 
-def plotRChangeOnEnergy2(regionArray, planetaryRadius, L, theta, phi, logEnergy=True):
+def plotRChangeOnEnergy2(regionArray, planetaryRadius, L, theta, phi, logEnergy=True, plotErrors=True):
     """
     This function accepts region data in the form produced by the loadRegionData function.
     It plots the change in r on energy.
@@ -302,9 +302,8 @@ def plotRChangeOnEnergy2(regionArray, planetaryRadius, L, theta, phi, logEnergy=
     a = planetaryRadius
 
     #data rows are of the form:
-    #name, date, species, field, initialKE, pitchAngle, phase, initialRadius, finalRadius, initialGyroradius, finalGyroradius
+    #name, date, species, field, initialKE, finalKE, pitchAngle, phase, initialRadius, finalRadius, initialGyroradius, finalGyroradius, positionError
 
-    #separate data by name, in case of difference between simulations
     electronDipole = selectCriteria(regionArray, species="electron", field="dipoleOnly")
     electronFull = selectCriteria(regionArray, species="electron", field="fullField")
     protonDipole = selectCriteria(regionArray, species="proton", field="dipoleOnly")
@@ -315,13 +314,19 @@ def plotRChangeOnEnergy2(regionArray, planetaryRadius, L, theta, phi, logEnergy=
 
     
     #now can plot
-
     ax = plt.figure().add_subplot()
-    ax.plot(protonDipole[:, 4], (protonDipole[:,8] - protonDipole[:,7])/a, label="Dipole, proton", color="red", marker = "+", linestyle="none")
-    ax.plot(protonFull[:, 4], (protonFull[:,8] - protonFull[:,7])/a, label="Full field, proton", color="purple", marker = "+", linestyle="none")
-    ax.plot(electronDipole[:, 4], (electronDipole[:,8] - electronDipole[:,7])/a, label = "Dipole, electron", color="blue", marker = "x", linestyle="none")
-    ax.plot(electronFull[:, 4], (electronFull[:,8] - electronFull[:,7])/a, label="Full field, electron", color = "green", marker = "x", linestyle="none")
 
+    if plotErrors:
+        ax.errorbar(protonDipole[:, 4], (protonDipole[:,9] - protonDipole[:,8])/a, yerr = protonDipole[:, 12]/a, label="Dipole, proton", color="red", marker = "+", linestyle="none")
+        ax.errorbar(protonFull[:, 4], (protonFull[:,9] - protonFull[:,8])/a, yerr = protonFull[:, 12]/a, label="Full field, proton", color="purple", marker = "+", linestyle="none")
+        ax.errorbar(electronDipole[:, 4], (electronDipole[:,9] - electronDipole[:,8])/a, yerr = electronDipole[:, 12]/a, label = "Dipole, electron", color="blue", marker = "x", linestyle="none")
+        ax.errorbar(electronFull[:, 4], (electronFull[:,9] - electronFull[:,8])/a, yerr = electronFull[:, 12]/a, label="Full field, electron", color = "green", marker = "x", linestyle="none")
+    else:
+        ax.plot(protonDipole[:, 4], (protonDipole[:,9] - protonDipole[:,8])/a, label="Dipole, proton", color="red", marker = "+", linestyle="none")
+        ax.plot(protonFull[:, 4], (protonFull[:,9] - protonFull[:,8])/a, label="Full field, proton", color="purple", marker = "+", linestyle="none")
+        ax.plot(electronDipole[:, 4], (electronDipole[:,9] - electronDipole[:,8])/a, label = "Dipole, electron", color="blue", marker = "x", linestyle="none")
+        ax.plot(electronFull[:, 4], (electronFull[:,9] - electronFull[:,8])/a, label="Full field, electron", color = "green", marker = "x", linestyle="none")
+    
     
     titleString = "Change in equatorial r/a against initial KE; L=" + str(np.round(L)) + ", " + r"$\theta$ = " + str(np.round(theta)) + ", " + r"$\phi$ = " + str(np.round(phi))
     ax.set_title(titleString)
@@ -416,5 +421,98 @@ def deleteOlderThan(date, name, path):
     np.savez(path, data = data)
 
     print("Data deleted.")
+
+    return
+
+
+
+
+
+def saveRegionData2(filePath, name, species, field, initialKE, finalKE, pitchAngle, phase, initialRadius, finalRadius, initialGyroradius, finalGyroradius, positionError):
+    """
+    This function opens a file for the regional test, appends the array stored there and re-saves it.
+    If the file does not already exist, a new one will be created.
+
+    filePath:           The relative path to the file in which the data is saved
+    name:               Your name, for record-keeping purposes.  It accepts your name in mulitple ways, but ultimately
+                        Harry = 0, Nick = 1.
+    species:            electron = 0, proton = 1
+    field:              Dipole = 0, Full field = 1
+    initialKE:          Float, eV
+    finalKE:            Float, eV
+    pitchAngle:         Float, radians.  The initial pitch angle.
+    phase:              Float, radians.  0 phase means in direction radially away from centre of planet.  Goes round in same direction as phi.
+    initialRadius:      Float, m.  This is the radius of the centre of the gyromotion, which you must calculate.
+    finalRadius:        Float, m.  This is the radius of the centre of the gyromotion, which you must calculate.
+    initialGyroradius:  Float, m
+    finalGyroradius:    Float, m
+    positionError:      Float, m
+    """
+
+    #Do some checks on the input name
+    if name=="Harry" or name == "H" or name=="C" or name == "Charalambos" or name == 0:
+        name = 0
+    elif name=="Nick" or name == "N" or name == "Nicholas" or name==1:
+        name = 1
+    else:
+        raise(Exception("Invalid name entered!"))
+
+    if species == "electron" or species == "e" or species == "Electron" or species == "0":
+        species = 0
+    elif species == "proton" or species == "p" or species == "Proton" or species == "1":
+        species = 1
+    else:
+        raise(Exception("Invalid species entered"))
+    
+    if field == "dipole" or field == "dipoleOnly" or field == 0:
+        field = 0
+    elif field == "complete" or field == "full" or field == "fullField" or field == 1:
+        field = 1
+    else:
+        raise(Exception("Invalid field entered"))
+
+    #construct the correct number to represent the date
+    date = dt.datetime.now().month*100 + dt.datetime.now().day
+    #date should be a 4 digit number, where the first two digits are the day and the second two the month
+
+    newLine = np.array([[name, date, species, field, initialKE, finalKE, pitchAngle, phase, initialRadius, finalRadius, initialGyroradius, finalGyroradius, positionError]])
+
+    #branch depending on whether the file already exists
+    if exists(filePath):
+        #file exists, so we must first retrieve all data from it
+        savedArray = np.load(filePath)
+        oldData = savedArray["data"]
+        newData = np.concatenate((oldData, newLine), axis = 0)
+    else:
+        #file does not exist already so we are making new one
+        newData = newLine
+
+    np.savez(filePath, data = newData)
+
+    print("Appended line to file.")
+
+    return
+
+
+
+def plotDeltaRHistogram(path, a):
+    """
+    path:       Path to region test data file
+    a:          Planetary radius
+    """
+
+    data = loadRegionData(path)
+    deltaR = data[:, 9] - data[:, 8]
+
+    deltaR = deltaR/a
+
+
+    ax = plt.figure().add_subplot()
+    ax.hist(deltaR, bins=100)
+    ax.set_ylabel("Frequency")
+    ax.set_xlabel("Final r/a - initial r/a")
+    ax.set_title("Effect of modifying B field parameters on net guiding centre position")
+    plt.savefig("Output/Figures/randomiseBHistogram.eps")
+
 
     return

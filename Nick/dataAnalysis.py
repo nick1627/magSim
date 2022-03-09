@@ -72,7 +72,34 @@ def findFirstEnergyStepHeight(sim):
 
 
 
+def collectResults(pathToFolder, pathOfResultsFile):
+    """
+    Collects results for single bounces and saves them to a file
 
+    pathToFolder:       The path to the directory containing the results
+    pathOfResultsFile:  The complete (relative) path of the file where the 
+                        analysis results get put
+    """
+
+    fileList = os.listdir(pathToFolder)
+    pathList = []
+    for name in fileList:
+        if name[0] != ".":
+            f = os.path.join(pathToFolder, name)
+            if os.path.isfile(f):
+                pathList.append(f)
+    
+    #Now have list of paths to the data files in pathList.
+
+    for f in pathList:
+        sim = Simulation(simDataPath=f)
+
+        try:
+            sim.saveBounceData(pathOfResultsFile)
+        except:
+            print("The following path did not work: " + f)
+
+    return
 
 
 # sim = Simulation(simDataPath = "Output/locationCheck-ErrorTest-Uranus-7-30-200-0--Proton-fullField-10000000.npz")

@@ -97,8 +97,8 @@ import dataAnalysis
 
 #dipole only, 0 phase runs
 
-sim = Simulation(simDataPath = "Output/locationCheck-Uranus-50Step-7-30-200-0--Proton-fullField-10000.npz")
-sim.plotPositionOnTime(z=True)
+# sim = Simulation(simDataPath = "Output/locationCheck-Uranus-50Step-7-30-200-0--Proton-fullField-10000.npz")
+# sim.plotPositionOnTime(z=True)
 # equatorialIndex = sim.getFirstEquatorialIndex()
 # print(equatorialIndex)
 # # deltaLarmorRadius = sim.getChangeInLarmorRadius(equatorialIndex, sim.particle.initialEnergy)
@@ -131,4 +131,40 @@ sim.plotPositionOnTime(z=True)
 # Uradius = 25600000
 # data = tools.loadRegionData("Output/RegionTests/regionTest_Uranus_MoreSteps_7-30-200.npz")
 # tools.plotRChangeOnEnergy2(data, Uradius, 7, 30, 200)
+# plt.show()
+
+
+
+#======================================Collecting Nick only results==========================================
+# dataAnalysis.collectResults("Output/FinalData/Nick", "Output/RegionTests/NICK_ONLY_regionTest_Uranus_7-30-200.npz")
+
+Uradius = 25600000
+data = tools.loadRegionData("Output/RegionTests/NICK_ONLY_regionTest_Uranus_7-30-200.npz")
+tools.plotRChangeOnEnergy2(data, Uradius, 7, 30, 200)
 plt.show()
+
+
+#The following files are ones that don't cross the equator
+
+# sim = Simulation(simDataPath="Output/locationCheck-Uranus-200Step-7-30-200-90--Electron-dipoleOnly-10000000.npz")
+# sim.plotPositionOnTime(z=True)
+# plt.show()
+# "Output/FinalData/Nick/locationCheck-Uranus-50Step-7-30-200-90--Proton-fullField-1000.npz" done checked
+# "Output/FinalData/Nick/locationCheck-Uranus-7-30-200-270--Electron-fullField-100000.npz" done checked BUT MAY HAVE TO REDO AS ONLY USED 50 STEPS INSTEAD OF LIKE 200
+# "Output/FinalData/Nick/locationCheck-Uranus-50Step-7-30-200-270--Proton-dipoleOnly-1000.npz" done
+# "Output/FinalData/Nick/locationCheck-Uranus-gammaRemoved-7-30-200-90--Proton-fullField-4000000.npz" done checked
+# "Output/FinalData/Nick/locationCheck-Uranus-50Step-7-30-200-180--Proton-dipoleOnly-1000.npz" done
+# "Output/FinalData/Nick/locationCheck-Uranus-50Step-7-30-200-0--Proton-dipoleOnly-1000.npz" done checked
+# "Output/FinalData/Nick/locationCheck-Uranus-50Step-7-30-200-180--Proton-fullField-1000.npz" done
+# "Output/FinalData/Nick/locationCheck-Uranus-50Step-7-30-200-90--Proton-dipoleOnly-1000.npz" done
+# "Output/FinalData/Nick/locationCheck-Uranus-gammaRemoved-7-30-200-0--Proton-dipoleOnly-6000000.npz" done
+
+
+#also missing 10**7 electrons
+
+#======================================checking errors==========================================
+
+# sim = Simulation(simDataPath="Output/FinalData/Nick/locationCheck-Uranus-50Step-7-30-200-0--Proton-fullField-1000.npz")
+# equatorialIndex = sim.getFirstEquatorialIndex()
+# positionError, velocityError = sim.getPositionAndVelocityError(equatorialIndex)
+# print(positionError/Uradius)
