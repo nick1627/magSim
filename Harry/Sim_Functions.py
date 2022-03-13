@@ -39,15 +39,17 @@ R = np.array([x_f, y_f, z_f])
 Rinv = np.linalg.inv(R)
 
 #Field coefficients
+#Uranus
+# rand = np.random.random(5) - 0.5
 
 g01 = 11278 * 1e-9 #z
 g11 = 10928 * 1e-9 #x
 h11 = -16049 * 1e-9 #y
-g02 = -9648 * 1e-9
-g12 = -12284 * 1e-9
-h12 = 6405 * 1e-9
-g22 = 1453 * 1e-9
-h22 = 4220 * 1e-9
+g02 = (-9648) * 1e-9
+g12 = (-12284) * 1e-9
+h12 = (6405) * 1e-9
+g22 = (1453) * 1e-9
+h22 = (4220) * 1e-9
 
 g = np.array([[g01, g11], 
               [g02, g12, g22]], dtype = object)
@@ -201,7 +203,7 @@ def RK(f, t0, E, direction, r0, n, args, mode, step_size):
         
     return t, v, r, L, mew
 
-def RK_single(f, t0, E, direction, r0, n, args, mode, step_size):
+def RK_single(f, t0, E, direction, r0, n, g, h_coeff, args, mode, step_size):
     
     t = np.zeros(n+1)
     t[0] = t0
@@ -219,9 +221,16 @@ def RK_single(f, t0, E, direction, r0, n, args, mode, step_size):
     
     B0 = B_rot_fun(r0, a, g, h_coeff, mode, R)
     v0_par = np.dot(B0 / np.linalg.norm(B0), v0) * (B0 / np.linalg.norm(B0))
-    v0_perp = np.linalg.norm(v0 - v0_par)
+    v_perp_vec0 = v0 - v0_par
+    v0_perp = np.linalg.norm(v_perp_vec0)
     mew_term0 = 0.5 * gamma(v_mag) * args[1] * v0_perp * v0_perp / np.linalg.norm(B0)
     mew = [mew_term0]
+    
+    gyroradius0 = (gamma(v0) * args[1] * v0_perp) / (abs(args[0]) * np.linalg.norm(B0))
+    perp_vec0 = np.cross(v_perp_vec0, B0)
+    perp_dir0 = perp_vec0 / np.linalg.norm(perp_vec0)
+    
+    gc0_ap = r0 + ((args[0] / q) * gyroradius0 * perp_dir0)
     
     period = gyroperiod(v0, args[1], args[0], B0)
     
@@ -278,7 +287,7 @@ def RK_single(f, t0, E, direction, r0, n, args, mode, step_size):
             v = v[:i+2]
             r = r[:i+2]
             
-            return t, v, r, L, mew, gyroradius, gc
+            return t, v, r, L, mew, gyroradius, gc0_ap, gc
         
         # if np.linalg.norm(r[i+1]) < a :
         #     print('Particle has hit the planet!')
@@ -296,5 +305,18 @@ def RK_single(f, t0, E, direction, r0, n, args, mode, step_size):
     gyroradius2 = None
     gc2 = None
     
-    return t, v, r, L, mew, gyroradius2, gc2
+    return t, v, r, L, mew, gyroradius2, gc0_ap, gc2
 
+def comp_error(t, r, a):
+    
+    error_r = 0
+    
+    for i in range(len(r)-1):
+        dt = (t[i+1] - t[i])
+        a_r = (v[i+1] - v[i]) / dt
+    
+        error_r += (a_r * dt * dt / 2) / a
+    
+    error = np.sqrt((error_r[0] * error_r[0]) + (error_r[1] * error_r[1]))
+    
+    return error

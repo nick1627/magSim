@@ -43,14 +43,25 @@ Rinv = np.linalg.inv(R)
 
 #Field coefficients
 
-g01 = 11278 #z
-g11 = 10928 #x
-h11 = -16049 #y
-g02 = -9648
-g12 = -12284
-h12 = 6405
-g22 = 1453
-h22 = 4220
+#URANUS
+# g01 = 11278 #z
+# g11 = 10928 #x
+# h11 = -16049 #y
+# g02 = -9648
+# g12 = -12284
+# h12 = 6405
+# g22 = 1453
+# h22 = 4220
+
+#Neptune
+g01 = 0.09732 #z
+g11 = 0.03220 #x
+h11 = -0.09889 #y
+g02 = 0.074481
+g12 = 0.00664
+h12 = 0.11230
+g22 = 0.04499
+h22 = -0.00070
 
 g = np.array([[g01, g11], 
               [g02, g12, g22]], dtype = object)
@@ -58,6 +69,8 @@ h = np.array([[0, h11],
               [0, h12, h22]], dtype = object)
 
 args = np.array([g01, g11, h11, g02, g12, h12, g22, h22])
+
+
 plt.rcParams["figure.autolayout"] = True
 params = {
 'axes.labelsize': 20,

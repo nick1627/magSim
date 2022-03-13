@@ -30,25 +30,25 @@ params = {
 #'font.family': 'sans-serif', # Optionally change the font family to sans-serif
 #'font.serif': 'Arial', # Optionally change the font to Arial
 'legend.fontsize': 11,
-'xtick.labelsize': 12,
-'ytick.labelsize': 12, 
-'figure.figsize': [8, 8]
+'xtick.labelsize': 16,
+'ytick.labelsize': 16, 
+'figure.figsize': [8.5, 6]
 } 
 plt.rcParams.update(params)
 
 #%%
+
 #INITIAL CONDITIONS
 species = 'Proton' #Proton or Electron
-arguments = np.array([q, m_p], dtype = object)
-mode0 = 1 #1 for dipole, 2 for full field
+mode0 = 2 #1 for dipole, 2 for full field
 
 L_shell = 7
 phi_in = 200 * np.pi / 180
-theta_in = 40 * np.pi / 180
-phase = 90 * np.pi / 180
+theta_in = 30 * np.pi / 180
+phase = 0 * np.pi / 180
 t0 = 0.
-E = 1e6 * abs(q)
-n = 5000000 #number of steps
+E = 1e7 * abs(q)
+n = 1000000 #number of steps
 
 #-------------------------#
 if mode0 == 1:
@@ -59,11 +59,14 @@ elif mode0 == 2:
 
 if species == 'Proton':
     arguments = np.array([q, m_p], dtype = object)
+    sp_id = '1'
     
 elif species == 'Electron':
     arguments = np.array([-q, m_e], dtype = object)
-    
+    sp_id = '0'
 #-------------------------#
+
+#%%
 
 lambda_lat = (np.pi / 2) - theta_in
 
@@ -108,11 +111,17 @@ direction0 = perp_mag * v_dir
 direction0[2] = 1
 #direction = np.array([1, 1, 1])
 
-#%%
-t, v, r, L, mew = RK(f_dvdt, t0, E, direction0, r0, n, arguments, mode0, 100)
-#t, v, r, L, mew, gyroradius, gc = RK_single(f_dvdt, t0, E, direction0, r0, n, arguments, mode0, 50)
+#t, v, r, L, mew = RK(f_dvdt, t0, E, direction0, r0, n, arguments, mode0, 100)
+t, v, r, L, mew, gyroradius, gc0_ap, gc = RK_single(f_dvdt, t0, E, direction0, r0, n, g, h_coeff, arguments, mode0, 50)
 
-t_all = []
+# dr = (np.linalg.norm(gc) - np.linalg.norm(gc0_ap)) / a
+# print(dr)
+# dr_all.append(dr)
+# plt.hist(dr_all, bins = 100, color = 'blue')
+# plt.xlabel('change in radius ($r_U$)', fontsize = 20)
+# plt.ylabel('Frequency', fontsize = 20)
+# plt.show()
+
 x = []
 y = []
 z = []
@@ -122,14 +131,20 @@ for i in range(len(r)):
     x.append(r[i][0])
     y.append(r[i][1])
     z.append(r[i][2])
-    t_all.append(t[i])
     
     energy.append((arguments[1] * c * c) * (gamma(v[i]) - 1) / (1e3 * abs(arguments[0])))
 
 x = np.array(x)
 y = np.array(y)
 z = np.array(z)
+#%%
 
+error_dr = comp_error(t, r, a)
+
+dr = (np.linalg.norm(gc) - np.linalg.norm(gc0_ap)) / a
+
+print(dr, '+/-', error_dr)
+#%%
 fig = plt.figure()
 ax = plt.axes(projection='3d')
 
@@ -152,34 +167,74 @@ plt.xlabel('x ($r_U$)', fontsize=16)
 plt.ylabel('y ($r_U$)', fontsize=16)
 plt.show()
 
-plt.plot(t_all, energy, color = 'blue')
-plt.xlabel('Time (s)', fontsize=16)
-plt.ylabel('Energy (keV)', fontsize=16)
-plt.title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
+plt.plot(t, energy, color = 'blue')
+plt.xlabel('Time (s)', fontsize=20)
+plt.ylabel('Energy (MeV)', fontsize=20)
+# plt.yticks([0.999, 1, 1.001])
+# plt.ylim([0.999, 1.001])
+#plt.title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
 plt.show()
 
-plt.plot(t_all, z / a, color = 'blue')
+plt.plot(t, z / a, color = 'blue')
 plt.xlabel('Time (s)', fontsize=16)
 plt.ylabel('z ($r_U$)', fontsize=16)
 plt.title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
 plt.show()
 
-plt.plot(t_all, L, color = 'blue')
-plt.xlabel('Time (s)', fontsize=16)
-plt.ylabel('L', fontsize=16)
-plt.title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
+plt.plot(t, L, color = 'blue')
+plt.xlabel('Time (s)', fontsize=20)
+plt.ylabel('L shell ($r_U$)', fontsize=20)
+#plt.yticks([6.99, 7, 7.01])
+#plt.ylim([6.9, 7.1])
+#plt.title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
 plt.show()
 
-plt.plot(t, mew, color = 'blue')
-plt.xlabel('Time (s)', fontsize=16)
-plt.ylabel('Adiabatic invariant ($Am^2$)', fontsize=16)
-plt.title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
+
+plt.plot(t, mew * 1e8, color = 'blue')
+plt.xlabel('Time (s)', fontsize=20)
+plt.ylabel('$μ$ ($10^{-8} Am^2$)', fontsize=20)
+#plt.yticks([1, 2.5, 4])
+#plt.title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
+plt.show()
+
+#%%
+print((np.linalg.norm(gc) - np.linalg.norm(gc0_ap)) / a)
+
+
+#%%
+fig, (ax1,ax2, ax3) = plt.subplots(nrows=3, sharex=True, subplot_kw=dict(frameon=False))
+plt.subplots_adjust(hspace=.0)
+
+ax1.grid()
+ax2.grid()
+ax3.grid()
+
+ax1.plot(t[:200000], energy[:200000], color = 'blue')
+#ax1.set_xlabel('Time (s)', fontsize=20)
+ax1.set_ylabel('Energy (MeV)', fontsize=20)
+ax1.set_yticks([0.999, 1, 1.001])
+ax1.set_ylim([0.9989, 1.001])
+#plt.title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
+
+ax2.plot(t[:200000], L[:200000], color = '#0043BC')
+#plt.xlabel('Time (s)', fontsize=20)
+ax2.set_ylabel('L shell ($r_U$)', fontsize=20)
+ax2.set_yticks([6.98, 7, 7.02])
+ax2.set_ylim([6.979, 7.02])
+#plt.title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
+
+
+ax3.plot(t[:200000], mew[:200000] * 1e8, color = '#015BFF')
+ax3.set_xlabel('Time (s)', fontsize=20)
+ax3.set_ylabel('$μ$ ($10^{-8} Am^2$)', fontsize=20)
+ax3.set_yticks([1, 2.5, 4])
+#plt.title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
 plt.show()
 
 #%%
 #SAVE DATA
 #np.savez('Harry/Simulation_data/e1000keV_1_1_1-6_0_0', t = t, v = v, r = r, L = L, mew = mew)
-saveRegionData('Output/RegionTests/regionTest_Uranus_7-30-200.npz', 0, '0', mode0 - 1, E / q, alpha_eq, phase, np.linalg.norm(gc0_in), np.linalg.norm(gc), gyroradius0, gyroradius)
+saveRegionData('Output/RegionTests/regionTest_Uranus_7-30-200.npz', 0, sp_id, mode0 - 1, E / q, alpha_eq, phase, np.linalg.norm(gc0_ap), np.linalg.norm(gc), gyroradius0, gyroradius)
 
 #%%
 savedArrays = np.load('Harry/Simulation_data/e1000keV_0.1_0.1_1-6_0_0.npz', allow_pickle = True)
@@ -262,7 +317,7 @@ tim = savedArrays["times"]
 #%%
 
 data = loadRegionData('Output/RegionTests/regionTest_Uranus_7-30-200.npz')
-data = selectCriteria(data, name = 'Harry', species = 'electron')
+data = selectCriteria(data, name = 'Nick', species = 'proton')
 
 #%%
 dr_dip = []
@@ -282,8 +337,8 @@ for i in range(len(data)):
 # en = data[:, 4]
 # gyro_plot = data[:, 10]
 #plt.plot(en, dr, 'x', color = 'blue', ms = 8)
-plt.plot(np.array(en_dip) / 1e3, dr_dip, 'x', color = 'red', ms = 8, label = 'Dipole')
-#plt.plot(np.array(en_quad) / 1e3, dr_quad, 'x', color = 'blue', ms = 8, label = 'Quadrupole')
+plt.plot(np.array(en_dip) / 1e3, dr_dip, 'x', color = 'blue', ms = 8, label = 'Dipole')
+plt.plot(np.array(en_quad) / 1e3, dr_quad, 'x', color = 'red', ms = 8, label = 'Quadrupole')
 plt.xscale('log')
 # plt.yscale('log')
 titleString = "Change in equatorial r/a against initial KE for location L=" + str(np.round(L_shell)) + ", " + r"$\theta$ = " + str(np.round(theta_in * 180 / np.pi)) + ", " + r"$\phi$ = " + str(np.round(phi_in * 180 / np.pi))
@@ -321,8 +376,44 @@ print(r[-1] - np.array([-107270755.39616576, -63324023.61693426, -68776417.01780
 print(v[0])
 
 #%%
-for_save = np.array([t, v, r, L, mew, gc0_in, gc], dtype = object)
-np.savez('Poster_data', for_save)
+for_save = np.array([t, v, r, L, mew], dtype = object)
+np.savez('RandomBdata', dr_all)
+#%%
+poster_data = np.load('Poster_data.npz', allow_pickle = True)
+r = poster_data['arr_0'][2]
+#%%
+x = []
+y = []
+z = []
+
+for i in range(len(r)):
+    x.append(r[i][0])
+    y.append(r[i][1])
+    z.append(r[i][2])
+
+x = np.array(x)
+y = np.array(y)
+z = np.array(z)
+#%%
+fig = plt.figure()
+ax = plt.axes(projection='3d')
+
+u_grid, v_grid = np.mgrid[0:2 * np.pi:40j, 0:np.pi:20j]
+xp = np.cos(u_grid)*np.sin(v_grid)
+yp = np.sin(u_grid)*np.sin(v_grid)
+zp = np.cos(v_grid)
+
+ax.plot_wireframe(xp, yp, zp, color = 'blue')
+
+ax.plot3D(x[:2500000] / a, y[:2500000] / a, z[:2500000] / a, color = 'red')
+ax.set_xlabel('x ($r_U$)',fontsize=20)
+ax.set_ylabel('y ($r_U$)', fontsize=20)
+ax.set_zlabel('z ($r_U$)', fontsize=20)
+#ax.set_title('{} {} - {:#d}keV'.format(species, shape, int(E / (q * 1e3))))
+plt.show()
+#%%
+
+
 #%%
 print((np.linalg.norm(gc) - np.linalg.norm(gc0_in)) / a)
 #print(v[0])
