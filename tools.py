@@ -1,7 +1,10 @@
 """
 Contains code that saves and loads data so we can compare results etc.
 """
+from random import gauss
 import numpy as np
+import scipy as sp
+from scipy.optimize import curve_fit
 import datetime as dt
 from os.path import exists
 import matplotlib.pyplot as plt
@@ -291,7 +294,7 @@ def plotRChangeOnEnergy(regionArray, planetaryRadius, L, theta, phi, logEnergy=T
 
     return
 
-def plotRChangeOnEnergy2(regionArray, planetaryRadius, L, theta, phi, logEnergy=True, plotErrors=True):
+def plotRChangeOnEnergy2(regionArray, planetaryRadius, L, theta, phi, logEnergy=True, plotErrors=True, save=""):
     """
     This function accepts region data in the form produced by the loadRegionData function.
     It plots the change in r on energy.
@@ -335,6 +338,9 @@ def plotRChangeOnEnergy2(regionArray, planetaryRadius, L, theta, phi, logEnergy=
     if logEnergy:
         ax.set_xscale('log')
     ax.legend()
+
+    if save != "":
+        plt.savefig(save)
 
     return
 
@@ -428,7 +434,7 @@ def deleteOlderThan(date, name, path):
 
 
 
-def saveRegionData2(filePath, name, species, field, initialKE, finalKE, pitchAngle, phase, initialRadius, finalRadius, initialGyroradius, finalGyroradius, positionError):
+def saveRegionData2(filePath, name, species, field, initialKE, finalKE, pitchAngle, phase, initialRadius, finalRadius, initialGyroradius, finalGyroradius, positionError, initialPhi):
     """
     This function opens a file for the regional test, appends the array stored there and re-saves it.
     If the file does not already exist, a new one will be created.
@@ -447,6 +453,7 @@ def saveRegionData2(filePath, name, species, field, initialKE, finalKE, pitchAng
     initialGyroradius:  Float, m
     finalGyroradius:    Float, m
     positionError:      Float, m
+    initialPhi:         The initial longitude of guiding centre in the field coord system.  Float, radians.
     """
 
     #Do some checks on the input name
@@ -475,7 +482,7 @@ def saveRegionData2(filePath, name, species, field, initialKE, finalKE, pitchAng
     date = dt.datetime.now().month*100 + dt.datetime.now().day
     #date should be a 4 digit number, where the first two digits are the day and the second two the month
 
-    newLine = np.array([[name, date, species, field, initialKE, finalKE, pitchAngle, phase, initialRadius, finalRadius, initialGyroradius, finalGyroradius, positionError]])
+    newLine = np.array([[name, date, species, field, initialKE, finalKE, pitchAngle, phase, initialRadius, finalRadius, initialGyroradius, finalGyroradius, positionError, initialPhi]])
 
     #branch depending on whether the file already exists
     if exists(filePath):
@@ -495,8 +502,10 @@ def saveRegionData2(filePath, name, species, field, initialKE, finalKE, pitchAng
 
 
 
-def plotDeltaRHistogram(path, a):
+def plotDeltaRHistogram(path, a, save=""):
     """
+    Plots histogram for the random B field analysis.  You need a region data test file to do this.
+
     path:       Path to region test data file
     a:          Planetary radius
     """
@@ -506,13 +515,57 @@ def plotDeltaRHistogram(path, a):
 
     deltaR = deltaR/a
 
+    def gaussian(x, mean, stdDev, amp):
+        return (amp/(stdDev*np.sqrt(2*np.pi)))*np.exp(-0.5*(x - mean)**2/(stdDev**2))
+
+    
+    
+    
+
 
     ax = plt.figure().add_subplot()
-    ax.hist(deltaR, bins=100)
+    n, bins, patches = ax.hist(deltaR, bins=100)
+    yData = n
+    binWidth = bins[1] - bins[0]
+    xData = bins + binWidth/2
+    length = np.size(bins)
+    xData = xData[0:length-1]
+
+    popt, pcov = curve_fit(gaussian, xData, yData, p0 = [-0.08, 0.005, 1])
+
+    xVals = np.linspace(bins[0], bins[-1], 1000)
+    yVals = gaussian(xVals, popt[0], popt[1], popt[2])
+    ax.plot(xVals, yVals)
+
     ax.set_ylabel("Frequency")
     ax.set_xlabel("Final r/a - initial r/a")
     ax.set_title("Effect of modifying B field parameters on net guiding centre position")
-    plt.savefig("Output/Figures/randomiseBHistogram.eps")
 
+    if save!="":
+        plt.savefig(save)
 
+    print("standard deviation is %f ± %f" % (popt[1], np.sqrt(pcov[1, 1])))
     return
+
+
+def plotCircumferenceGraphs(northRegionFile, southRegionFile, a, save=""):
+    northData = loadRegionData(northRegionFile)
+    southData = loadRegionData(southRegionFile)
+
+    northData[:,13] *= 180/np.pi
+    southData[:,13] *= 180/np.pi
+
+    northData[:, 13] = northData[:, 13] % 360
+    southData[:, 13] = southData[:, 13] % 360
+
+    ax = plt.figure().add_subplot()
+    ax.errorbar(northData[:, 13], (northData[:,9] - northData[:,8])/a, yerr = northData[:, 12]/a, label="Northbound proton", color="red", marker = "x", linestyle="none")
+    ax.errorbar(southData[:, 13], (southData[:,9] - southData[:,8])/a, yerr = southData[:, 12]/a, label="Southbound proton", color = "blue", marker = "x", linestyle="none")
+    ax.set_title("Change in equatorial L-shell after mirroring once")
+    ax.set_xlabel("Magnetic longitude (º)")
+    ax.set_ylabel("Change in equatorial L-shell (planetary radii)")
+
+    if save != "":
+        plt.savefig(save)
+
+    ax.legend()

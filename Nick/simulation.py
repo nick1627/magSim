@@ -484,19 +484,21 @@ class Simulation:
         else:
             # print("Particle heading south")
             #particle heading South initially
+            counter = 5
             while (found == False) and (counter < length):
                 if self.position[counter, 2]>0:
                     #particle has crossed back into other hemisphere
                     found = True
                 else:
                     counter+=1
-
         
         if found == False:
             raise(Exception("The particle in this simulation did not cross back into the other hemisphere.  No results can be found."))
 
         # print("The index is " + str(counter))
         if counter < 100:
+            print("yeah it's here")
+            print(counter)
             print("this is a bit small right?")
 
         #counter is now the index of the final point.
@@ -518,36 +520,8 @@ class Simulation:
         #first collect up all the data
         #Index of initial event is 0
         #Need to find final index
+        counter = self.getFirstEquatorialIndex()
 
-        found = False
-        counter=0
-        length = np.shape(self.position)[0]       
-        if self.position[1, 2] > 0:
-            # print("Particle heading north")
-            #particle heading North initially
-            while (found == False) and (counter < length):
-                if self.position[counter, 2]<0:
-                    #particle has crossed back into the other hemisphere
-                    found = True
-                else:
-                    counter+=1
-        else:
-            # print("Particle heading south")
-            #particle heading South initially
-            while (found == False) and (counter < length):
-                if self.position[counter, 2]>0:
-                    #particle has crossed back into other hemisphere
-                    found = True
-                else:
-                    counter+=1
-
-        
-        if found == False:
-            raise(Exception("The particle in this simulation did not cross back into the other hemisphere.  No results can be found."))
-
-        # print("The index is " + str(counter))
-        if counter < 100:
-            print("this is a bit small right?")
 
         #counter is now the index of the final point.
                 
@@ -571,7 +545,10 @@ class Simulation:
         d = np.sqrt(v[0]**2 + v[1]**2)
         pitchAngle = np.arctan((d/v[2]))
 
-        tools.saveRegionData2(filePath, "N", self.particle.name, not(self.field.dipoleOnly), initialKE, finalKE, pitchAngle, self.initialPhase, initialRadius, finalRadius, initialGyroradius, finalGyroradius, positionError)
+        initial_gc = self.getGuidingCentrePosition(0, initialGyroradius)
+        initialPhi = np.arctan2(initial_gc[1], initial_gc[0])
+
+        tools.saveRegionData2(filePath, "N", self.particle.name, not(self.field.dipoleOnly), initialKE, finalKE, pitchAngle, self.initialPhase, initialRadius, finalRadius, initialGyroradius, finalGyroradius, positionError, initialPhi)
 
         return
 
@@ -923,7 +900,7 @@ class LocationCheck(SimulationManager):
                 else:
                     directionModifier = np.pi/2
                 
-                velocityDirection = np.array([np.sin(alpha)*np.cos(phi + gyroPhase + directionModifier), np.sin(alpha)*np.sin(phi + gyroPhase + directionModifier), np.cos(alpha)])
+                velocityDirection = np.array([np.sin(alpha)*np.cos(phi + gyroPhase + directionModifier), np.sin(alpha)*np.sin(phi + gyroPhase + directionModifier), np.sign(latitude)*np.cos(alpha)])
                 position = guidingCentrePosition + larmorRadius*np.array([np.cos(phi + gyroPhase), np.sin(phi + gyroPhase), 0])   
 
                 particleList.append(Proton(position, velocityDirection, energyList[i])) 
@@ -949,7 +926,7 @@ class LocationCheck(SimulationManager):
                 else:
                     directionModifier = -np.pi/2
                 
-                velocityDirection = np.array([np.sin(alpha)*np.cos(phi + gyroPhase + directionModifier), np.sin(alpha)*np.sin(phi + gyroPhase + directionModifier), np.cos(alpha)])
+                velocityDirection = np.array([np.sin(alpha)*np.cos(phi + gyroPhase + directionModifier), np.sin(alpha)*np.sin(phi + gyroPhase + directionModifier), np.sign(latitude)*np.cos(alpha)])
                 position = guidingCentrePosition + larmorRadius*np.array([np.cos(phi + gyroPhase), np.sin(phi + gyroPhase), 0])   
 
                 particleList.append(Electron(position, velocityDirection, energyList[i]))

@@ -2,6 +2,7 @@
 In this script we randomise the quadrupole component of the B field within the range allowed by the errors.
 """
 
+from math import dist
 import sys, os
 sys.path.insert(0, os.getcwd())
 
@@ -37,7 +38,7 @@ import dataAnalysis
 
 # delta_r = []
 
-print(np.shape(tools.loadRegionData("Output/RegionTests/randomiseB_regionTest_Uranus_7-30-200.npz"))[0])
+# print(np.shape(tools.loadRegionData("Output/RegionTests/randomiseB_regionTest_Uranus_7-30-200.npz"))[0])
 
 # for i in range(0, 694):
 #     #First create the field objects
@@ -64,5 +65,7 @@ print(np.shape(tools.loadRegionData("Output/RegionTests/randomiseB_regionTest_Ur
 #         manager1.simulations[0].plotPositionOnTime(z=True)
 
 
-tools.plotDeltaRHistogram("Output/RegionTests/randomiseB_regionTest_Uranus_7-30-200.npz", 25600000)
+tools.plotDeltaRHistogram("Output/RegionTests/randomiseB_Nick_regionTest_Uranus_7-30-200.npz", 25600000)
 plt.show()
+
+

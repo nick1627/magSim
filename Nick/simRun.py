@@ -433,7 +433,7 @@ UFieldDipole.rotate("Field")
 # print("8 done")
 
 
-energyList = [10**7] #energies in eV
+# energyList = [10**7] #energies in eV
 
 
 # manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 0, UFieldDipole, endStepList=1500000, fileNameAddition="-Uranus-200Step-")
@@ -442,20 +442,76 @@ energyList = [10**7] #energies in eV
 # manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 90, UFieldDipole, endStepList=1200000, fileNameAddition="-Uranus-200Step-")
 # manager1.runAllSims()
 
-manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 180, UFieldDipole, endStepList=1200000, fileNameAddition="-Uranus-200Step-")
-manager1.runAllSims()
+# manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 180, UFieldDipole, endStepList=1200000, fileNameAddition="-Uranus-200Step-")
+# manager1.runAllSims()
 
-manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 270, UFieldDipole, endStepList=1200000, fileNameAddition="-Uranus-200Step-")
-manager1.runAllSims()
+# manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 270, UFieldDipole, endStepList=1200000, fileNameAddition="-Uranus-200Step-")
+# manager1.runAllSims()
 
-manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 0, UFieldWhole, endStepList=1200000, fileNameAddition="-Uranus-200Step-")
-manager1.runAllSims()
+# manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 0, UFieldWhole, endStepList=1200000, fileNameAddition="-Uranus-200Step-")
+# manager1.runAllSims()
 
-manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 90, UFieldWhole, endStepList=1200000, fileNameAddition="-Uranus-200Step-")
-manager1.runAllSims()
+# manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 90, UFieldWhole, endStepList=1200000, fileNameAddition="-Uranus-200Step-")
+# manager1.runAllSims()
 
-manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 180, UFieldWhole, endStepList=1200000, fileNameAddition="-Uranus-200Step-")
-manager1.runAllSims()
+# manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 180, UFieldWhole, endStepList=1200000, fileNameAddition="-Uranus-200Step-")
+# manager1.runAllSims()
 
-manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 270, UFieldWhole, endStepList=1200000, fileNameAddition="-Uranus-200Step-")
+# manager1 = LocationCheck(7, 30, 200, 1, energyList, "electron", 270, UFieldWhole, endStepList=1200000, fileNameAddition="-Uranus-200Step-")
+# manager1.runAllSims()
+
+
+#================================================test bunch of positions around the circumference =====================================
+
+# missed = [86, 82, 258, 260, 252, 78, 70, 90, 74, 266, 264, 256, 262, 250, 72, 76, 84, 80, 88]
+# missed = [82, 258, 260, 254, 270, 256, 262, 80]
+
+# for i in range(0, 360, 2):
+#     manager1 = LocationCheck(7, 30, i, 1, [10**6], "proton", 0, UFieldWhole, endStepList=50000, fileNameAddition="-Uranus-Circumference-N" + str(i) + "-50Step-")
+#     manager1.runAllSims()
+#     try:
+#         index = manager1.simulations[0].getFirstEquatorialIndex()
+#     except:
+#         manager1 = LocationCheck(7, 30, i, 1, [10**6], "proton", 0, UFieldWhole, endStepList=210000, fileNameAddition="-Uranus-Circumference-N" + str(i) + "-50Step-")
+#         manager1.runAllSims()
+
+# for phi in missed:
+#     manager1 = LocationCheck(7, 30, phi, 1, [10**6], "proton", 0, UFieldWhole, endStepList=450000, fileNameAddition="-Uranus-Circumference-N" + str(phi) + "-50Step-")
+#     manager1.runAllSims()
+   
+
+
+# for i in range(0, 360, 2):
+#     manager1 = LocationCheck(7, 150, i, 1, [10**6], "proton", 0, UFieldWhole, endStepList=25000, fileNameAddition="-Uranus-Circumference-S" + str(i) + "-50Step-")
+#     manager1.runAllSims()
+
+# for i in range(276, 360, 2):
+#     manager1 = LocationCheck(7, 150, i, 1, [10**6], "proton", 0, UFieldWhole, endStepList=50000, fileNameAddition="-Uranus-Circumference-S" + str(i) + "-50Step-")
+#     manager1.runAllSims()
+
+#     try:
+#         index = manager1.simulations[0].getFirstEquatorialIndex()
+#     except:
+#         manager1 = LocationCheck(7, 150, i, 1, [10**6], "proton", 0, UFieldWhole, endStepList=200000, fileNameAddition="-Uranus-Circumference-S" + str(i) + "-50Step-")
+#         manager1.runAllSims()
+
+#         try:
+#             index = manager1.simulations[0].getFirstEquatorialIndex()
+#         except:
+#             manager1 = LocationCheck(7, 150, i, 1, [10**6], "proton", 0, UFieldWhole, endStepList=450000, fileNameAddition="-Uranus-Circumference-S" + str(i) + "-50Step-")
+#             manager1.runAllSims()
+
+
+
+
+#===========================================================
+#comparing errors
+Ru = 25600000           #radius of Uranus in metres
+
+manager1 = LocationCheck(7, 30, 200, 1, [10**7], "proton", 0, UFieldWhole, endStepList=15000, fileNameAddition="deletthis-50Step-")
 manager1.runAllSims()
+index = manager1.simulations[0].getFirstEquatorialIndex()
+print(manager1.simulations[0].getPositionAndVelocityError(index)[0]/Ru)
+print(index)
+manager1.simulations[0].plotPositionOnTime(z=True)
+plt.show()

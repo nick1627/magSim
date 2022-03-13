@@ -168,3 +168,15 @@ plt.show()
 # equatorialIndex = sim.getFirstEquatorialIndex()
 # positionError, velocityError = sim.getPositionAndVelocityError(equatorialIndex)
 # print(positionError/Uradius)
+
+#======================================general analysis ==========================================
+
+# sim = Simulation(simDataPath="Output/locationCheck-Uranus-Circumference-S56-50Step-7-150-56-0--Proton-fullField-1000000.npz")
+# sim.plotPositionOnTime(z=True)
+# plt.show()
+
+# dataAnalysis.collectResults("Output/FinalData/Nick/CircumferenceSouth", "Output/RegionTests/NICK_ONLY_regionTest_CircumferenceSouth_Uranus_7-30-200.npz")
+
+# tools.plotCircumferenceGraphs("Output/RegionTests/NICK_ONLY_regionTest_CircumferenceNorth_Uranus_7-30-200.npz", "Output/RegionTests/NICK_ONLY_regionTest_CircumferenceSouth_Uranus_7-30-200.npz", 25600000)
+
+# plt.show()
