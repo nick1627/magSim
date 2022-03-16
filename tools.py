@@ -565,6 +565,12 @@ def plotCircumferenceGraphs(northRegionFile, southRegionFile, a, save=""):
     ax.set_xlabel("Magnetic longitude (º)")
     ax.set_ylabel("Change in equatorial L-shell (planetary radii)")
 
+
+    netChange = np.sum((northData[:,9] - northData[:,8])/a) + np.sum((southData[:,9] - southData[:,8])/a)
+    netChangeError = np.sum(northData[:, 12]/a) + np.sum(southData[:, 12]/a)
+
+    print("net change is %f ± %f" % (netChange, netChangeError))
+
     if save != "":
         plt.savefig(save)
 

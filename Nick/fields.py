@@ -505,6 +505,8 @@ class SHField(Field):
 
         for n in range(1, self.nMax+1):
             frac2 = np.power(frac, (n+2))
+            if n==2:
+                print("oh god")
             for m in range(0, n+1):
     
                 #g[n,m] difference in matrix index to n value
@@ -1513,7 +1515,7 @@ class UniformField(Field):
 
 
 class UranusField(SHField):
-    def __init__(self, dipoleOnly):
+    def __init__(self, dipoleOnly=False):
         Ru = 25600000           #radius of Uranus in metres
 
         #Create field of Uranus
@@ -1523,6 +1525,20 @@ class UranusField(SHField):
         h = h/1000000000
 
         super(UranusField, self).__init__(Ru, g, h, 0, 0, dipoleOnly=dipoleOnly)
+        
+        return
+
+class UranusFieldOld(SHField):
+    def __init__(self, dipoleOnly=False):
+        Ru = 25600000           #radius of Uranus in metres
+
+        #Create field of Uranus
+        g = np.array([[11893, 11579, 0], [-6030, -12587, 196]]) #these are in nanoteslas
+        h = np.array([[0, -15684, 0], [0, 6116, 4759]])
+        g = g/1000000000 #now in teslas
+        h = h/1000000000
+
+        super(UranusFieldOld, self).__init__(Ru, g, h, 0, 0, dipoleOnly=dipoleOnly)
         
         return
 
