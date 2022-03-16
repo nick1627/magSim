@@ -505,8 +505,6 @@ class SHField(Field):
 
         for n in range(1, self.nMax+1):
             frac2 = np.power(frac, (n+2))
-            if n==2:
-                print("oh god")
             for m in range(0, n+1):
     
                 #g[n,m] difference in matrix index to n value
