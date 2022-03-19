@@ -2,12 +2,10 @@
 This file stores the code that analyses the simulation
 """
 
-from doctest import IGNORE_EXCEPTION_DETAIL
 import sys, os
 sys.path.insert(0, os.getcwd())
 
 import numpy as np
-from numpy.lib.arraysetops import isin
 from fields import *
 from particles import *
 import time 
@@ -259,12 +257,12 @@ class Simulation:
         
         return
 
-    def plotLShellOnTime(self, titleAddition="", otherSims = [], legendList=[]):
+    def plotLShellOnTime(self, titleAddition="", otherSims = [], legendList=[], finalIndex = -1):
 
         if otherSims == []:
             #Need to get L from position
-            L = np.zeros(np.shape(self.position)[0])
-            for i in range(0, np.shape(self.position)[0]):
+            L = np.zeros(np.shape(self.position[:finalIndex])[0])
+            for i in range(0, np.shape(L)[0]):
                 sphericalPos = self.field.convertCartesianToPolar(self.position[i])
                 L[i] = sphericalPos[0]/(np.sin(sphericalPos[1]))**2
 
@@ -273,7 +271,7 @@ class Simulation:
             #Now plot L-shell on time
 
             ax = plt.figure().add_subplot()
-            ax.plot(self.time, L, color="purple")
+            ax.plot(self.time[:finalIndex], L, color="purple")
             
             titleString = "L-shell on time" + " " + titleAddition
             ax.set_title(titleString)
@@ -739,6 +737,50 @@ class Simulation:
                         [np.cos(theta),             -np.sin(theta),             0]])
 
         return np.matmul(T, rvec)
+
+    def convertCartesianToPolar(self, rvec, theta=0, phi=0, origin=True):
+        if origin:
+        
+            r = np.sqrt(np.power(rvec[0], 2) + np.power(rvec[1], 2) + np.power(rvec[2], 2))
+            theta = np.arctan2(np.sqrt(np.power(rvec[0], 2) + np.power(rvec[1], 2)), rvec[2])
+            phi = np.arctan2(rvec[1], rvec[0])
+
+            result = np.array([r, theta, phi])
+        
+        else:
+            Sp = np.sin(phi)
+            St = np.sin(theta)
+            Cp = np.cos(phi)
+            Ct = np.cos(theta)
+
+            T = np.array([[St*Cp, St*Sp, Ct], 
+                            [Ct*Cp, Ct*Sp, -St],
+                            [-Sp, Cp, 0]])
+
+            result = np.matmul(T, rvec)
+        
+        return result
+
+
+    def getFirstBounceThetaPhi(self):
+
+        maxIndex = self.getFirstEquatorialIndex()
+
+        positions = self.position[:maxIndex, :]
+        # print(positions[4,:])
+
+        phiTheta = np.zeros((np.shape(positions)[0], 2))
+        for i in range(0, np.shape(positions)[0]):
+            # print(positions[i, :])
+            newvec = self.convertCartesianToPolar(positions[i,:])
+            phiTheta[i, :] = np.array([newvec[2], newvec[1]]) * (180/np.pi)
+            phiTheta[i, 0] = phiTheta[i, 0] % 360
+            # phiTheta[i, 1] = phiTheta[i, 1] % 180
+            # print(phiTheta[i, :])
+
+        # print(phiTheta[:, 1])
+        
+        return phiTheta
   
 class SimulationManager:
     """

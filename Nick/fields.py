@@ -365,9 +365,12 @@ class SHField(Field):
             self.naturalUnits = False
         return    
 
-    def rotate(self, rotationKey): #Sets the rotation matrix for the whole system.
-        #rotationKey is a string that tells you what system to rotate into.
-        #rotationKey can take values "Field" and "Rotation", or "F" and "R"
+    def rotate(self, rotationKey): 
+        """
+        Sets the rotation matrix for the whole system.
+        rotationKey:    string, "Field", "Rotation".  Tells you what system to rotate into.
+                        Can use "F" and "R".
+        """
 
         if rotationKey == ("Field" or "F"):
             self.rotationFlag = "F"
@@ -1345,7 +1348,7 @@ class SHField(Field):
         return
 
 
-    def plotDriftDirectionLShell(self, LArray, deltaTheta = 1, deltaPhi = 1, vectorStep = 10):
+    def plotDriftDirectionLShell(self, LArray, deltaTheta = 1, deltaPhi = 1, vectorStep = 10, particlePath=False, save=""):
         #Drift will be plotted outward from the equator
         if isinstance(LArray, int):
             LArray = np.array([LArray])
@@ -1353,6 +1356,11 @@ class SHField(Field):
             LArray = np.array(LArray)
         else:
             LArray = copy.deepcopy(LArray)
+
+        #Ensure field object using field aligned coords
+        if self.rotationFlag == "R":
+            print("Warning:  Rotating into F frame")
+            self.rotate("Field")
 
         thetaArray = np.arange(0, np.pi + deltaTheta*np.pi/180, deltaTheta*np.pi/180)
         phiArray = np.arange(0, 2*np.pi + deltaPhi*np.pi/180, deltaPhi*np.pi/180)
@@ -1407,7 +1415,8 @@ class SHField(Field):
 
         colourMin = -1
         colourMax = 1
-        print(colourMin, colourMax)
+    
+        # print(colourMin, colourMax)
 
         phiArray = np.rad2deg(phiArray)
         thetaArray = np.rad2deg(thetaArray)
@@ -1430,24 +1439,27 @@ class SHField(Field):
         for i in range(0, np.shape(vec_y)[0]):
             vec_y[i] = thetaArray[vectorStep*i]
 
-        print(np.shape(vec_x))
-        print(np.shape(vec_y))
-        print(np.shape(vectorData))
-        print(np.shape(vectorData2))
+            
+
+
+        # print(np.shape(vec_x))
+        # print(np.shape(vec_y))
+        # print(np.shape(vectorData))
+        # print(np.shape(vectorData2))
         superTitle = "Drift direction vector on planes of constant L-shell"
-        self.generalLShellPlot(LArray, vec_x = vec_x, vec_y=vec_y, vectorData = vectorData2, colour_x=phiArray, colour_y=thetaArray, colourData = normalDrifts, colourMin=colourMin, colourMax=colourMax, title=superTitle)
+        self.generalLShellPlot(LArray, vec_x = vec_x, vec_y=vec_y, vectorData = vectorData2, colour_x=phiArray, colour_y=thetaArray, colourData = normalDrifts, colourMin=colourMin, colourMax=colourMax, title=superTitle, particlePath=particlePath, save=save)
 
         return
 
 
-    def generalLShellPlot(self, LArray, vec_x = 0, vec_y = 0, vectorData = 0, colour_x = 0, colour_y = 0, colourData = 0, colourMin = 0.1, colourMax = 1, title=""):
+    def generalLShellPlot(self, LArray, vec_x = 0, vec_y = 0, vectorData = 0, colour_x = 0, colour_y = 0, colourData = 0, colourMin = 0.1, colourMax = 1, title="", particlePath=False, save=""):
         #All vectors in cartesian, F frame
         #Vector positions already given relative to the plotting surface
         #Need to extract phi axis and theta axis from 
         print("Warning:  Normalisation needs more options.")
         
         noFigs = np.shape(LArray)[0]
-        maxCols = 2
+        maxCols = 1
         figCols = int(min([maxCols, noFigs]))
         figRows = int(np.ceil(noFigs/figCols))
         fig, axs = plt.subplots(nrows=figRows, ncols=figCols, squeeze=False)  
@@ -1456,6 +1468,8 @@ class SHField(Field):
         # colourData[0, 0, 0] = 1
         # vectorData[0, 0, 0, 0] = 10
         # vectorData[0, 0, 0, 1] = -10
+
+        # print(colourData[0, 20, 20])
             
         counter = 0
         for i in range(0, figRows):
@@ -1465,6 +1479,11 @@ class SHField(Field):
 
                     obj = axs[i, j].pcolormesh(colour_x, colour_y, colourData[counter, :, :], cmap = "plasma", vmin=colourMin, vmax=colourMax)#, norm=LogNorm(), vmax=colourMax, vmin=colourMin)
                     axs[i, j].quiver(vec_x, vec_y, vectorData[counter, :, :, 0], vectorData[counter, :, :, 1])
+
+                    if type(particlePath) != bool:
+                        axs[i, j].plot(particlePath[:, 0], particlePath[:, 1], color="black")
+
+
                     axs[i, j].set_ylim(axs[i, j].get_ylim()[::-1])
                     axs[i, j].set_xlabel("Phi ($\degree$)")
                     axs[i, j].set_ylabel("Theta ($\degree$)")
@@ -1473,8 +1492,13 @@ class SHField(Field):
                     axs[i, j].set_aspect("equal")
                     counter+=1
 
+        plt.subplots_adjust(hspace=0.5)
         fig.colorbar(obj, ax = axs.ravel().tolist())
         fig.suptitle(title)
+
+        if save != "":
+            print("trying to save")
+            plt.savefig(save, dpi=1000)
 
         return
 
