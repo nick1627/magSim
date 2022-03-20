@@ -506,12 +506,28 @@ UFieldDipole.rotate("Field")
 
 #===========================================================
 #comparing errors
-Ru = 25600000           #radius of Uranus in metres
+# Ru = 25600000           #radius of Uranus in metres
 
-manager1 = LocationCheck(7, 30, 200, 1, [10**7], "proton", 0, UFieldWhole, endStepList=15000, fileNameAddition="deletthis-50Step-")
-manager1.runAllSims()
-index = manager1.simulations[0].getFirstEquatorialIndex()
-print(manager1.simulations[0].getPositionAndVelocityError(index)[0]/Ru)
-print(index)
-manager1.simulations[0].plotPositionOnTime(z=True)
-plt.show()
+# manager1 = LocationCheck(7, 30, 200, 1, [10**7], "proton", 0, UFieldWhole, endStepList=15000, fileNameAddition="deletthis-50Step-")
+# manager1.runAllSims()
+# index = manager1.simulations[0].getFirstEquatorialIndex()
+# print(manager1.simulations[0].getPositionAndVelocityError(index)[0]/Ru)
+# print(index)
+# manager1.simulations[0].plotPositionOnTime(z=True)
+# plt.show()
+
+#===========================================================
+#Demo run for nice pic of long trajectory
+
+# manager1 = LocationCheck(5, 50, 0, 1, [10**7], "proton", 0, UFieldDipole, endStepList=300000, fileNameAddition="demoPic-50Step-")
+# manager1.runAllSims()
+# manager1.simulations[0].plotPositionOnTime()
+# plt.show()
+
+#===========================================================
+#Demo run for nice pic of 1 bounce 
+
+# manager1 = LocationCheck(3, 50, 0, 1, [10**8], "proton", 0, UFieldWhole, endStepList=3500, fileNameAddition="demoPic-1bounce-50Step-")
+# manager1.runAllSims()
+# manager1.simulations[0].plotPositionOnTime(x=True)
+# plt.show()

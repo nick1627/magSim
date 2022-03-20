@@ -138,10 +138,10 @@ import dataAnalysis
 #======================================Collecting Nick only results==========================================
 # dataAnalysis.collectResults("Output/FinalData/Nick", "Output/RegionTests/NICK_ONLY_regionTest_Uranus_7-30-200.npz")
 
-Uradius = 25600000
-data = tools.loadRegionData("Output/RegionTests/NICK_ONLY_regionTest_Uranus_7-30-200.npz")
-tools.plotRChangeOnEnergy2(data, Uradius, 7, 30, 200)
-plt.show()
+# Uradius = 25600000
+# data = tools.loadRegionData("Output/RegionTests/NICK_ONLY_regionTest_Uranus_7-30-200.npz")
+# tools.plotRChangeOnEnergy2(data, Uradius, 7, 30, 200)
+# plt.show()
 
 
 #The following files are ones that don't cross the equator
@@ -179,4 +179,11 @@ plt.show()
 
 # tools.plotCircumferenceGraphs("Output/RegionTests/NICK_ONLY_regionTest_CircumferenceNorth_Uranus_7-30-200.npz", "Output/RegionTests/NICK_ONLY_regionTest_CircumferenceSouth_Uranus_7-30-200.npz", 25600000)
 
+# plt.show()
+
+
+#=====================================nice 3d plot==========================================
+
+# sim = Simulation(simDataPath="Output/locationCheckdemoPic-50Step-5-50-0-0--Proton-dipoleOnly-10000000.npz")
+# sim.plotPositionOnTime()
 # plt.show()

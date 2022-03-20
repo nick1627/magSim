@@ -342,7 +342,14 @@ class Simulation:
 
     def plotPositionOnTime(self, x=False, y=False, z=False):
         ax = plt.figure().add_subplot(projection = "3d")
-        ax.plot(self.position[:,0], self.position[:,1], self.position[:,2])
+        ax.plot(self.position[:,0], self.position[:,1], self.position[:,2], color="red")
+
+        #REMOVE THESE LINES IF U WANT
+        scale = np.linalg.norm(self.position[0,:])
+        ax.plot([0,0], [0,0], [-scale, scale], color="w", linestyle="none")
+        ax.plot([0,0], [-scale, scale], [0,0], color="w", linestyle="none")
+        ax.plot([-scale, scale], [0,0], [0,0], color="w", linestyle="none")
+
 
         if isinstance(self.field, SHField):
             a = self.field.a
@@ -351,8 +358,8 @@ class Simulation:
             x1 = a*np.cos(u)*np.sin(v)
             y1 = a*np.sin(u)*np.sin(v)
             z1 = a*np.cos(v)
-            ax.plot_wireframe(x1, y1, z1, color="r")
-        ax.set_title("Position of particle in 3D")
+            ax.plot_wireframe(x1, y1, z1, color="blue")
+        ax.set_title("Position of particle over time")
 
         if x:
             ax1 = plt.figure().add_subplot()
