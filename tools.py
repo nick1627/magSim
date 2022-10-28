@@ -320,21 +320,21 @@ def plotRChangeOnEnergy2(regionArray, planetaryRadius, L, theta, phi, logEnergy=
     ax = plt.figure().add_subplot()
 
     if plotErrors:
-        ax.errorbar(protonDipole[:, 4], (protonDipole[:,9] - protonDipole[:,8])/a, yerr = protonDipole[:, 12]/a, label="Dipole, proton", color="red", marker = "+", linestyle="none")
-        ax.errorbar(protonFull[:, 4], (protonFull[:,9] - protonFull[:,8])/a, yerr = protonFull[:, 12]/a, label="Full field, proton", color="purple", marker = "+", linestyle="none")
-        ax.errorbar(electronDipole[:, 4], (electronDipole[:,9] - electronDipole[:,8])/a, yerr = electronDipole[:, 12]/a, label = "Dipole, electron", color="blue", marker = "x", linestyle="none")
-        ax.errorbar(electronFull[:, 4], (electronFull[:,9] - electronFull[:,8])/a, yerr = electronFull[:, 12]/a, label="Full field, electron", color = "green", marker = "x", linestyle="none")
+        ax.errorbar(protonDipole[:, 4], (protonDipole[:,9] - protonDipole[:,8])/a, yerr = protonDipole[:, 12]/a, label="Dipole, proton", color="red", marker = ".", linestyle="none")
+        ax.errorbar(protonFull[:, 4], (protonFull[:,9] - protonFull[:,8])/a, yerr = protonFull[:, 12]/a, label="Complete field, proton", color="purple", marker = ".", linestyle="none")
+        ax.errorbar(electronDipole[:, 4], (electronDipole[:,9] - electronDipole[:,8])/a, yerr = electronDipole[:, 12]/a, label = "Dipole, electron", color="green", marker = "x", linestyle="none")
+        ax.errorbar(electronFull[:, 4], (electronFull[:,9] - electronFull[:,8])/a, yerr = electronFull[:, 12]/a, label="Complete field, electron", color = "black", marker = "x", linestyle="none")
     else:
-        ax.plot(protonDipole[:, 4], (protonDipole[:,9] - protonDipole[:,8])/a, label="Dipole, proton", color="red", marker = "+", linestyle="none")
-        ax.plot(protonFull[:, 4], (protonFull[:,9] - protonFull[:,8])/a, label="Full field, proton", color="purple", marker = "+", linestyle="none")
+        ax.plot(protonDipole[:, 4], (protonDipole[:,9] - protonDipole[:,8])/a, label="Dipole, proton", color="red", marker = ".", linestyle="none")
+        ax.plot(protonFull[:, 4], (protonFull[:,9] - protonFull[:,8])/a, label="Full field, proton", color="purple", marker = ".", linestyle="none")
         ax.plot(electronDipole[:, 4], (electronDipole[:,9] - electronDipole[:,8])/a, label = "Dipole, electron", color="blue", marker = "x", linestyle="none")
         ax.plot(electronFull[:, 4], (electronFull[:,9] - electronFull[:,8])/a, label="Full field, electron", color = "green", marker = "x", linestyle="none")
     
     
-    titleString = "Change in equatorial r/a against initial KE; L=" + str(np.round(L)) + ", " + r"$\theta$ = " + str(np.round(theta)) + ", " + r"$\phi$ = " + str(np.round(phi))
+    titleString = "Change in equatorial L-shell against initial KE; L=" + str(np.round(L)) + ", " + r"$\theta$ = " + str(np.round(theta)) + ", " + r"$\phi$ = " + str(np.round(phi))
     ax.set_title(titleString)
     ax.set_xlabel("Kinetic energy (eV)")
-    ax.set_ylabel("Final r/a - initial r/a")
+    ax.set_ylabel("Change in Equatorial L-shell ($R_U$)")
     if logEnergy:
         ax.set_xscale('log')
     ax.legend()
@@ -518,9 +518,6 @@ def plotDeltaRHistogram(path, a, save=""):
     def gaussian(x, mean, stdDev, amp):
         return (amp/(stdDev*np.sqrt(2*np.pi)))*np.exp(-0.5*(x - mean)**2/(stdDev**2))
 
-    
-    
-    
 
 
     ax = plt.figure().add_subplot()
@@ -535,22 +532,32 @@ def plotDeltaRHistogram(path, a, save=""):
 
     xVals = np.linspace(bins[0], bins[-1], 1000)
     yVals = gaussian(xVals, popt[0], popt[1], popt[2])
-    ax.plot(xVals, yVals)
+
+    stdev = popt[1]
+    stdev_err = np.sqrt(pcov[1, 1])
+    print("standard deviation is %f ± %f" % (stdev, stdev_err))
+    w = 2*stdev
+    w_error = 2*stdev_err
+    print("so width is %f ± %f" %(w, w_error))
+
+    ax.plot(xVals, yVals, label = "Gaussian width %.4f ± %.4f $\mathrm{R_U}$" % (np.round(w, 4), np.round(w_error, 4)))
 
     ax.set_ylabel("Frequency")
-    ax.set_xlabel("Final r/a - initial r/a")
-    ax.set_title("Effect of modifying B field parameters on net guiding centre position")
+    ax.set_xlabel("Change in L-shell ($\mathrm{R_U}$)")
+    ax.legend()
+    ax.set_title("Effect of modifying B field parameters on change in guiding centre L-shell")
 
     if save!="":
         plt.savefig(save)
 
-    print("standard deviation is %f ± %f" % (popt[1], np.sqrt(pcov[1, 1])))
+
     return
 
 
 def plotCircumferenceGraphs(northRegionFile, southRegionFile, a, save=""):
-    northData = loadRegionData(northRegionFile)
-    southData = loadRegionData(southRegionFile)
+    #swap north and south
+    southData = loadRegionData(northRegionFile)
+    northData = loadRegionData(southRegionFile)
 
     northData[:,13] *= 180/np.pi
     southData[:,13] *= 180/np.pi
@@ -562,9 +569,9 @@ def plotCircumferenceGraphs(northRegionFile, southRegionFile, a, save=""):
     ax.errorbar(northData[:, 13], (northData[:,9] - northData[:,8])/a, yerr = northData[:, 12]/a, label="Northbound proton", color="red", marker = "x", linestyle="none")
     ax.errorbar(southData[:, 13], (southData[:,9] - southData[:,8])/a, yerr = southData[:, 12]/a, label="Southbound proton", color = "blue", marker = "x", linestyle="none")
     ax.set_title("Change in equatorial L-shell after mirroring once")
-    ax.set_xlabel("Magnetic longitude (º)")
-    ax.set_ylabel("Change in equatorial L-shell (planetary radii)")
-
+    ax.set_xlabel("Magnetic longitude (" + r"$\degree$" + ")")
+    ax.set_ylabel("Change in equatorial L-shell (" + r"$\mathrm{R_U}$" + ")")
+    plt.legend(loc='lower left')
 
     netChange = np.sum((northData[:,9] - northData[:,8])/a) + np.sum((southData[:,9] - southData[:,8])/a)
     netChangeError = np.sum(northData[:, 12]/a) + np.sum(southData[:, 12]/a)
@@ -574,4 +581,6 @@ def plotCircumferenceGraphs(northRegionFile, southRegionFile, a, save=""):
     if save != "":
         plt.savefig(save)
 
-    ax.legend()
+    return
+
+    # ax.legend()

@@ -1128,7 +1128,7 @@ class SHField(Field):
         return
 
 
-    def plotDeviationColourMapLShell2(self, L, deltaTheta = 1, deltaPhi = 1, vectorStep = 10, save = ""):
+    def plotDeviationColourMapLShell2(self, L, deltaTheta = 1, deltaPhi = 1, vectorStep = 20, save = ""):
         #UNFINISHED:  purpose is to plot multiple L shell graphs as subplots.  THe plots change size, so you'll have
         #to find a way to deal with that
 
@@ -1193,7 +1193,6 @@ class SHField(Field):
             for j in range(0, np.shape(vectors2)[2]):
                 vectors2[:, i, j, :] = vectors[:, vectorStep*i, vectorStep*j, :]
 
-    
         # vectors2 = np.zeros((np.shape(LArray)[0], int(np.ceil(np.shape(vectors)[0]/vectorStep)), int(np.ceil(np.shape(vectors)[1]/vectorStep)), np.shape(vectors)[2]))
        
         # for i in range(0, np.shape(vectors2)[1]):
@@ -1213,11 +1212,11 @@ class SHField(Field):
         colourMin = np.min(temp)
         colourMax = np.max(temp)
 
-        print(colourMin, colourMax)            
-            
+        print(colourMin, colourMax)
+
 
         titleString = "Quadrupole/dipole ratio on different L-shells"
-        self.generalLShellPlot(LArray, vec_x=vec_x, vec_y=vec_y, vectorData=vectors2, colour_x = phiArray, colour_y = thetaArray, colourData = diagnostic, colourMin = colourMin, colourMax = colourMax, title = titleString,save = save)
+        self.generalLShellPlot(LArray, vec_x=vec_x, vec_y=vec_y, vectorData=vectors2, colour_x = phiArray, colour_y = thetaArray, colourData = diagnostic, colourMin = colourMin, colourMax = colourMax, title = titleString, save = save, cbarLabel=r"$\frac{|\mathrm{Quadrupole}|}{|\mathrm{Dipole}|}$", vecColour="white", vecScale=30)
 
         return
 
@@ -1384,9 +1383,12 @@ class SHField(Field):
         #Extract drift components
         normalDrifts = np.multiply(driftPlanes, normalVecs)
         normalDrifts = np.sum(normalDrifts, axis=-1)
+        print("printing")
+        print(np.nanmax(normalDrifts))
         normalDrifts2 = np.array([normalDrifts, normalDrifts, normalDrifts])
         normalDrifts2 = np.transpose(normalDrifts2, (1, 2, 3, 0))
         inPlaneDrifts = driftPlanes - normalDrifts2*normalVecs
+        print(np.nanmax(inPlaneDrifts))
         #Now need to convert the 3D in-plane drifts into their 2D equivalents 
         #Define phi hat direction
         phiFactor = 1/(np.sqrt(driftPositions[:, :, :, 0]**2 + driftPositions[:, :, :, 1]**2))
@@ -1430,20 +1432,30 @@ class SHField(Field):
         for i in range(0, np.shape(vec_y)[0]):
             vec_y[i] = thetaArray[vectorStep*i]
 
-            
+        # print(vectorData2[1, :, :, 0])
 
+        vecScale = vectorData2[1, 3, 3, 0]*10**8
+        print(vecScale)
+        
 
         # print(np.shape(vec_x))
         # print(np.shape(vec_y))
         # print(np.shape(vectorData))
         # print(np.shape(vectorData2))
         superTitle = "Drift direction vector on planes of constant L-shell"
-        self.generalLShellPlot(LArray, vec_x = vec_x, vec_y=vec_y, vectorData = vectorData2, colour_x=phiArray, colour_y=thetaArray, colourData = normalDrifts, colourMin=colourMin, colourMax=colourMax, title=superTitle, particlePath=particlePath, save=save)
+
+        # if type(particlePath)!=bool:
+
+
+
+
+
+        self.generalLShellPlot(LArray, vec_x = vec_x, vec_y=vec_y, vectorData = vectorData2, colour_x=phiArray, colour_y=thetaArray, colourData = normalDrifts, colourMin=colourMin, colourMax=colourMax, title=superTitle, particlePath=particlePath, save=save, cbarLabel="Perpendicular drift component", vecColour="white", vecScale=vecScale)
 
         return
 
 
-    def generalLShellPlot(self, LArray, vec_x = 0, vec_y = 0, vectorData = 0, colour_x = 0, colour_y = 0, colourData = 0, colourMin = 0.1, colourMax = 1, title="", particlePath=False, save=""):
+    def generalLShellPlot(self, LArray, vec_x = 0, vec_y = 0, vectorData = 0, colour_x = 0, colour_y = 0, colourData = 0, colourMin = 0.1, colourMax = 1, title="", particlePath=False, save="", cbarLabel = "", vecColour="black", vecScale=None):
         #All vectors in cartesian, F frame
         #Vector positions already given relative to the plotting surface
         #Need to extract phi axis and theta axis from 
@@ -1453,7 +1465,7 @@ class SHField(Field):
         maxCols = 1
         figCols = int(min([maxCols, noFigs]))
         figRows = int(np.ceil(noFigs/figCols))
-        fig, axs = plt.subplots(nrows=figRows, ncols=figCols, squeeze=False)  
+        fig, axs = plt.subplots(nrows=figRows, ncols=figCols, squeeze=False)#, figsize=(10,3))  
 
         # #Diagnostic pixel
         # colourData[0, 0, 0] = 1
@@ -1461,38 +1473,64 @@ class SHField(Field):
         # vectorData[0, 0, 0, 1] = -10
 
         # print(colourData[0, 20, 20])
+
+        d1 = int(np.round(np.shape(vectorData)[1]/2))
+        d2 = int(np.round(np.shape(vectorData)[2]/2))
+        
             
         counter = 0
         for i in range(0, figRows):
             for j in range(0, figCols):
                 if counter < noFigs:
+                    
+                  
+                    vecScale = vectorData[counter, d1, d2, 1]*30
                 
 
                     obj = axs[i, j].pcolormesh(colour_x, colour_y, colourData[counter, :, :], cmap = "plasma", vmin=colourMin, vmax=colourMax)#, norm=LogNorm(), vmax=colourMax, vmin=colourMin)
                     # obj = axs[i, j].pcolormesh(colour_x, colour_y, colourData[counter, :, :], cmap = "plasma", norm=LogNorm())#, norm=LogNorm(), vmax=colourMax, vmin=colourMin)
 
                     if type(vectorData) != int:
-                        axs[i, j].quiver(vec_x, vec_y, vectorData[counter, :, :, 0], vectorData[counter, :, :, 1])
+                        axs[i, j].quiver(vec_x, vec_y, vectorData[counter, :, :, 0], vectorData[counter, :, :, 1], color=vecColour, scale=vecScale, scale_units="width")
 
                     if type(particlePath) != bool:
                         axs[i, j].plot(particlePath[:, 0], particlePath[:, 1], color="black")
 
 
+                    # axs[i, j].set_ylim(axs[i, j].get_ylim()[::-1])
+                    # axs[i, j].set_xlabel("$\phi$ ($\degree$)")
+                    # if ((i*figRows + j)%figCols) == 0:
+                    #     axs[i,j].set_ylabel(r"$\theta$" + " ($\degree$)")
+                    # else:
+                    #     plt.setp(axs[i,j].get_yticklabels(), visible=False)
+
                     axs[i, j].set_ylim(axs[i, j].get_ylim()[::-1])
-                    axs[i, j].set_xlabel("Phi ($\degree$)")
-                    axs[i, j].set_ylabel("Theta ($\degree$)")
+                    axs[i,j].set_ylabel(r"$\theta$" + " ($\degree$)")
+                    
+                    if counter < noFigs-1:
+                        plt.setp(axs[i,j].get_xticklabels(), visible=False)
+                    else:
+                        axs[i, j].set_xlabel("$\phi$ ($\degree$)")
+
+                    
                     titleString = "L = " + str(LArray[counter])
                     axs[i, j].set_title(titleString)
                     axs[i, j].set_aspect("equal")
                     counter+=1
 
-        plt.subplots_adjust(hspace=0.5)
-        fig.colorbar(obj, ax = axs.ravel().tolist())
+                # if ((i*figRows + j)%figCols) != 1:
+                #     axs[i,j].
+
+        # plt.subplots_adjust(wspace=0.05)#, left=0.05, bottom =0.1)#, bottom=0.05, left=0.05)
+        cbar = fig.colorbar(obj, ax = axs.ravel().tolist())
+        cbar.set_label(cbarLabel, rotation=90)
         fig.suptitle(title)
+        # fig.tight_layout()
 
         if save != "":
             print("trying to save")
             plt.savefig(save, dpi=1000)
+            print("saved")
 
         return
 
@@ -1502,6 +1540,7 @@ class SHField(Field):
 
     def plotLShellB(self, LArray, deltaTheta = 1, deltaPhi = 1, vectorStep = 10, particlePath=False, save=""):
         #Drift will be plotted outward from the equator
+        #Why is there any mention of drift in this function?
         if isinstance(LArray, int):
             LArray = np.array([LArray])
         elif isinstance(LArray, list):

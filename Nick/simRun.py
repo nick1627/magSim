@@ -531,3 +531,11 @@ UFieldDipole.rotate("Field")
 # manager1.runAllSims()
 # manager1.simulations[0].plotPositionOnTime(x=True)
 # plt.show()
+
+#===========================================================
+#Demo pic for long run constants
+
+manager1 = LocationCheck(7, 40, 0, 1, [10**7], "proton", 0, UFieldDipole, endStepList=100000, fileNameAddition="Long-constantPlot-50Step-")
+manager1.runAllSims()
+manager1.simulations[0].plotPositionOnTime()
+plt.show()

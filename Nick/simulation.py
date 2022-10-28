@@ -309,7 +309,23 @@ class Simulation:
 
         return
 
-    def plotFirstAIOnTime(self, titleAddition = ""):
+    def plotConstantsOnTime(self, titleAddition="", save=""):
+        """
+        Plots KE, first AI and L-shell on time
+        """
+        #KE first
+        restMassEnergy = self.particle.m0*sp.constants.c**2
+        v = np.linalg.norm(self.velocity, axis=-1)
+        gamma = 1/(np.sqrt(1 - (v/sp.constants.c)**2))
+        for g in gamma:
+            if math.isnan(g) or math.isinf(g):
+                print(g)
+                raise(Exception("Warning!  Energy problems!"))
+
+        Ek = (gamma - 1)*restMassEnergy #This is in joules
+        Ek = Ek/(sp.constants.e)
+
+        #First AI
         #Plots the first adiabatic invariant on time
         r = self.position
         v = self.velocity
@@ -329,6 +345,101 @@ class Simulation:
             gammaSquared = 1/(1-(np.linalg.norm(v[i])/sp.constants.c)**2)
 
             mu[i] = (m/(2*BMag))*np.dot(vPerp, vPerp)*gammaSquared
+        
+        #Now L shell
+        #Need to get L from position
+        L = np.zeros(np.shape(self.position)[0])
+        for i in range(0, np.shape(L)[0]):
+            sphericalPos = self.field.convertCartesianToPolar(self.position[i])
+            L[i] = sphericalPos[0]/(np.sin(sphericalPos[1]))**2
+
+        L = L/self.field.a
+        #Now have obtained an array of L-shell
+      
+
+
+
+
+
+        # ax = plt.figure().add_subplot()
+        fig, axs = plt.subplots(3, sharex=True)
+        # Ek = Ek/10**7
+        axs[0].plot(self.time, Ek, color="red")
+        axs[0].grid()
+        axs[0].set_ylabel("Kinetic Energy (eV)")
+
+        # plt.setp(ax1.get_xticklabels(), visible=False)
+
+        # gain = ((Ek[-1] - Ek[0])/Ek[0])*100
+        # gain = np.round(gain, decimals=3)
+        # titleString = "Kinetic Energy on Time - Percentage Gain: " + str(gain) + "%" + " " + titleAddition
+        # ax.set_title(titleString, y=1.04)
+        # ax.set_xlabel("Time (s)")
+        # ax.set_ylabel("Kinetic Energy (eV)")
+
+
+        # ax2 = plt.subplot(312)
+        axs[1].plot(self.time, mu, color="blue")
+        axs[1].grid()
+        axs[1].set_ylabel(r"$\mu$" + " (Am$^2$)")
+        # plt.setp(ax2.get_xticklabels(), visible=False)
+
+        # titleString = "1st Adiabatic Invariant on Time" + " " + titleAddition
+        # ax.set_title(titleString)
+        # ax.set_xlabel("Time (s)")
+        # ax.set_ylabel("First Adiabatic Invariant")
+
+
+        #Now plot L-shell on time
+
+        # ax3 = plt.subplot(313)
+        axs[2].plot(self.time, L, color="purple")
+
+        axs[2].grid()    
+        axs[2].set_ylabel("L-shell (" + r"$R_U$" + ")")
+
+        for ax in axs:
+            ax.label_outer()
+
+        plt.subplots_adjust(hspace=0.2)
+        axs[2].set_xlabel("Time (s)")
+
+        title = "Kinetic Energy, First Adiabatic Invariant and L-shell on Time"
+        fig.suptitle(title + titleAddition)
+
+        
+        # titleString = "L-shell on time" + " " + titleAddition
+        # ax.set_title(titleString)
+        # ax.set_xlabel("Time (s)")
+        # ax.set_ylabel("L-shell (planetary radii)")
+
+        if save != "":
+            plt.savefig(save)
+
+
+        return
+
+    def plotFirstAIOnTime(self, titleAddition = ""):
+        #Plots the first adiabatic invariant on time
+        r = self.position
+        v = self.velocity
+        m = self.particle.m0
+
+        if isinstance(self.field, SHField):
+            self.field.rotate("Field")
+
+        mu = np.zeros(np.shape(self.position)[0])
+
+        for i in range(0, np.shape(r)[0]):
+            B = self.field.getField(r[i])
+            # print(self.field.nMax)
+            BMag = np.linalg.norm(B)
+            BHat = B/BMag
+            vPerp = v[i] - np.dot(v[i], BHat)*BHat
+            gammaSquared = 1/(1-(np.linalg.norm(v[i])/sp.constants.c)**2)
+            gamma = np.sqrt(gammaSquared)
+
+            mu[i] = (m/(2*BMag))*np.dot(vPerp, vPerp)*gamma
         
         ax = plt.figure().add_subplot()
         ax.plot(self.time, mu, color="blue")
@@ -511,7 +622,7 @@ class Simulation:
         return counter
 
 
-    def saveBounceData(self, filePath):
+    def saveBounceData(self, filePath, removePrecipitates=True):
         """
         This function can run after the simulation has completed.  It saves data from the first bounce in a given file.
         """
@@ -530,31 +641,69 @@ class Simulation:
 
         #counter is now the index of the final point.
                 
+        if removePrecipitates:
+            Uradius = 25600000
+            proceed = True
+            counter2 = 0
+            while proceed == True and counter2 <= counter:
+                r = np.linalg.norm(self.position[counter2, :])
+                if r < Uradius:
+                    proceed = False
+                    print("particle precipitated")
+                else:
+                    counter2 += 1
+                    
+            if proceed:
+                initialKE = self.getKE(0, unit="eV")
+                initialGyroradius = self.getLarmorRadius(0)
+
+                finalGyroradius = self.getLarmorRadius(counter)
+
+                initialRadius = np.linalg.norm(self.getGuidingCentrePosition(0, initialGyroradius))
+                finalPos = self.getGuidingCentrePosition(counter, finalGyroradius)
+                # print(finalPos)
+                finalRadius = np.linalg.norm(finalPos)
+
+                positionError, velocityError = self.getPositionAndVelocityError(counter)
+
+                finalKE = self.getKE(counter, unit="eV")
             
-        initialKE = self.getKE(0, unit="eV")
-        initialGyroradius = self.getLarmorRadius(0)
+                #calculate pitch angle
+                v = self.velocity[0]
+                d = np.sqrt(v[0]**2 + v[1]**2)
+                pitchAngle = np.arctan((d/v[2]))
 
-        finalGyroradius = self.getLarmorRadius(counter)
+                initial_gc = self.getGuidingCentrePosition(0, initialGyroradius)
+                initialPhi = np.arctan2(initial_gc[1], initial_gc[0])
 
-        initialRadius = np.linalg.norm(self.getGuidingCentrePosition(0, initialGyroradius))
-        finalPos = self.getGuidingCentrePosition(counter, finalGyroradius)
-        # print(finalPos)
-        finalRadius = np.linalg.norm(finalPos)
+                tools.saveRegionData2(filePath, "N", self.particle.name, not(self.field.dipoleOnly), initialKE, finalKE, pitchAngle, self.initialPhase, initialRadius, finalRadius, initialGyroradius, finalGyroradius, positionError, initialPhi)
+        else:
 
-        positionError, velocityError = self.getPositionAndVelocityError(counter)
+            initialKE = self.getKE(0, unit="eV")
+            initialGyroradius = self.getLarmorRadius(0)
 
-        finalKE = self.getKE(counter, unit="eV")
-     
-        #calculate pitch angle
-        v = self.velocity[0]
-        d = np.sqrt(v[0]**2 + v[1]**2)
-        pitchAngle = np.arctan((d/v[2]))
+            finalGyroradius = self.getLarmorRadius(counter)
 
-        initial_gc = self.getGuidingCentrePosition(0, initialGyroradius)
-        initialPhi = np.arctan2(initial_gc[1], initial_gc[0])
+            initialRadius = np.linalg.norm(self.getGuidingCentrePosition(0, initialGyroradius))
+            finalPos = self.getGuidingCentrePosition(counter, finalGyroradius)
+            # print(finalPos)
+            finalRadius = np.linalg.norm(finalPos)
 
-        tools.saveRegionData2(filePath, "N", self.particle.name, not(self.field.dipoleOnly), initialKE, finalKE, pitchAngle, self.initialPhase, initialRadius, finalRadius, initialGyroradius, finalGyroradius, positionError, initialPhi)
+            positionError, velocityError = self.getPositionAndVelocityError(counter)
 
+            finalKE = self.getKE(counter, unit="eV")
+        
+            #calculate pitch angle
+            v = self.velocity[0]
+            d = np.sqrt(v[0]**2 + v[1]**2)
+            pitchAngle = np.arctan((d/v[2]))
+
+            initial_gc = self.getGuidingCentrePosition(0, initialGyroradius)
+            initialPhi = np.arctan2(initial_gc[1], initial_gc[0])
+
+            tools.saveRegionData2(filePath, "N", self.particle.name, not(self.field.dipoleOnly), initialKE, finalKE, pitchAngle, self.initialPhase, initialRadius, finalRadius, initialGyroradius, finalGyroradius, positionError, initialPhi)
+
+       
         return
 
     def getGuidingCentrePosition(self, index, larmorRadius):

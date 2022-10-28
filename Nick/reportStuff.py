@@ -22,21 +22,25 @@ import dataAnalysis
 
 #=======================================field plots==============================================
 #Field plots
-UField2 = UranusField(dipoleOnly=False)
-UField2.rotate("Field")
+# UField1 = UranusField(dipoleOnly=True)
+# UField2 = UranusField(dipoleOnly=False)
+# UField1.rotate("Field")
+# UField2.rotate("Field")
+# UField1.plot2DField("x", 0, 16, 25600000/4, 25600000)
+
 
 # UField2.plotDeviationColourMapLShell(7)
 # UField2.plotLShellBMagnitude(2)
-UField2.plotDeviationColourMapLShell2([2, 7])
+# UField2.plotDeviationColourMapLShell2([2, 7], save="Output/Figures/L2-7BDeviationNick2.eps")
 
 #=======================================drift plots==============================================
 # UField1 = UranusField(dipoleOnly=True)
 # UField1.rotate("Field")
 # # UField1.plotDriftDirectionLShell([7])
 
-# UField2 = UranusField(dipoleOnly=False)
-# UField2.rotate("Field")
-# UField2.plotDriftDirectionLShell([2,7], save="Output/Figures/L2-7DriftNick.png")
+UField2 = UranusField(dipoleOnly=False)
+UField2.rotate("Field")
+UField2.plotDriftDirectionLShell([2,7])#, save="Output/Figures/L2-7DriftNick2.eps")
 
 
 
@@ -46,9 +50,12 @@ UField2.plotDeviationColourMapLShell2([2, 7])
 
 
 
+#======================================Constants plot======================================
+
+# sim4 = Simulation(simDataPath="Output/locationCheckLong-constantPlot-50Step-7-40-0-0--Proton-dipoleOnly-10000000.npz")
 
 
-
+# sim4.plotConstantsOnTime(save = "Output/Figures/constants3Nick.eps")
 
 
 #=====================================Main result 1===============================================
@@ -67,6 +74,12 @@ UField2.plotDeviationColourMapLShell2([2, 7])
 
 # tools.plotCircumferenceGraphs("Output/RegionTests/NICK_ONLY_regionTest_CircumferenceNorth_Uranus_7-30-200.npz", "Output/RegionTests/NICK_ONLY_regionTest_CircumferenceSouth_Uranus_7-30-200.npz", 25600000, save="Output/Figures/circumferenceNick.eps")
 
+# #=====================================final thing===============================================
+
+
+# UField2 = UranusField(dipoleOnly=False)
+# UField2.rotate("Field")
+# UField2.plotDriftDirectionLShell([7], particlePath = "Output/FinalData/Nick/CircumferenceNorth/locationCheck-Uranus-Circumference-N220-50Step-7-30-220-0--Proton-fullField-1000000.np")#, save="Output/Figures/L2-7DriftNick2.eps")
 
 
 plt.show()

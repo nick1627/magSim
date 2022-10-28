@@ -72,7 +72,7 @@ def findFirstEnergyStepHeight(sim):
 
 
 
-def collectResults(pathToFolder, pathOfResultsFile):
+def collectResults(pathToFolder, pathOfResultsFile, removePrecipitates=True):
     """
     Collects results for single bounces and saves them to a file
 
@@ -95,7 +95,7 @@ def collectResults(pathToFolder, pathOfResultsFile):
         sim = Simulation(simDataPath=f)
 
         try:
-            sim.saveBounceData(pathOfResultsFile)
+            sim.saveBounceData(pathOfResultsFile, removePrecipitates=removePrecipitates)
         except:
             print("The following path did not work: " + f)
 
